@@ -4,7 +4,7 @@
 import * as storageBlob from '@azure/storage-blob';
 import { expect } from 'chai';
 import sinon = require('sinon');
-import { ManagedIdentityUserStrategy } from '../../src/storage-blob/managedIdentityUserStartegy';
+import { ManagedIdentityUserStrategy } from '../../src/storage-blob/managedIdentityUserStrategy';
 
 describe('ManagedIdentityUserStrategy', () => {
     let sandbox: sinon.SinonSandbox;

@@ -1,6 +1,6 @@
 {
     "name": "@azure/functions-extensions-blob",
-    "version": "0.1.0",
+    "version": "0.1.0-preview",
     "sideEffects": true,
     "description": "Node.js Azure Storage Client extension implementations for Azure Functions",
     "keywords": [
@@ -36,6 +36,7 @@
         "build": "webpack --mode development",
         "minify": "webpack --mode production",
         "test": "ts-node ./test/index.ts",
+        "clean": "rimraf dist && rimraf node_modules/",
         "format": "prettier . --write",
         "lint": "eslint . --fix",
         "updateVersion": "ts-node ./scripts/updateVersion.ts",
@@ -43,7 +44,6 @@
         "watch": "webpack --watch --mode development"
     },
     "devDependencies": {
-        "@azure/functions": "^4.7.0",
         "@types/chai": "^4.2.22",
         "@types/minimist": "^1.2.2",
         "@types/mocha": "^9.1.1",
@@ -77,6 +77,7 @@
     },
     "dependencies": {
         "@azure/identity": "^4.9.1",
-        "@azure/storage-blob": "^12.27.0"
+        "@azure/storage-blob": "^12.27.0",
+        "@azure/functions": "^4.7.0"
     }
 }

@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { expect } from 'chai';
-import { AzureStorageBlobClient } from '../../src/storage-blob/azureStorageBlobClient';
+import { StorageBlobClient } from '../../src/storage-blob/storageBlobClient';
 import { StorageBlobServiceClientStrategy } from '../../src/storage-blob/storageBlobServiceClientStrategy';
 
 class MockBlobServiceClient {
@@ -37,9 +37,10 @@ describe('AzureStorageBlobClient', () => {
     it('should create container client when container name is provided', () => {
         // Arrange
         const containerName = 'test-container';
+        const blobName = 'test-blob';
 
         // Act
-        const client = new AzureStorageBlobClient(mockStrategy, containerName);
+        const client = new StorageBlobClient(mockStrategy, containerName, blobName);
 
         // Assert
         const containerClient = client.getContainerClient();
@@ -54,7 +55,7 @@ describe('AzureStorageBlobClient', () => {
         const blobName = 'test-blob.txt';
 
         // Act
-        const client = new AzureStorageBlobClient(mockStrategy, containerName, blobName);
+        const client = new StorageBlobClient(mockStrategy, containerName, blobName);
 
         // Assert
         const blobClient = client.getBlobClient();
@@ -62,23 +63,6 @@ describe('AzureStorageBlobClient', () => {
         expect(blobClient.name).to.equal(blobName);
         expect(blobClient.url).to.include(containerName);
         expect(blobClient.url).to.include(blobName);
-    });
-
-    it('should throw error when getting blob client without providing blob name', () => {
-        // Arrange
-        const containerName = 'test-container';
-        const client = new AzureStorageBlobClient(mockStrategy, containerName);
-
-        // Act & Assert
-        expect(() => client.getBlobClient()).to.throw('No blob client available');
-    });
-
-    it('should throw error when getting container client without providing container name', () => {
-        // Arrange
-        const client = new AzureStorageBlobClient(mockStrategy);
-
-        // Act & Assert
-        expect(() => client.getContainerClient()).to.throw('No container client available');
     });
 
     it('should pass options to blob service client creation', () => {
@@ -98,7 +82,7 @@ describe('AzureStorageBlobClient', () => {
         };
 
         // Act
-        new AzureStorageBlobClient(strategySpy as any, containerName, blobName, options);
+        new StorageBlobClient(strategySpy as any, containerName, blobName, options);
 
         // Assert
         expect(strategySpy.lastOptions).to.equal(options);
