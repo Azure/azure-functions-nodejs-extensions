@@ -7,4 +7,3 @@ export interface StorageBlobClient {
     blobClient: BlobClient;
     containerClient: ContainerClient;
 }
-

@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { StorageBlobClientOptions, StorageBlobClientRegistry } from '@azure/functions';
-import { AzureStorageBlobClientFactory } from './storage-blob/azureStorageBlobClientFactory';
+import { CacheableAzureStorageBlobClientFactory } from './storage-blob/cacheableAzureStorageBlobClientFactory';
 
 console.log('Executing extensions-blob from Index.ts...');
 
@@ -16,7 +16,9 @@ function registerStorageBlobClientFactoryBase(): void {
             StorageBlobClientRegistry.getInstance().registerFactory(
                 (storageBlobClientOptions: StorageBlobClientOptions) => {
                     console.log('2 Registering StorageBlobClient factory...');
-                    return AzureStorageBlobClientFactory.buildClientFromModelBindingData(storageBlobClientOptions);
+                    return CacheableAzureStorageBlobClientFactory.buildClientFromModelBindingData(
+                        storageBlobClientOptions
+                    );
                 }
             );
             console.log('Custom blob client factory registered successfully');
