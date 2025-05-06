@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { StorageBlobClientOptions, StorageBlobClientRegistry } from '@azure/functions';
-import { CacheableAzureStorageBlobClientFactory } from './storage-blob/cacheableAzureStorageBlobClientFactory';
+import { CacheableAzureStorageBlobClientFactory } from './storage-blob/cacheableStorageBlobClientFactory';
 
 console.log('Executing extensions-blob from Index.ts...');
 
