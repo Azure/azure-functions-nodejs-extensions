@@ -30,7 +30,7 @@ describe('CacheableAzureStorageBlobClientFactory', () => {
         mockStorageBlobClient = {
             getBlobClient: sinon.stub(),
             getContainerClient: sinon.stub(),
-            dispose: sinon.stub() as sinon.SinonStub,
+            dispose: sinon.stub(),
         } as unknown as StorageBlobClient;
 
         mockStrategy = {
@@ -152,31 +152,29 @@ describe('CacheableAzureStorageBlobClientFactory', () => {
                 clock.tick(1000); // Advance clock by 1 second between each client
             }
 
-            let optionsFirstClient = clientOptions[0] as StorageBlobClientOptions;
+            const optionsFirstClient = clientOptions[0] as StorageBlobClientOptions;
             // Access the first client again to make it no longer the oldest
             CacheableAzureStorageBlobClientFactory.buildClientFromModelBindingData(optionsFirstClient);
-            clock.tick(1000);
 
             // Now the second client should be the oldest
 
             // Act - Add one more client to trigger eviction
-
-            let optionsOfMaxCacheSize = clientOptions[0] as StorageBlobClientOptions;
+            const optionsOfMaxCacheSize = clientOptions[maxCacheSize] as StorageBlobClientOptions;
             CacheableAzureStorageBlobClientFactory.buildClientFromModelBindingData(optionsOfMaxCacheSize);
 
-            let mockClient1 = mockClients[1] as StorageBlobClient;
-            let mockClient0 = mockClients[1] as StorageBlobClient;
+            const mockClient1 = mockClients[1] as StorageBlobClient;
+            const mockClient0 = mockClients[0] as StorageBlobClient;
             // Assert
             // Client 1 should still be in cache, client 2 should have been evicted
-            expect((mockClient1.dispose as sinon.SinonStub).called).to.be.false; // Client 1 (index 1) should be disposed
+            expect((mockClient1.dispose as sinon.SinonStub).called).to.be.true; // Client 1  should be disposed
             expect((mockClient0.dispose as sinon.SinonStub).called).to.be.false; // Client 0 should not be disposed
 
             // Verify client 1 is gone by requesting it again (should create a new one)
             fromConnectionDetailsStub.resetHistory();
 
-            let optionsSecondClient = clientOptions[0] as StorageBlobClientOptions;
+            const optionsSecondClient = clientOptions[1] as StorageBlobClientOptions;
             CacheableAzureStorageBlobClientFactory.buildClientFromModelBindingData(optionsSecondClient);
-            expect(fromConnectionDetailsStub.calledOnce).to.be.false; // Should create a new client
+            expect(fromConnectionDetailsStub.calledOnce).to.be.true; // Should create a new client
         });
     });
 

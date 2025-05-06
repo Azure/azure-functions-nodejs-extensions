@@ -23,7 +23,7 @@ interface CacheEntry {
  */
 export class CacheableAzureStorageBlobClientFactory {
     private static readonly clientCache = new Map<string, CacheEntry>();
-    private static readonly MAX_CACHE_SIZE = 10;
+    private static readonly MAX_CACHE_SIZE = 5;
 
     //TODO: Check if we need an interval to clean up the cache periodically, if resource contention is founr.
 
