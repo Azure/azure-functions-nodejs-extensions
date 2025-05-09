@@ -1,10 +1,10 @@
 // Copyright (c) .NET Foundation. All rights reserved.
 // Licensed under the MIT License.
 
-import { StorageBlobClientFactory, StorageBlobClientFactoryResolver } from '@azure/functions';
+import { StorageBlobClientFactory, StorageBlobClientFactoryResolver } from '@azure/functions-extensions-base';
 import { expect } from 'chai';
 import * as sinon from 'sinon';
-import { CacheableAzureStorageBlobClientFactory } from '../src/storage-blob/cacheableStorageBlobClientFactory';
+import { CacheableAzureStorageBlobClientFactory } from '../../src/storage-blob/cacheableStorageBlobClientFactory';
 
 describe('Storage Blob Extension Registration', () => {
     // Save original console methods to restore later
@@ -18,7 +18,7 @@ describe('Storage Blob Extension Registration', () => {
 
     beforeEach(() => {
         // Reset module cache to ensure fresh import
-        delete require.cache[require.resolve('../src/index')];
+        delete require.cache[require.resolve('../../src/index')];
 
         // Create stubs for the resolver
         resolverStub = sinon.createStubInstance(StorageBlobClientFactoryResolver);
@@ -51,7 +51,7 @@ describe('Storage Blob Extension Registration', () => {
         buildClientStub.returns({} as any);
 
         // Execute
-        require('../src/index');
+        require('../../src/index.ts');
 
         // Verify
         expect(hasFactoryStub.calledOnce).to.be.true;
@@ -63,7 +63,7 @@ describe('Storage Blob Extension Registration', () => {
         hasFactoryStub.returns(true);
 
         // Execute
-        require('../src/index');
+        require('../../src/index');
 
         // Verify
         expect(hasFactoryStub.calledOnce).to.be.true;
@@ -77,11 +77,11 @@ describe('Storage Blob Extension Registration', () => {
 
         // Verify
         try {
-            require('../src/index');
+            require('../../src/index');
             expect.fail('Should have thrown an error');
         } catch (error) {
             expect(error).to.be.instanceOf(Error);
-            expect((error as Error).message).to.include('Custom blob client initialization failed');
+            expect((error as Error).message).to.include('Blob client initialization failed');
         }
     });
 
@@ -91,7 +91,7 @@ describe('Storage Blob Extension Registration', () => {
         buildClientStub.returns({} as any);
 
         // Execute
-        require('../src/index');
+        require('../../src/index');
 
         // Get the factory function that was registered
         const factoryFn = registerFactoryStub.args[0]?.[0];

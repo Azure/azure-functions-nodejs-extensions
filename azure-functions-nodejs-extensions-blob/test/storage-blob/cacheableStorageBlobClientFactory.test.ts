@@ -1,7 +1,7 @@
 // Copyright (c) .NET Foundation. All rights reserved.
 // Licensed under the MIT License.
 
-import { StorageBlobClientOptions } from '@azure/functions';
+import { StorageBlobClientOptions } from '@azure/functions-extensions-base';
 import { expect } from 'chai';
 import { createHash } from 'crypto';
 import * as sinon from 'sinon';

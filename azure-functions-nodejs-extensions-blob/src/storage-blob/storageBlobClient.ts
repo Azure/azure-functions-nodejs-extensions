@@ -4,17 +4,30 @@
 import { BlobClient, ContainerClient, StoragePipelineOptions } from '@azure/storage-blob';
 import { StorageBlobServiceClientStrategy } from './storageBlobServiceClientStrategy';
 
+/**
+ * The `StorageBlobClient` class provides a client for interacting with Azure Blob Storage.
+ * It allows you to perform operations on blobs and containers within a specified storage account.
+ *
+ * @remarks
+ * This class is designed to be used in conjunction with the Azure Functions Extensions framework.
+ * It provides a simplified interface for working with Azure Blob Storage, allowing you to easily
+ * create, read, update, and delete blobs and containers.
+ */
 export class StorageBlobClient {
     private blobClient: BlobClient | undefined;
     private containerClient: ContainerClient | undefined;
     private disposed = false;
 
     /**
-     * Creates a new StorageBlobClient instance
+     * Initializes a new instance of the `StorageBlobClient` class.
      *
-     * @param strategyOrAccountUrl - The strategy to use for creating the BlobServiceClient or the account URL
-     * @param credentialOrOptions - The credential to use for au  thentication or storage pipeline options
-     * @param options - Storage pipeline options (optional, only used when the first parameter is an account URL)
+     * @param strategy - An implementation of the `StorageBlobServiceClientStrategy` interface,
+     *                   used to create the `BlobServiceClient`.
+     * @param containerName - The name of the container in the storage account.
+     * @param blobName - The name of the blob within the container.
+     * @param options - Optional storage pipeline options for configuring the client.
+     *
+     * @throws {Error} If the `containerName` or `blobName` is not provided, the respective client cannot be initialized.
      */
     constructor(
         strategy: StorageBlobServiceClientStrategy,

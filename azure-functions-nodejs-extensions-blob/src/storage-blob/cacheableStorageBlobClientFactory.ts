@@ -1,7 +1,7 @@
 // Copyright (c) .NET Foundation. All rights reserved.
 // Licensed under the MIT License.
 
-import { StorageBlobClientOptions } from '@azure/functions';
+import { StorageBlobClientOptions } from '@azure/functions-extensions-base';
 import { createHash } from 'crypto';
 import { ConnectionStringStrategy } from './connectionStringStrategy';
 import { ManagedIdentitySystemStrategy } from './managedIdentitySystemStrategy';
@@ -99,18 +99,17 @@ export class CacheableAzureStorageBlobClientFactory {
      * Creates the appropriate connection strategy based on the connection name and URL
      */
     static createConnectionStrategy(connectionName: string, connectionUrl: string): StorageBlobServiceClientStrategy {
-        // User-assigned managed identity takes precedence
+        // Check for system-assigned managed identity
+        if (isSystemBasedManagedIdentity(connectionName)) {
+            return new ManagedIdentitySystemStrategy(connectionUrl);
+        }
+        // Check User-assigned managed identity
         if (isUserBasedManagedIdentity(connectionName)) {
             const clientId = process.env[`${connectionName}__clientId`];
             if (!clientId) {
                 throw new Error(`Environment variable ${connectionName}__clientId is not defined.`);
             }
             return new ManagedIdentityUserStrategy(connectionUrl, clientId);
-        }
-
-        // Next, check for system-assigned managed identity
-        if (isSystemBasedManagedIdentity(connectionName)) {
-            return new ManagedIdentitySystemStrategy(connectionUrl);
         }
 
         // Default to connection string

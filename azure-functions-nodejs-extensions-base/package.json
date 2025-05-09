@@ -1,5 +1,5 @@
 {
-    "name": "@azure/functions-extensions-blob",
+    "name": "@azure/functions-extensions-base",
     "version": "0.1.0-preview",
     "sideEffects": true,
     "description": "Node.js Azure Storage Client extension implementations for Azure Functions",
@@ -12,7 +12,7 @@
     ],
     "author": "Microsoft",
     "license": "MIT",
-    "homepage": "https://github.com/Azure/azure-functions-nodejs-extensions-blob#readme",
+    "homepage": "https://github.com/Azure/azure-functions-nodejs-extensions-base#readme",
     "repository": {
         "type": "git",
         "url": "https://github.com/Azure/azure-functions-nodejs-extensions.git"
@@ -20,7 +20,7 @@
     "bugs": {
         "url": "https://github.com/Azure/azure-functions-nodejs-extensions/issues"
     },
-    "main": "./dist/azure-functions-extensions-blob.js",
+    "main": "./dist/azure-functions-extensions-base.js",
     "types": "types/index.d.ts",
     "files": [
         "dist/",
@@ -73,9 +73,5 @@
         "webpack": "^5.74.0",
         "webpack-cli": "^4.10.0"
     },
-    "dependencies": {
-        "@azure/identity": "^4.9.1",
-        "@azure/storage-blob": "^12.27.0",
-        "@azure/functions-extensions-base": "0.1.0-preview"
-    }
+    "dependencies": {}
 }

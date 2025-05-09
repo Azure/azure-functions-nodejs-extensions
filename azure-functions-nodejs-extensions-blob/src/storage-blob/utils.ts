@@ -50,6 +50,7 @@ export function isSystemBasedManagedIdentity(connectionName: string): boolean {
  * User-assigned managed identities in Azure Functions are identified by the presence of:
  * - ${connectionName}__clientId: The client ID of the user-assigned managed identity
  * - ${connectionName}__credential: The credential type being used
+ * - ${connectionName}__serviceUri: The storage service Uri.
  *
  * This differs from system-assigned managed identities, which don't require a client ID.
  *
