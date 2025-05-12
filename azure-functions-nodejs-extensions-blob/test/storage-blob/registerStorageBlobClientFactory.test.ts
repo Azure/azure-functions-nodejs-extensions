@@ -1,114 +1,146 @@
 // Copyright (c) .NET Foundation. All rights reserved.
 // Licensed under the MIT License.
 
-import { StorageBlobClientFactory, StorageBlobClientFactoryResolver } from '@azure/functions-extensions-base';
+import { ModelBindingData, ResourceFactoryResolver } from '@azure/functions-extensions-base';
 import { expect } from 'chai';
 import * as sinon from 'sinon';
 import { CacheableAzureStorageBlobClientFactory } from '../../src/storage-blob/cacheableStorageBlobClientFactory';
+import { registerStorageBlobClientFactory } from '../../src/storage-blob/registerStorageBlobClientFactory';
+import { StorageBlobClient } from '../../src/storage-blob/storageBlobClient';
 
-describe('Storage Blob Extension Registration', () => {
-    // Save original console methods to restore later
-    const originalConsoleLog = console.log;
-    const originalConsoleError = console.error;
-
-    let resolverStub: sinon.SinonStubbedInstance<StorageBlobClientFactoryResolver>;
-    let hasFactoryStub: sinon.SinonStub;
-    let registerFactoryStub: sinon.SinonStub;
+describe('registerStorageBlobClientFactory', () => {
+    // Stubs for dependencies
+    let resolverStub: sinon.SinonStubbedInstance<ResourceFactoryResolver>;
+    let hasResourceFactoryStub: sinon.SinonStub;
+    let registerResourceFactoryStub: sinon.SinonStub;
     let buildClientStub: sinon.SinonStub;
+    let mockStorageBlobClient: StorageBlobClient;
+
+    // Sample model binding data for testing
+    const sampleModelBindingData: ModelBindingData = {
+        content: Buffer.from(
+            JSON.stringify({
+                Connection: 'TestConnection',
+                ContainerName: 'test-container',
+                BlobName: 'test-blob',
+            })
+        ),
+        contentType: 'application/json',
+        source: 'test-source',
+        version: '1.0',
+    };
 
     beforeEach(() => {
-        // Reset module cache to ensure fresh import
-        delete require.cache[require.resolve('../../src/index')];
+        // Create mock client
+        mockStorageBlobClient = {
+            getBlobClient: sinon.stub(),
+            getContainerClient: sinon.stub(),
+            dispose: sinon.stub(),
+        } as unknown as StorageBlobClient;
 
-        // Create stubs for the resolver
-        resolverStub = sinon.createStubInstance(StorageBlobClientFactoryResolver);
-        hasFactoryStub = sinon.stub();
-        registerFactoryStub = sinon.stub<[StorageBlobClientFactory], void>();
+        // Set up stubs
+        resolverStub = {
+            hasResourceFactory: sinon.stub(),
+            registerResourceFactory: sinon.stub(),
+        } as unknown as sinon.SinonStubbedInstance<ResourceFactoryResolver>;
 
-        resolverStub.hasFactory = hasFactoryStub as sinon.SinonStub<[], boolean>;
-        resolverStub.registerFactory = registerFactoryStub as sinon.SinonStub<[StorageBlobClientFactory], void>;
+        // Extract the stubs for easier reference
+        // eslint-disable-next-line @typescript-eslint/unbound-method
+        hasResourceFactoryStub = resolverStub.hasResourceFactory as sinon.SinonStub;
+        // eslint-disable-next-line @typescript-eslint/unbound-method
+        registerResourceFactoryStub = resolverStub.registerResourceFactory as sinon.SinonStub;
 
-        // Stub the getInstance method
-        sinon
-            .stub(StorageBlobClientFactoryResolver, 'getInstance')
-            .returns(resolverStub as unknown as StorageBlobClientFactoryResolver);
+        // Stub the static method
+        sinon.stub(ResourceFactoryResolver, 'getInstance').returns(resolverStub as unknown as ResourceFactoryResolver);
 
-        // Stub the static method in CacheableAzureStorageBlobClientFactory
-        buildClientStub = sinon.stub(CacheableAzureStorageBlobClientFactory, 'buildClientFromModelBindingData');
+        // Stub CacheableAzureStorageBlobClientFactory.buildClientFromModelBindingData
+        buildClientStub = sinon
+            .stub(CacheableAzureStorageBlobClientFactory, 'buildClientFromModelBindingData')
+            .returns(mockStorageBlobClient);
     });
 
     afterEach(() => {
-        // Restore all stubbed methods
         sinon.restore();
-        console.log = originalConsoleLog;
-        console.error = originalConsoleError;
     });
 
-    // eslint-disable-next-line @typescript-eslint/require-await
-    it('should register a blob client factory when none exists', async () => {
-        // Setup
-        hasFactoryStub.returns(false);
-        buildClientStub.returns({} as any);
+    it('should register a blob client factory when none exists', () => {
+        // Arrange
+        hasResourceFactoryStub.returns(false);
 
-        // Execute
-        require('../../src/index.ts');
+        // Act
+        registerStorageBlobClientFactory();
 
-        // Verify
-        expect(hasFactoryStub.calledOnce).to.be.true;
-        expect(registerFactoryStub.calledOnce).to.be.true;
+        // Assert
+        expect(hasResourceFactoryStub.calledOnceWith('AzureStorageBlobs')).to.be.true;
+        expect(registerResourceFactoryStub.calledOnce).to.be.true;
+        expect(registerResourceFactoryStub.firstCall.args[0]).to.equal('AzureStorageBlobs');
+
+        // Verify the factory function
+        const factoryFn = registerResourceFactoryStub.firstCall.args[1];
+        expect(typeof factoryFn).to.equal('function');
+
+        // Call the factory function to verify it passes through to buildClientFromModelBindingData
+        factoryFn(sampleModelBindingData);
+        expect(buildClientStub.calledOnceWith(sampleModelBindingData)).to.be.true;
     });
 
     it('should skip registration when a factory is already registered', () => {
-        // Setup
-        hasFactoryStub.returns(true);
+        // Arrange
+        hasResourceFactoryStub.returns(true);
 
-        // Execute
-        require('../../src/index');
+        // Act
+        registerStorageBlobClientFactory();
 
-        // Verify
-        expect(hasFactoryStub.calledOnce).to.be.true;
-        expect(registerFactoryStub.called).to.be.false;
+        // Assert
+        expect(hasResourceFactoryStub.calledOnceWith('AzureStorageBlobs')).to.be.true;
+        expect(registerResourceFactoryStub.called).to.be.false;
     });
 
-    it('should throw error when factory registration fails', () => {
-        // Setup
-        hasFactoryStub.returns(false);
-        registerFactoryStub.throws(new Error('Registration failed'));
+    it('should propagate and enhance errors from ResourceFactoryResolver', () => {
+        // Arrange
+        hasResourceFactoryStub.throws(new Error('Resource resolver error'));
 
-        // Verify
+        // Act & Assert
         try {
-            require('../../src/index');
+            registerStorageBlobClientFactory();
             expect.fail('Should have thrown an error');
         } catch (error) {
-            expect(error).to.be.instanceOf(Error);
-            expect((error as Error).message).to.include('Blob client initialization failed');
+            const err = error as Error;
+            expect(err.message).to.include('Blob client initialization failed');
+            expect(err.message).to.include('Resource resolver error');
         }
     });
 
-    it('should correctly pass options to the client factory', () => {
-        // Setup
-        hasFactoryStub.returns(false);
-        buildClientStub.returns({} as any);
+    it('should propagate and handle non-Error exceptions', () => {
+        // Arrange
+        hasResourceFactoryStub.throws('String exception');
 
-        // Execute
-        require('../../src/index');
-
-        // Get the factory function that was registered
-        const factoryFn = registerFactoryStub.args[0]?.[0];
-        if (!factoryFn) {
-            throw new Error('Factory function is undefined');
+        // Act & Assert
+        try {
+            registerStorageBlobClientFactory();
+            expect.fail('Should have thrown an error');
+        } catch (error) {
+            const err = error as Error;
+            expect(err.message).to.include('Blob client initialization failed');
+            expect(err.message).to.include('String exception');
         }
+    });
 
-        // Create a mock options object
-        const testOptions = {
-            connection: 'test-connection',
-            containerName: 'test-container',
-        };
+    it('should correctly register factory that creates client instances', () => {
+        // Arrange
+        hasResourceFactoryStub.returns(false);
 
-        // Call the factory function with the options
-        factoryFn(testOptions);
+        // Act
+        registerStorageBlobClientFactory();
 
-        // Verify that buildClientFromModelBindingData was called with the right options
-        expect(buildClientStub.calledWith(testOptions)).to.be.true;
+        // Get the registered factory function
+        const factoryFn = registerResourceFactoryStub.firstCall.args[1];
+
+        // Call the factory function with model binding data
+        const resultClient = factoryFn(sampleModelBindingData);
+
+        // Assert
+        expect(resultClient).to.equal(mockStorageBlobClient);
+        expect(buildClientStub.calledOnceWith(sampleModelBindingData)).to.be.true;
     });
 });

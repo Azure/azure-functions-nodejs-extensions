@@ -64,3 +64,49 @@ export function isUserBasedManagedIdentity(connectionName: string): boolean {
         process.env[`${connectionName}__serviceUri`] !== undefined
     );
 }
+
+export type StorageBlobClientOptions = {
+    Connection: string;
+    ContainerName: string;
+    BlobName: string;
+};
+
+/**
+ * Type Guard to check if an object is of type BlobConnectionInfo
+ */
+// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+function isBlobConnectionDetails(obj: unknown): obj is StorageBlobClientOptions {
+    return (
+        obj !== null &&
+        typeof obj === 'object' &&
+        'Connection' in obj &&
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+        typeof (obj as any).Connection === 'string' &&
+        'ContainerName' in obj &&
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+        typeof (obj as any).ContainerName === 'string' &&
+        'BlobName' in obj &&
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+        typeof (obj as any).BlobName === 'string'
+    );
+}
+
+/**
+ * Function to parse JSON and determine its type
+ * @param jsonBuffer Bufer that holds the JSON string to parse
+ * @returns `BlobConnectionDetails`
+ */
+export function parseConnectionDetails(jsonBuffer: Buffer | null | undefined): StorageBlobClientOptions {
+    if (jsonBuffer === null || jsonBuffer === undefined) {
+        throw new Error('Connection details content is null or undefined');
+    }
+    const parsedObject: unknown = JSON.parse(jsonBuffer.toString());
+
+    if (isBlobConnectionDetails(parsedObject)) {
+        return parsedObject;
+    }
+    //TODO add other parser for different resource types
+    else {
+        throw new Error('Invalid connection info type');
+    }
+}

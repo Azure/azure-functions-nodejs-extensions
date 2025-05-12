@@ -1,5 +1,5 @@
 // Copyright (c) .NET Foundation. All rights reserved.
 // Licensed under the MIT License.
 
-export * from './storage';
-export * from './storageBlobClientFactoryResolver';
+export * from './resourceFactory';
+export * from './deferredBindingTypes';

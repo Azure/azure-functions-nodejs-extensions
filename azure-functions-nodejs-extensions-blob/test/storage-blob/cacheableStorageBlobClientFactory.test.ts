@@ -1,7 +1,7 @@
 // Copyright (c) .NET Foundation. All rights reserved.
 // Licensed under the MIT License.
 
-import { StorageBlobClientOptions } from '@azure/functions-extensions-base';
+import { ModelBindingData } from '@azure/functions-extensions-base';
 import { expect } from 'chai';
 import { createHash } from 'crypto';
 import * as sinon from 'sinon';
@@ -17,10 +17,17 @@ describe('CacheableAzureStorageBlobClientFactory', () => {
     let fromConnectionDetailsStub: sinon.SinonStub;
     let clock: sinon.SinonFakeTimers;
 
-    const testOptions: StorageBlobClientOptions = {
-        connection: 'TestConnection',
-        containerName: 'test-container',
-        blobName: 'test-blob',
+    const testOptions: utils.StorageBlobClientOptions = {
+        Connection: 'TestConnection',
+        ContainerName: 'test-container',
+        BlobName: 'test-blob',
+    };
+
+    const sampleData: ModelBindingData = {
+        content: Buffer.from(JSON.stringify(testOptions), 'utf-8'),
+        contentType: 'StorageBlobClient',
+        source: `https://${testOptions.Connection}.blob.core.windows.net/${testOptions.ContainerName}/${testOptions.BlobName}`,
+        version: '1.0',
     };
 
     beforeEach(() => {
@@ -58,20 +65,33 @@ describe('CacheableAzureStorageBlobClientFactory', () => {
     describe('buildClientFromModelBindingData', () => {
         it('should create a new client when not in cache', () => {
             // Act
-            const client = CacheableAzureStorageBlobClientFactory.buildClientFromModelBindingData(testOptions);
+            const client = CacheableAzureStorageBlobClientFactory.buildClientFromModelBindingData(sampleData);
 
             // Assert
             expect(fromConnectionDetailsStub.calledOnce).to.be.true;
             expect(client).to.equal(mockStorageBlobClient);
+
+            // Verify cache contains the new client
+            // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
+            const keyString = `${testOptions.Connection}|${testOptions.ContainerName}|${testOptions.BlobName}`;
+            const cacheKey = createHash('sha256').update(keyString).digest('hex').substring(0, 16);
+            const cache = Reflect.get(CacheableAzureStorageBlobClientFactory, 'clientCache') as Map<
+                string,
+                { client: StorageBlobClient }
+            >;
+            const cachedEntry = cache.get(cacheKey);
+
+            expect(cachedEntry).to.exist;
+            expect(cachedEntry!.client).to.equal(mockStorageBlobClient);
         });
 
         it('should return cached client when options match', () => {
             // Arrange - Create a client first
-            const firstClient = CacheableAzureStorageBlobClientFactory.buildClientFromModelBindingData(testOptions);
+            const firstClient = CacheableAzureStorageBlobClientFactory.buildClientFromModelBindingData(sampleData);
             fromConnectionDetailsStub.resetHistory(); // Reset call history
 
             // Act - Request client with same options
-            const secondClient = CacheableAzureStorageBlobClientFactory.buildClientFromModelBindingData(testOptions);
+            const secondClient = CacheableAzureStorageBlobClientFactory.buildClientFromModelBindingData(sampleData);
 
             // Assert
             expect(fromConnectionDetailsStub.called).to.be.false; // Should not create a new client
@@ -80,17 +100,17 @@ describe('CacheableAzureStorageBlobClientFactory', () => {
 
         it('should update lastUsed timestamp when retrieving from cache', () => {
             // Arrange
-            CacheableAzureStorageBlobClientFactory.buildClientFromModelBindingData(testOptions);
+            CacheableAzureStorageBlobClientFactory.buildClientFromModelBindingData(sampleData);
             const initialTime = Date.now();
 
             // Advance clock by 1000ms
             clock.tick(1000);
 
             // Act
-            CacheableAzureStorageBlobClientFactory.buildClientFromModelBindingData(testOptions);
+            CacheableAzureStorageBlobClientFactory.buildClientFromModelBindingData(sampleData);
 
             // Get cache key and check lastUsed time
-            const keyString = `${testOptions.connection}|${testOptions.containerName}|${testOptions.blobName}`;
+            const keyString = `${testOptions.Connection}|${testOptions.ContainerName}|${testOptions.BlobName}`;
 
             // Generate SHA-256 hash for better distribution and fixed length
             const cacheKey = createHash('sha256').update(keyString).digest('hex').substring(0, 16);
@@ -109,8 +129,14 @@ describe('CacheableAzureStorageBlobClientFactory', () => {
 
         it('should create different cache entries for different options', () => {
             // Arrange
-            const options1 = { ...testOptions };
-            const options2 = { ...testOptions, blobName: 'different-blob' };
+            const testOptions1: utils.StorageBlobClientOptions = {
+                Connection: 'TestConnection',
+                ContainerName: 'test-container',
+                BlobName: 'different-blob',
+            };
+
+            const options1 = { ...sampleData };
+            const options2 = { ...sampleData, content: Buffer.from(JSON.stringify(testOptions1), 'utf-8') };
 
             // Act
             CacheableAzureStorageBlobClientFactory.buildClientFromModelBindingData(options1);
@@ -120,64 +146,6 @@ describe('CacheableAzureStorageBlobClientFactory', () => {
             expect(fromConnectionDetailsStub.calledTwice).to.be.true; // Should create two clients
         });
     });
-    /*
-    describe('evictLeastRecentlyUsedClient', () => {
-        it('should evict the least recently used client when cache is full', () => {
-            // Arrange - Create MAX_CACHE_SIZE clients with different options
-            const maxCacheSize = Reflect.get(CacheableAzureStorageBlobClientFactory, 'MAX_CACHE_SIZE');
-            const clientOptions: StorageBlobClientOptions[] = [];
-            const mockClients: StorageBlobClient[] = [];
-
-            // Create unique client options and mock clients
-            for (let i = 0; i <= maxCacheSize; i++) {
-                const options = { ...testOptions, blobName: `test-blob-${i}` };
-                clientOptions.push(options);
-
-                const mockClient = {
-                    getBlobClient: sinon.stub(),
-                    getContainerClient: sinon.stub(),
-                    dispose: sinon.stub(),
-                } as unknown as StorageBlobClient;
-                mockClients.push(mockClient);
-
-                // Setup stub to return the specific mock client for this option
-                fromConnectionDetailsStub.withArgs(options).returns(mockClient);
-            }
-
-            // Create clients in sequence, updating timestamps
-            for (let i = 0; i < maxCacheSize; i++) {
-                const options = clientOptions[i] as StorageBlobClientOptions;
-                const client = CacheableAzureStorageBlobClientFactory.buildClientFromModelBindingData(options);
-                expect(client).to.equal(mockClients[i]);
-                clock.tick(1000); // Advance clock by 1 second between each client
-            }
-
-            const optionsFirstClient = clientOptions[0] as StorageBlobClientOptions;
-            // Access the first client again to make it no longer the oldest
-            CacheableAzureStorageBlobClientFactory.buildClientFromModelBindingData(optionsFirstClient);
-
-            // Now the second client should be the oldest
-
-            // Act - Add one more client to trigger eviction
-            const optionsOfMaxCacheSize = clientOptions[maxCacheSize] as StorageBlobClientOptions;
-            CacheableAzureStorageBlobClientFactory.buildClientFromModelBindingData(optionsOfMaxCacheSize);
-
-            const mockClient1 = mockClients[1] as StorageBlobClient;
-            const mockClient0 = mockClients[0] as StorageBlobClient;
-            // Assert
-            // Client 1 should still be in cache, client 2 should have been evicted
-            expect((mockClient1.dispose as sinon.SinonStub).called).to.be.true; // Client 1  should be disposed
-            expect((mockClient0.dispose as sinon.SinonStub).called).to.be.false; // Client 0 should not be disposed
-
-            // Verify client 1 is gone by requesting it again (should create a new one)
-            fromConnectionDetailsStub.resetHistory();
-
-            const optionsSecondClient = clientOptions[1] as StorageBlobClientOptions;
-            CacheableAzureStorageBlobClientFactory.buildClientFromModelBindingData(optionsSecondClient);
-            expect(fromConnectionDetailsStub.calledOnce).to.be.true; // Should create a new client
-        });
-    });
-    */
 
     describe('evictLeastRecentlyUsedClient', () => {
         it('should evict the least recently used client when cache is full', () => {
@@ -194,8 +162,8 @@ describe('CacheableAzureStorageBlobClientFactory', () => {
 
             // Set up the stub to return clients based on blobName
             fromConnectionDetailsStub.callsFake(
-                (mockStrategy: StorageBlobServiceClientStrategy, options: StorageBlobClientOptions) => {
-                    const blobNameParts = options.blobName?.split('-') || [];
+                (mockStrategy: StorageBlobServiceClientStrategy, options: utils.StorageBlobClientOptions) => {
+                    const blobNameParts = options.BlobName?.split('-') || [];
                     const clientIndex = blobNameParts.length > 2 ? parseInt(blobNameParts[2] as string, 10) : 0;
                     return mockClients[clientIndex];
                 }
@@ -213,9 +181,15 @@ describe('CacheableAzureStorageBlobClientFactory', () => {
 
             // Add clients to the cache in order, advancing time between each
             for (let i = 0; i < maxCacheSize; i++) {
+                const testOptions1: utils.StorageBlobClientOptions = {
+                    Connection: 'TestConnection',
+                    ContainerName: 'test-container',
+                    BlobName: `test-blob-${i}`,
+                };
+
                 const options = {
                     ...testOptions,
-                    blobName: `test-blob-${i}`,
+                    content: Buffer.from(JSON.stringify(testOptions1), 'utf-8'),
                 };
                 const client = CacheableAzureStorageBlobClientFactory.buildClientFromModelBindingData(options);
                 const clientId = (client as unknown as { id: number }).id;
@@ -226,18 +200,32 @@ describe('CacheableAzureStorageBlobClientFactory', () => {
                 clock.tick(1000);
             }
 
+            const testOptions1: utils.StorageBlobClientOptions = {
+                Connection: 'TestConnection',
+                ContainerName: 'test-container',
+                BlobName: 'test-blob-0',
+            };
+
             // Update client 0's timestamp so it's no longer the oldest
             CacheableAzureStorageBlobClientFactory.buildClientFromModelBindingData({
                 ...testOptions,
-                blobName: `test-blob-0`,
+                content: Buffer.from(JSON.stringify(testOptions1), 'utf-8'),
             });
 
             // At this point, client 1 should be the least recently used
 
             // Act - Add one more client to trigger eviction
+
+            const testOptions2: utils.StorageBlobClientOptions = {
+                Connection: 'TestConnection',
+                ContainerName: 'test-container',
+                BlobName: `test-blob-${maxCacheSize as string}`,
+            };
+
+            // Update client 0's timestamp so it's no longer the oldest
             CacheableAzureStorageBlobClientFactory.buildClientFromModelBindingData({
                 ...testOptions,
-                blobName: `test-blob-${maxCacheSize as string}`,
+                content: Buffer.from(JSON.stringify(testOptions2), 'utf-8'),
             });
 
             const client1 = mockClients[1] as StorageBlobClient;
@@ -253,9 +241,17 @@ describe('CacheableAzureStorageBlobClientFactory', () => {
 
             // Verify client 1 is gone by requesting it again
             fromConnectionDetailsStub.resetHistory();
+
+            const testOptions3: utils.StorageBlobClientOptions = {
+                Connection: 'TestConnection',
+                ContainerName: 'test-container',
+                BlobName: `test-blob-1`,
+            };
+
+            // Update client 0's timestamp so it's no longer the oldest
             CacheableAzureStorageBlobClientFactory.buildClientFromModelBindingData({
                 ...testOptions,
-                blobName: `test-blob-1`,
+                content: Buffer.from(JSON.stringify(testOptions3), 'utf-8'),
             });
 
             expect(fromConnectionDetailsStub.calledOnce).to.be.true,
@@ -273,8 +269,8 @@ describe('CacheableAzureStorageBlobClientFactory', () => {
                 CacheableAzureStorageBlobClientFactory,
                 'fromConnectionDetailsToBlobStorageClient'
             );
-            fromConnectionDetailsStub.callsFake((options: StorageBlobClientOptions) => {
-                const clientIndex = parseInt((options.blobName || '').split('-')[1] || '0');
+            fromConnectionDetailsStub.callsFake((options: utils.StorageBlobClientOptions) => {
+                const clientIndex = parseInt((options.BlobName || '').split('-')[1] || '0');
                 return mockClients[clientIndex];
             });
 
@@ -290,18 +286,32 @@ describe('CacheableAzureStorageBlobClientFactory', () => {
 
             // Add maxCacheSize clients to fill the cache
             for (let i = 0; i < maxCacheSize; i++) {
+                const testOptions3: utils.StorageBlobClientOptions = {
+                    Connection: 'TestConnection',
+                    ContainerName: 'test-container',
+                    BlobName: `blob-${i}`,
+                };
+
+                // Update client 0's timestamp so it's no longer the oldest
                 CacheableAzureStorageBlobClientFactory.buildClientFromModelBindingData({
                     ...testOptions,
-                    blobName: `blob-${i}`,
+                    content: Buffer.from(JSON.stringify(testOptions3), 'utf-8'),
                 });
                 clock.tick(1000);
             }
 
             // Act - Add 3 more clients (should evict clients 0, 1, and 2)
             for (let i = maxCacheSize; i <= maxCacheSize + 2; i++) {
+                const testOptions3: utils.StorageBlobClientOptions = {
+                    Connection: 'TestConnection',
+                    ContainerName: 'test-container',
+                    BlobName: `blob-${i}`,
+                };
+
+                // Update client 0's timestamp so it's no longer the oldest
                 CacheableAzureStorageBlobClientFactory.buildClientFromModelBindingData({
                     ...testOptions,
-                    blobName: `blob-${i}`,
+                    content: Buffer.from(JSON.stringify(testOptions3), 'utf-8'),
                 });
             }
 
@@ -323,8 +333,19 @@ describe('CacheableAzureStorageBlobClientFactory', () => {
             fromConnectionDetailsStub.onFirstCall().returns(mockClient1);
             fromConnectionDetailsStub.onSecondCall().returns(mockClient2);
 
-            const options1 = { ...testOptions, blobName: 'blob1' };
-            const options2 = { ...testOptions, blobName: 'blob2' };
+            const testOptions1: utils.StorageBlobClientOptions = {
+                Connection: 'TestConnection',
+                ContainerName: 'test-container',
+                BlobName: `blob1`,
+            };
+            const testOptions2: utils.StorageBlobClientOptions = {
+                Connection: 'TestConnection',
+                ContainerName: 'test-container',
+                BlobName: `blob2`,
+            };
+
+            const options1 = { ...testOptions, content: Buffer.from(JSON.stringify(testOptions1), 'utf-8') };
+            const options2 = { ...testOptions, content: Buffer.from(JSON.stringify(testOptions2), 'utf-8') };
 
             CacheableAzureStorageBlobClientFactory.buildClientFromModelBindingData(options1);
             CacheableAzureStorageBlobClientFactory.buildClientFromModelBindingData(options2);
@@ -351,7 +372,7 @@ describe('CacheableAzureStorageBlobClientFactory', () => {
 
             // Act & Assert
             expect(() => {
-                CacheableAzureStorageBlobClientFactory.buildClientFromModelBindingData(testOptions);
+                CacheableAzureStorageBlobClientFactory.buildClientFromModelBindingData(sampleData);
             }).to.throw(`${expectedError.message}`);
         });
     });
