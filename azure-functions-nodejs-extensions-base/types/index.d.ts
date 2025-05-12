@@ -2,4 +2,3 @@
 // Licensed under the MIT License.
 
 export * from './resourceFactory';
-export * from './deferredBindingTypes';

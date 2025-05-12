@@ -6,7 +6,9 @@ import {
     getConnectionString,
     isSystemBasedManagedIdentity,
     isUserBasedManagedIdentity,
+    parseConnectionDetails,
 } from '../../src/storage-blob/utils';
+import { StorageBlobClientOptions } from 'types/storage';
 
 describe('Storage Blob Utils', () => {
     // Store original env vars
@@ -166,6 +168,151 @@ describe('Storage Blob Utils', () => {
         it('should return false when all are missing', () => {
             // Act & Assert
             expect(isUserBasedManagedIdentity('TestConnection')).to.be.false;
+        });
+    });
+});
+
+describe('Utils - parseConnectionDetails', () => {
+    describe('successful parsing', () => {
+        it('should correctly parse valid JSON with all required properties', () => {
+            // Arrange
+            const validJson = JSON.stringify({
+                Connection: 'TestConnection',
+                ContainerName: 'test-container',
+                BlobName: 'test-blob.txt',
+            });
+            const buffer = Buffer.from(validJson);
+
+            // Act
+            const result = parseConnectionDetails(buffer);
+
+            // Assert
+            expect(result).to.deep.equal({
+                Connection: 'TestConnection',
+                ContainerName: 'test-container',
+                BlobName: 'test-blob.txt',
+            });
+        });
+
+        it('should parse JSON with additional properties', () => {
+            // Arrange
+            const jsonWithExtra = JSON.stringify({
+                Connection: 'TestConnection',
+                ContainerName: 'test-container',
+                BlobName: 'test-blob.txt',
+                ExtraProperty: 'should be included',
+            });
+            const buffer = Buffer.from(jsonWithExtra);
+
+            // Act
+            const result = parseConnectionDetails(buffer) as StorageBlobClientOptions & { ExtraProperty: string };
+
+            // Assert
+            expect(result.Connection).to.equal('TestConnection');
+            expect(result.ContainerName).to.equal('test-container');
+            expect(result.BlobName).to.equal('test-blob.txt');
+            expect(result.ExtraProperty).to.equal('should be included');
+        });
+
+        it('should handle empty JSON object', () => {
+            // Arrange
+            const emptyJson = JSON.stringify({});
+            const buffer = Buffer.from(emptyJson);
+
+            // Act
+            const result = parseConnectionDetails(buffer);
+
+            // Assert
+            expect(result).to.deep.equal({});
+        });
+    });
+
+    describe('error handling', () => {
+        it('should throw error when buffer is null', () => {
+            // Act & Assert
+            expect(() => parseConnectionDetails(null)).to.throw('Connection details content is null or undefined');
+        });
+
+        it('should throw error when buffer is undefined', () => {
+            // Act & Assert
+            expect(() => parseConnectionDetails(undefined)).to.throw('Connection details content is null or undefined');
+        });
+
+        it('should throw error when JSON is invalid', () => {
+            // Arrange
+            const invalidJson = Buffer.from('{invalid: json}');
+
+            // Act & Assert
+            expect(() => parseConnectionDetails(invalidJson)).to.throw(SyntaxError);
+        });
+
+        it('should throw error when buffer contains non-JSON data', () => {
+            // Arrange
+            const nonJsonBuffer = Buffer.from('This is not JSON');
+
+            // Act & Assert
+            expect(() => parseConnectionDetails(nonJsonBuffer)).to.throw(SyntaxError);
+        });
+    });
+
+    describe('edge cases', () => {
+        it('should handle JSON with empty string values', () => {
+            // Arrange
+            const emptyValuesJson = JSON.stringify({
+                Connection: '',
+                ContainerName: '',
+                BlobName: '',
+            });
+            const buffer = Buffer.from(emptyValuesJson);
+
+            // Act
+            const result = parseConnectionDetails(buffer);
+
+            // Assert
+            expect(result).to.deep.equal({
+                Connection: '',
+                ContainerName: '',
+                BlobName: '',
+            });
+        });
+
+        it('should handle JSON with Unicode characters', () => {
+            // Arrange
+            const unicodeJson = JSON.stringify({
+                Connection: 'TestConnection',
+                ContainerName: 'test-контейнер',
+                BlobName: '测试文件.txt',
+            });
+            const buffer = Buffer.from(unicodeJson);
+
+            // Act
+            const result = parseConnectionDetails(buffer);
+
+            // Assert
+            expect(result).to.deep.equal({
+                Connection: 'TestConnection',
+                ContainerName: 'test-контейнер',
+                BlobName: '测试文件.txt',
+            });
+        });
+
+        it('should handle JSON with missing properties', () => {
+            // Arrange
+            const incompleteJson = JSON.stringify({
+                Connection: 'TestConnection',
+                // Missing ContainerName and BlobName
+            });
+            const buffer = Buffer.from(incompleteJson);
+
+            // Act
+            const result = parseConnectionDetails(buffer);
+
+            // Assert
+            expect(result).to.deep.equal({
+                Connection: 'TestConnection',
+            });
+            expect(result.ContainerName).to.be.undefined;
+            expect(result.BlobName).to.be.undefined;
         });
     });
 });

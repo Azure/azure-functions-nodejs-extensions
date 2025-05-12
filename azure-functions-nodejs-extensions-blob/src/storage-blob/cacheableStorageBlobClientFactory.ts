@@ -3,6 +3,7 @@
 
 import { ModelBindingData } from '@azure/functions-extensions-base';
 import { createHash } from 'crypto';
+import { StorageBlobClientOptions } from 'types/storage';
 import { ConnectionStringStrategy } from './connectionStringStrategy';
 import { ManagedIdentitySystemStrategy } from './managedIdentitySystemStrategy';
 import { ManagedIdentityUserStrategy } from './managedIdentityUserStrategy';
@@ -13,7 +14,6 @@ import {
     isSystemBasedManagedIdentity,
     isUserBasedManagedIdentity,
     parseConnectionDetails,
-    StorageBlobClientOptions,
 } from './utils';
 
 /**

@@ -7,3 +7,9 @@ export interface StorageBlobClient {
     blobClient: BlobClient;
     containerClient: ContainerClient;
 }
+
+type StorageBlobClientOptions = {
+    Connection: string;
+    ContainerName: string;
+    BlobName: string;
+};

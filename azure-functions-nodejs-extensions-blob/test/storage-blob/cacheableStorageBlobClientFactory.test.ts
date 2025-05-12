@@ -9,6 +9,7 @@ import { CacheableAzureStorageBlobClientFactory } from '../../src/storage-blob/c
 import { StorageBlobClient } from '../../src/storage-blob/storageBlobClient';
 import { StorageBlobServiceClientStrategy } from '../../src/storage-blob/storageBlobServiceClientStrategy';
 import * as utils from '../../src/storage-blob/utils';
+import { StorageBlobClientOptions } from 'types/storage';
 
 describe('CacheableAzureStorageBlobClientFactory', () => {
     // Mocks
@@ -17,7 +18,7 @@ describe('CacheableAzureStorageBlobClientFactory', () => {
     let fromConnectionDetailsStub: sinon.SinonStub;
     let clock: sinon.SinonFakeTimers;
 
-    const testOptions: utils.StorageBlobClientOptions = {
+    const testOptions: StorageBlobClientOptions = {
         Connection: 'TestConnection',
         ContainerName: 'test-container',
         BlobName: 'test-blob',
@@ -129,7 +130,7 @@ describe('CacheableAzureStorageBlobClientFactory', () => {
 
         it('should create different cache entries for different options', () => {
             // Arrange
-            const testOptions1: utils.StorageBlobClientOptions = {
+            const testOptions1: StorageBlobClientOptions = {
                 Connection: 'TestConnection',
                 ContainerName: 'test-container',
                 BlobName: 'different-blob',
@@ -162,7 +163,7 @@ describe('CacheableAzureStorageBlobClientFactory', () => {
 
             // Set up the stub to return clients based on blobName
             fromConnectionDetailsStub.callsFake(
-                (mockStrategy: StorageBlobServiceClientStrategy, options: utils.StorageBlobClientOptions) => {
+                (mockStrategy: StorageBlobServiceClientStrategy, options: StorageBlobClientOptions) => {
                     const blobNameParts = options.BlobName?.split('-') || [];
                     const clientIndex = blobNameParts.length > 2 ? parseInt(blobNameParts[2] as string, 10) : 0;
                     return mockClients[clientIndex];
@@ -181,7 +182,7 @@ describe('CacheableAzureStorageBlobClientFactory', () => {
 
             // Add clients to the cache in order, advancing time between each
             for (let i = 0; i < maxCacheSize; i++) {
-                const testOptions1: utils.StorageBlobClientOptions = {
+                const testOptions1: StorageBlobClientOptions = {
                     Connection: 'TestConnection',
                     ContainerName: 'test-container',
                     BlobName: `test-blob-${i}`,
@@ -200,7 +201,7 @@ describe('CacheableAzureStorageBlobClientFactory', () => {
                 clock.tick(1000);
             }
 
-            const testOptions1: utils.StorageBlobClientOptions = {
+            const testOptions1: StorageBlobClientOptions = {
                 Connection: 'TestConnection',
                 ContainerName: 'test-container',
                 BlobName: 'test-blob-0',
@@ -216,7 +217,7 @@ describe('CacheableAzureStorageBlobClientFactory', () => {
 
             // Act - Add one more client to trigger eviction
 
-            const testOptions2: utils.StorageBlobClientOptions = {
+            const testOptions2: StorageBlobClientOptions = {
                 Connection: 'TestConnection',
                 ContainerName: 'test-container',
                 BlobName: `test-blob-${maxCacheSize as string}`,
@@ -242,7 +243,7 @@ describe('CacheableAzureStorageBlobClientFactory', () => {
             // Verify client 1 is gone by requesting it again
             fromConnectionDetailsStub.resetHistory();
 
-            const testOptions3: utils.StorageBlobClientOptions = {
+            const testOptions3: StorageBlobClientOptions = {
                 Connection: 'TestConnection',
                 ContainerName: 'test-container',
                 BlobName: `test-blob-1`,
@@ -269,7 +270,7 @@ describe('CacheableAzureStorageBlobClientFactory', () => {
                 CacheableAzureStorageBlobClientFactory,
                 'fromConnectionDetailsToBlobStorageClient'
             );
-            fromConnectionDetailsStub.callsFake((options: utils.StorageBlobClientOptions) => {
+            fromConnectionDetailsStub.callsFake((options: StorageBlobClientOptions) => {
                 const clientIndex = parseInt((options.BlobName || '').split('-')[1] || '0');
                 return mockClients[clientIndex];
             });
@@ -286,7 +287,7 @@ describe('CacheableAzureStorageBlobClientFactory', () => {
 
             // Add maxCacheSize clients to fill the cache
             for (let i = 0; i < maxCacheSize; i++) {
-                const testOptions3: utils.StorageBlobClientOptions = {
+                const testOptions3: StorageBlobClientOptions = {
                     Connection: 'TestConnection',
                     ContainerName: 'test-container',
                     BlobName: `blob-${i}`,
@@ -302,7 +303,7 @@ describe('CacheableAzureStorageBlobClientFactory', () => {
 
             // Act - Add 3 more clients (should evict clients 0, 1, and 2)
             for (let i = maxCacheSize; i <= maxCacheSize + 2; i++) {
-                const testOptions3: utils.StorageBlobClientOptions = {
+                const testOptions3: StorageBlobClientOptions = {
                     Connection: 'TestConnection',
                     ContainerName: 'test-container',
                     BlobName: `blob-${i}`,
@@ -333,12 +334,12 @@ describe('CacheableAzureStorageBlobClientFactory', () => {
             fromConnectionDetailsStub.onFirstCall().returns(mockClient1);
             fromConnectionDetailsStub.onSecondCall().returns(mockClient2);
 
-            const testOptions1: utils.StorageBlobClientOptions = {
+            const testOptions1: StorageBlobClientOptions = {
                 Connection: 'TestConnection',
                 ContainerName: 'test-container',
                 BlobName: `blob1`,
             };
-            const testOptions2: utils.StorageBlobClientOptions = {
+            const testOptions2: StorageBlobClientOptions = {
                 Connection: 'TestConnection',
                 ContainerName: 'test-container',
                 BlobName: `blob2`,
