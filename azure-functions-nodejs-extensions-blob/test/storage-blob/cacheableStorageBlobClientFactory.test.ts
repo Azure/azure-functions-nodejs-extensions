@@ -5,11 +5,11 @@ import { ModelBindingData } from '@azure/functions-extensions-base';
 import { expect } from 'chai';
 import { createHash } from 'crypto';
 import * as sinon from 'sinon';
+import { StorageBlobClientOptions } from 'types/storage';
 import { CacheableAzureStorageBlobClientFactory } from '../../src/storage-blob/cacheableStorageBlobClientFactory';
 import { StorageBlobClient } from '../../src/storage-blob/storageBlobClient';
 import { StorageBlobServiceClientStrategy } from '../../src/storage-blob/storageBlobServiceClientStrategy';
 import * as utils from '../../src/storage-blob/utils';
-import { StorageBlobClientOptions } from 'types/storage';
 
 describe('CacheableAzureStorageBlobClientFactory', () => {
     // Mocks

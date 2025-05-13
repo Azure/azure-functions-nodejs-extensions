@@ -2,13 +2,13 @@
 // Licensed under the MIT License.
 
 import { expect } from 'chai';
+import { StorageBlobClientOptions } from 'types/storage';
 import {
     getConnectionString,
     isSystemBasedManagedIdentity,
     isUserBasedManagedIdentity,
     parseConnectionDetails,
 } from '../../src/storage-blob/utils';
-import { StorageBlobClientOptions } from 'types/storage';
 
 describe('Storage Blob Utils', () => {
     // Store original env vars
