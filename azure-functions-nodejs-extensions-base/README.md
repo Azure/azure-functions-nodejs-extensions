@@ -1,6 +1,8 @@
 # Azure Functions Node.js Extensions Base
 
-The Azure Functions Node.js Extensions Base Library provides core interfaces, classes, and utilities for building extension components for Azure Functions in JavaScript and TypeScript.
+The Azure Functions Node.js Extensions Base Library provides core interfaces, classes, and utilities for building extension components for Azure Functions in JavaScript and TypeScript to recognize and bind to SDK types. **It is not intended for direct use**. Instead, please reference one of the extending packages:
+
+[@azure/functions-extensions-bindings-blob](https://github.com/Azure/azure-functions-nodejs-extensions/tree/main/azure-functions-nodejs-extensions-blob)
 
 ## Features
 
@@ -9,102 +11,11 @@ The Azure Functions Node.js Extensions Base Library provides core interfaces, cl
 -   **Type-Safe Bindings**: Type definitions for supported Azure binding types
 -   **Extension Registration**: Foundation for registering extensions in Azure Functions
 
-## Getting Started
-
-To use this library in your Azure Functions project, follow these steps:
-
-1. **Install the package**:
-
-    ```bash
-    npm install @azure/functions-extensions-base
-    ```
-
-2. **Import and use the components**:
-
-    ```javascript
-    import { resourceFactoryResolver, ModelBindingData } from '@azure/functions-extensions-base';
-    // Register a factory for creating Azure Storage clients
-    resourceFactoryResolver.registerResourceFactory('AzureStorageBlobs', (modelBindingData: ModelBindingData) => {
-        // Create and return storage client
-        return new StorageBlobClient(/* configuration from modelBindingData */);
-    });
-    ```
-
-3. **Creating a Client with Resource Factory Resolver**
-
-```javascript
-import { resourceFactoryResolver, ModelBindingData } from '@azure/functions-extensions-base';
-
-// Client code to get a client instance
-const modelBindingData: ModelBindingData = {
-    content: Buffer.from(
-        JSON.stringify({
-            /* connection details */
-        })
-    ),
-    contentType: 'application/json',
-    source: 'connection-string-source',
-};
-
-const storageClient = resourceFactoryResolver.createClient('AzureStorageBlobs', modelBindingData);
-```
-
-4. **Checking for Factory Registration**
-
-```javascript
-import { resourceFactoryResolver } from '@azure/functions-extensions-base';
-
-// Check if a factory is registered
-if (resourceFactoryResolver.hasResourceFactory('AzureStorageBlobs')) {
-    console.log('Storage Blob client factory is registered');
-}
-```
-
-## API Reference
-
-**ResourceFactoryResolver:**
-The ResourceFactoryResolver is a singleton class that manages resource factory registrations.
-
-```javascript
-// Get the singleton instance
-const resolver = resourceFactoryResolver;
-
-// Register a factory
-resolver.registerResourceFactory(resourceType: string, factory: ResourceFactory): void
-
-// Check if factory exists
-resolver.hasResourceFactory(resourceType: string): boolean
-
-// Create client instance
-resolver.createClient(resourceType: string, modelBindingData: ModelBindingData): unknown
-```
-
-**ModelBindingData:**
-Interface for data used in resource binding.
-
-```javascript
-interface ModelBindingData {
-    content?: Buffer | null;
-    contentType?: string | null;
-    source?: string | null;
-    version?: string | null;
-}
-```
-
 ## Integration with Azure Functions
 
 This library serves as a foundation for Azure Functions extensions that provide additional bindings or integration capabilities. For examples of extensions built on this library, see:
 
--   @azure/functions-extensions-blob
--   @azure/functions-extensions-servicebus
-
-## Contributing
-
-Contributions are welcome! Please follow these steps:
-
-1. Fork the repository.
-2. Create a new branch for your feature or bug fix.
-3. Submit a pull request with a detailed description of your changes.
+-   [@azure/functions-extensions-bindings-blob](https://github.com/Azure/azure-functions-nodejs-extensions/tree/main/azure-functions-nodejs-extensions-blob)
 
 ## License
 
