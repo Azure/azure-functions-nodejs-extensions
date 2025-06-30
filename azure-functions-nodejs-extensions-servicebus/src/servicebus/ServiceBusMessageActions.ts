@@ -18,23 +18,37 @@ import {
     SettlementServiceClient,
 } from '../../types/settlement-types';
 import { createGrpcClient } from '../grpcClientFactory';
+import { GrpcUriBuilder } from '../util/grpcUriBuilder';
 
 const PROTO_PATH = path.join(__dirname, '/proto/settlement.proto');
 
 // Client implementation with Promise-based methods
 export class ServiceBusMessageActions implements IServiceBusMessageActions {
+    private static instance: ServiceBusMessageActions | null = null;
     private client: SettlementServiceClient;
 
-    constructor(address: string, grpcMaxMessageLength: number, credentials?: grpc.ChannelCredentials) {
+    private constructor() {
+        console.log('In Constructor of ServiceBusMessageActions');
+        const { uri, grpcMaxMessageLength } = GrpcUriBuilder.build();
         this.client = createGrpcClient<SettlementServiceClient>({
             protoPath: PROTO_PATH,
             serviceName: 'Settlement',
-            address,
-            credentials: credentials || grpc.credentials.createInsecure(),
+            address: uri,
+            credentials: grpc.credentials.createInsecure(),
             grpcMaxMessageLength,
         });
     }
 
+    static getInstance(): ServiceBusMessageActions {
+        console.log('In getInstance of ServiceBusMessageActions');
+        if (!ServiceBusMessageActions.instance) {
+            console.log('Entered Just Once ServiceBusMessageActions');
+            ServiceBusMessageActions.instance = new ServiceBusMessageActions();
+        }
+
+        console.log('Returning ServiceBusMessageActions');
+        return ServiceBusMessageActions.instance;
+    }
     /**
      * Completes (settles) the specified message, removing it from the queue or subscription.
      *

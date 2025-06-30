@@ -8,7 +8,6 @@ import { ServiceBusReceivedMessage } from '@azure/service-bus';
 import rhea = require('rhea');
 import LongActual from 'long';
 import { ServiceBusMessageManager } from '../../types';
-import { GrpcUriBuilder } from '../util/grpcUriBuilder';
 import { ServiceBusMessageDecoder } from '../util/serviceBusMessageDecoder';
 import { ServiceBusMessageActions } from './ServiceBusMessageActions';
 
@@ -27,8 +26,7 @@ export class AzureServiceBusMessageFactory {
     static buildServiceBusMessageFromModelBindingData(
         modelBindingData: ModelBindingData | ModelBindingData[]
     ): ServiceBusMessageManager {
-        const { uri, grpcMaxMessageLength } = GrpcUriBuilder.build();
-        const client = new ServiceBusMessageActions(uri, grpcMaxMessageLength);
+        const client = ServiceBusMessageActions.getInstance();
 
         const toMessage = (data: ModelBindingData) => {
             if (!data.content) {
