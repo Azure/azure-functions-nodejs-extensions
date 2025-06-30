@@ -7,10 +7,11 @@ import { AzureServiceBusMessageFactory } from './azureServiceBusMessageFactory';
 const AZURE_SERVICE_BUS = 'AzureServiceBusReceivedMessage';
 export function registerServiceBusMessageFactory(): void {
     try {
+        const resourceFactoryResolver = ResourceFactoryResolver.getInstance();
         // Check if a factory is already registered to avoid conflicts
-        if (!ResourceFactoryResolver.getInstance().hasResourceFactory(AZURE_SERVICE_BUS)) {
+        if (!resourceFactoryResolver.hasResourceFactory(AZURE_SERVICE_BUS)) {
             console.log('There is noresolver for AzureServiceBusReceivedMessage');
-            ResourceFactoryResolver.getInstance().registerResourceFactory(
+            resourceFactoryResolver.registerResourceFactory(
                 AZURE_SERVICE_BUS,
                 (modelBindingData: ModelBindingData | ModelBindingData[]) => {
                     return AzureServiceBusMessageFactory.buildServiceBusMessageFromModelBindingData(modelBindingData);

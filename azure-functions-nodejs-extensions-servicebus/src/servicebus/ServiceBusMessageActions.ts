@@ -40,13 +40,9 @@ export class ServiceBusMessageActions implements IServiceBusMessageActions {
     }
 
     static getInstance(): ServiceBusMessageActions {
-        console.log('In getInstance of ServiceBusMessageActions');
         if (!ServiceBusMessageActions.instance) {
-            console.log('Entered Just Once ServiceBusMessageActions');
             ServiceBusMessageActions.instance = new ServiceBusMessageActions();
         }
-
-        console.log('Returning ServiceBusMessageActions');
         return ServiceBusMessageActions.instance;
     }
     /**
@@ -303,5 +299,12 @@ export class ServiceBusMessageActions implements IServiceBusMessageActions {
                 }
             );
         });
+    }
+
+    /**
+     * Resets the singleton instance (for testing purposes).
+     */
+    static resetInstance(): void {
+        ServiceBusMessageActions.instance = null;
     }
 }

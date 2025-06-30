@@ -12,7 +12,7 @@ export class ServiceBusMessageDecoder {
      * @returns An object containing the decoded message and the lock token
      */
     static decode(content: Buffer): { decodedMessage: rhea.Message; lockToken: string } {
-        if (!content) throw new Error('Content buffer is empty');
+        if (!content || content.length === 0) throw new Error('Content buffer is empty');
 
         const index = content.indexOf(LockTokenUtil.X_OPT_LOCK_TOKEN);
         if (index === -1) throw new Error('Lock token not found in content');
