@@ -1,7 +1,7 @@
 // Copyright (c) .NET Foundation. All rights reserved.
 // Licensed under the MIT License.
 
-import parseArgs = require('minimist');
+import parseArgs from 'minimist';
 
 /**
  *  GrpcUriBuilder is a utility class to build a gRPC URI from command line arguments.

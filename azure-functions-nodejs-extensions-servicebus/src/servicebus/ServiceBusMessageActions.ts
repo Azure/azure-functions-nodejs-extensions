@@ -1,9 +1,9 @@
 // Copyright (c) .NET Foundation. All rights reserved.
 // Licensed under the MIT License.
 
-import * as grpc from '@grpc/grpc-js';
-import path = require('path');
 import { ServiceBusReceivedMessage } from '@azure/service-bus';
+import * as grpc from '@grpc/grpc-js';
+import path from 'path';
 import {
     AbandonRequest,
     CompleteRequest,

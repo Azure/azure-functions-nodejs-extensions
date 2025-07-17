@@ -6,7 +6,7 @@ import { ModelBindingData } from '@azure/functions-extensions-base';
 import chai, { expect } from 'chai';
 import sinon from 'sinon';
 import sinonChai from 'sinon-chai';
-import rhea = require('rhea');
+import * as rhea from 'rhea';
 import LongActual from 'long';
 import { AzureServiceBusMessageFactory } from '../../src/servicebus/azureServiceBusMessageFactory';
 import { ServiceBusMessageActions } from '../../src/servicebus/ServiceBusMessageActions';

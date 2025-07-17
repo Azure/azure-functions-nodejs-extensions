@@ -3,7 +3,7 @@
 
 import * as grpc from '@grpc/grpc-js';
 import * as protoLoader from '@grpc/proto-loader';
-import path = require('path');
+import path from 'path';
 
 /**
  *  Creates a gRPC client for a specified service defined in a .proto file.
