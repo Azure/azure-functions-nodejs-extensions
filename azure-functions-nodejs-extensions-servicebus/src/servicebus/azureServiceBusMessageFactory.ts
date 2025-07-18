@@ -5,7 +5,7 @@ import { AmqpAnnotatedMessage } from '@azure/core-amqp';
 import { ModelBindingData } from '@azure/functions-extensions-base';
 import { ServiceBusReceivedMessage } from '@azure/service-bus';
 import LongActual from 'long';
-import * as rhea from 'rhea';
+import rhea = require('rhea');
 import { ServiceBusMessageManager } from '../../types';
 import { ServiceBusMessageDecoder } from '../util/serviceBusMessageDecoder';
 import { ServiceBusMessageActions } from './ServiceBusMessageActions';

@@ -1,7 +1,7 @@
 // Copyright (c) .NET Foundation. All rights reserved.
 // Licensed under the MIT License.
 
-import * as rhea from 'rhea';
+import rhea = require('rhea');
 import { LockTokenUtil } from './lockTokenUtil';
 
 export class ServiceBusMessageDecoder {
