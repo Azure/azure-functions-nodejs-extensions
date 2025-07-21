@@ -52,6 +52,7 @@
         "@typescript-eslint/parser": "^5.12.1",
         "chai": "^4.5.0",
         "chai-as-promised": "^7.1.1",
+        "copy-webpack-plugin": "^13.0.0",
         "eslint": "^7.32.0",
         "eslint-config-prettier": "^8.3.0",
         "eslint-plugin-deprecation": "^1.3.2",
@@ -82,10 +83,9 @@
     },
     "dependencies": {
         "@azure/core-amqp": "^4.3.6",
-        "@azure/functions-extensions-base": "file:Q:/Workplace/NodeJs/azure-functions-nodejs-extensions/azure-functions-nodejs-extensions-base",
+        "@azure/functions-extensions-base": "^0.1.0-preview",
         "@azure/service-bus": "^7.9.5",
         "@grpc/grpc-js": "^1.13.4",
-        "@grpc/proto-loader": "^0.7.15",
-        "copy-webpack-plugin": "^13.0.0"
+        "@grpc/proto-loader": "^0.7.15"
     }
 }
