@@ -6,12 +6,29 @@ import * as protoLoader from '@grpc/proto-loader';
 import path from 'path';
 
 /**
- *  Creates a gRPC client for a specified service defined in a .proto file.
- *  This function loads the .proto file, constructs the service client, and returns it.
- * @param param0 - Configuration for creating a gRPC client.
- * @param param0.protoPath - Path to the .proto file defining the gRPC service.
- * @param param0.serviceName - Name of the service to create a client for.
- * @returns A gRPC client instance for the specified service.
+ * Creates and returns a gRPC client for the specified service.
+ *
+ * @template T - The type of gRPC client to create, extends grpc.Client
+ *
+ * @param options - The configuration options for creating the gRPC client
+ * @param options.protoPath - Path to the .proto file that defines the service
+ * @param options.serviceName - Name of the service in the proto file
+ * @param options.address - The server address to connect to (e.g., "localhost:50051")
+ * @param options.credentials - gRPC channel credentials to use for secure communication (defaults to insecure)
+ * @param options.grpcMaxMessageLength - Maximum message length in bytes for both sending and receiving gRPC messages
+ * @param options.includeDirs - Additional directories to search for imported .proto files
+ *
+ * @returns A new instance of the specified gRPC client
+ *
+ * @throws {Error} When the specified service name is not found in the proto file
+ *
+ * @example
+ * const client = createGrpcClient<MyServiceClient>({
+ *   protoPath: './protos/my_service.proto',
+ *   serviceName: 'MyService',
+ *   address: 'localhost:50051',
+ *   grpcMaxMessageLength: 4 * 1024 * 1024, // 4MB
+ * });
  */
 export function createGrpcClient<T extends grpc.Client = grpc.Client>({
     protoPath,

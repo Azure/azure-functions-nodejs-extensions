@@ -16,8 +16,16 @@ const DEAD_LETTER_REASON_ANNOTATION = 'DeadLetterReason';
 const DEAD_LETTER_ERROR_DESCRIPTION_ANNOTATION = 'DeadLetterErrorDescription';
 
 /**
- * Factory class for creating and caching Azure Blob Storage clients
- * following Azure best practices for client reuse and lifecycle management
+ * Factory class for creating and processing Azure Service Bus messages Manager.
+ *
+ * This factory class provides methods to:
+ * - Build ServiceBusMessage instances from model binding data in Azure Functions
+ * - Convert between different message formats (AMQP, Rhea)
+ * - Extract and decode message body content with proper type handling
+ *
+ * The factory handles all necessary transformations of message properties,
+ * annotations, and content to ensure proper integration with the Azure
+ * Service Bus messaging system.
  */
 export class AzureServiceBusMessageFactory {
     /**
