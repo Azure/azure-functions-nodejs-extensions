@@ -8,7 +8,7 @@ export interface ModelBindingData {
     version?: string | null;
 }
 
-export type ResourceFactory = (modelBindingData: ModelBindingData) => unknown;
+export type ResourceFactory = (modelBindingData: ModelBindingData | ModelBindingData[]) => unknown;
 
 export class ResourceFactoryResolver {
     private constructor();
