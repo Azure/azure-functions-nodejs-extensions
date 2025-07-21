@@ -2,7 +2,7 @@
     "name": "@azure/functions-extensions-servicebus",
     "version": "0.1.0-preview",
     "sideEffects": true,
-    "description": "Node.js Azure Storage Client extension implementations for Azure Functions",
+    "description": "Node.js Azure ServiceBus extension implementations for Azure Functions",
     "keywords": [
         "azure",
         "azure-functions",
@@ -11,7 +11,7 @@
     ],
     "author": "Microsoft",
     "license": "MIT",
-    "homepage": "https://github.com/Azure/azure-functions-nodejs-extensions-servicebus#readme",
+    "homepage": "https://github.com/Azure/azure-functions-nodejs-extensions/blob/main/azure-functions-nodejs-extensions-servicebus/README.md",
     "repository": {
         "type": "git",
         "url": "https://github.com/Azure/azure-functions-nodejs-extensions.git"
@@ -29,7 +29,7 @@
         "README.md"
     ],
     "engines": {
-        "node": ">=18.0"
+        "node": ">=20.0"
     },
     "scripts": {
         "build": "webpack --mode development",

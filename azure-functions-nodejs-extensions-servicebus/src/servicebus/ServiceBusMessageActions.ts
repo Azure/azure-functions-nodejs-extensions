@@ -28,7 +28,6 @@ export class ServiceBusMessageActions implements IServiceBusMessageActions {
     private client: SettlementServiceClient;
 
     private constructor() {
-        console.log('In Constructor of ServiceBusMessageActions');
         const { uri, grpcMaxMessageLength } = GrpcUriBuilder.build();
         this.client = createGrpcClient<SettlementServiceClient>({
             protoPath: PROTO_PATH,
@@ -45,6 +44,16 @@ export class ServiceBusMessageActions implements IServiceBusMessageActions {
         }
         return ServiceBusMessageActions.instance;
     }
+
+    // Add this private helper method to the ServiceBusMessageActions class
+    private validateLockToken(message: ServiceBusReceivedMessage): string {
+        const locktoken = message.lockToken;
+        if (!locktoken) {
+            throw new Error('ArgumentException: lockToken is required in ServiceBusReceivedMessage.');
+        }
+        return locktoken;
+    }
+
     /**
      * Completes (settles) the specified message, removing it from the queue or subscription.
      *
@@ -53,10 +62,7 @@ export class ServiceBusMessageActions implements IServiceBusMessageActions {
      * @throws Error if the lockToken is missing or the gRPC call fails.
      */
     async complete(message: ServiceBusReceivedMessage): Promise<void> {
-        const locktoken = message.lockToken;
-        if (!locktoken) {
-            throw new Error('ArgumentException: lockToken is required in ServiceBusReceivedMessage.');
-        }
+        const locktoken = this.validateLockToken(message);
         return new Promise((resolve, reject) => {
             const request: CompleteRequest = { locktoken };
             this.client.complete(request, (error: grpc.ServiceError | null) => {
@@ -83,10 +89,7 @@ export class ServiceBusMessageActions implements IServiceBusMessageActions {
      * @throws Error if the lockToken is missing or the gRPC call fails.
      */
     async abandon(message: ServiceBusReceivedMessage, propertiesToModify?: Uint8Array): Promise<void> {
-        const locktoken = message.lockToken;
-        if (!locktoken) {
-            throw new Error('ArgumentException: lockToken is required in ServiceBusReceivedMessage.');
-        }
+        const locktoken = this.validateLockToken(message);
         return new Promise((resolve, reject) => {
             const request: AbandonRequest = {
                 locktoken,
@@ -124,10 +127,7 @@ export class ServiceBusMessageActions implements IServiceBusMessageActions {
         deadletterReason?: string,
         deadletterErrorDescription?: string
     ): Promise<void> {
-        const locktoken = message.lockToken;
-        if (!locktoken) {
-            throw new Error('ArgumentException: lockToken is required in ServiceBusReceivedMessage.');
-        }
+        const locktoken = this.validateLockToken(message);
         return new Promise((resolve, reject) => {
             const request: DeadletterRequest = {
                 locktoken,
@@ -160,10 +160,7 @@ export class ServiceBusMessageActions implements IServiceBusMessageActions {
      * @throws Error if the lockToken is missing or the gRPC call fails.
      */
     async defer(message: ServiceBusReceivedMessage, propertiesToModify?: Uint8Array): Promise<void> {
-        const locktoken = message.lockToken;
-        if (!locktoken) {
-            throw new Error('ArgumentException: lockToken is required in ServiceBusReceivedMessage.');
-        }
+        const locktoken = this.validateLockToken(message);
         return new Promise((resolve, reject) => {
             const request: DeferRequest = {
                 locktoken,
@@ -193,10 +190,7 @@ export class ServiceBusMessageActions implements IServiceBusMessageActions {
      * @throws Error if the lockToken is missing or the gRPC call fails.
      */
     async renewMessageLock(message: ServiceBusReceivedMessage): Promise<void> {
-        const locktoken = message.lockToken;
-        if (!locktoken) {
-            throw new Error('ArgumentException: lockToken is required in ServiceBusReceivedMessage.');
-        }
+        const locktoken = this.validateLockToken(message);
         return new Promise((resolve, reject) => {
             const request: RenewMessageLockRequest = { locktoken };
 

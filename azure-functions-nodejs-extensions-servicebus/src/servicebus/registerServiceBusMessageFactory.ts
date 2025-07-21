@@ -10,7 +10,6 @@ export function registerServiceBusMessageFactory(): void {
         const resourceFactoryResolver = ResourceFactoryResolver.getInstance();
         // Check if a factory is already registered to avoid conflicts
         if (!resourceFactoryResolver.hasResourceFactory(AZURE_SERVICE_BUS)) {
-            console.log('There is noresolver for AzureServiceBusReceivedMessage');
             resourceFactoryResolver.registerResourceFactory(
                 AZURE_SERVICE_BUS,
                 (modelBindingData: ModelBindingData | ModelBindingData[]) => {

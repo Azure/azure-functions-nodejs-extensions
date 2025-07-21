@@ -4,10 +4,10 @@
 import { AmqpAnnotatedMessage } from '@azure/core-amqp';
 import { ModelBindingData } from '@azure/functions-extensions-base';
 import chai, { expect } from 'chai';
+import LongActual from 'long';
+import * as rhea from 'rhea';
 import sinon from 'sinon';
 import sinonChai from 'sinon-chai';
-import * as rhea from 'rhea';
-import LongActual from 'long';
 import { AzureServiceBusMessageFactory } from '../../src/servicebus/azureServiceBusMessageFactory';
 import { ServiceBusMessageActions } from '../../src/servicebus/ServiceBusMessageActions';
 import { ServiceBusMessageDecoder } from '../../src/util/serviceBusMessageDecoder';
@@ -374,23 +374,6 @@ describe('AzureServiceBusMessageFactory', () => {
             expect(result).to.have.property('_rawAmqpMessage', mockAmqpMessage);
         });
 
-        it('should handle AMQP message without optional properties', () => {
-            // Arrange
-            const minimalAmqpMessage: AmqpAnnotatedMessage = {
-                body: 'minimal message',
-            };
-
-            // Act
-            const result = AzureServiceBusMessageFactory.createServiceBusReceivedMessageFromAmqp(minimalAmqpMessage);
-
-            // Assert
-            expect(result).to.have.property('body', 'minimal message');
-            expect(result).to.have.property('messageId', undefined);
-            expect(result).to.have.property('applicationProperties').that.deep.equals({});
-            expect(result).to.have.property('deliveryCount', 0);
-            expect(result).to.have.property('state', 'active');
-        });
-
         it('should convert timestamps correctly', () => {
             // Arrange
             const enqueuedTime = Date.now();
@@ -401,8 +384,13 @@ describe('AzureServiceBusMessageFactory', () => {
                 },
             });
 
+            const lockToken = 'test-lock-token-amqp';
+
             // Act
-            const result = AzureServiceBusMessageFactory.createServiceBusReceivedMessageFromAmqp(mockAmqpMessage);
+            const result = AzureServiceBusMessageFactory.createServiceBusReceivedMessageFromAmqp(
+                mockAmqpMessage,
+                lockToken
+            );
 
             // Assert
             expect(result).to.have.property('enqueuedTimeUtc').that.is.a('date');
@@ -420,8 +408,13 @@ describe('AzureServiceBusMessageFactory', () => {
                 },
             });
 
+            const lockToken = 'test-lock-token-amqp';
+
             // Act
-            const result = AzureServiceBusMessageFactory.createServiceBusReceivedMessageFromAmqp(mockAmqpMessage);
+            const result = AzureServiceBusMessageFactory.createServiceBusReceivedMessageFromAmqp(
+                mockAmqpMessage,
+                lockToken
+            );
 
             // Assert
             expect(result).to.have.property('enqueuedTimeUtc').that.is.a('date');
@@ -438,8 +431,13 @@ describe('AzureServiceBusMessageFactory', () => {
                 },
             });
 
+            const lockToken = 'test-lock-token-amqp';
+
             // Act
-            const result = AzureServiceBusMessageFactory.createServiceBusReceivedMessageFromAmqp(mockAmqpMessage);
+            const result = AzureServiceBusMessageFactory.createServiceBusReceivedMessageFromAmqp(
+                mockAmqpMessage,
+                lockToken
+            );
 
             // Assert
             expect(result).to.have.property('deadLetterReason', 'MaxDeliveryCountExceeded');
@@ -460,8 +458,13 @@ describe('AzureServiceBusMessageFactory', () => {
                 },
             });
 
+            const lockToken = 'test-lock-token-amqp';
+
             // Act
-            const result = AzureServiceBusMessageFactory.createServiceBusReceivedMessageFromAmqp(mockAmqpMessage);
+            const result = AzureServiceBusMessageFactory.createServiceBusReceivedMessageFromAmqp(
+                mockAmqpMessage,
+                lockToken
+            );
 
             // Assert
             expect(result).to.have.property('sessionId', sessionId);
@@ -482,8 +485,13 @@ describe('AzureServiceBusMessageFactory', () => {
             testCases.forEach((testCase) => {
                 const mockAmqpMessage = createMockAmqpMessage({ body: testCase.body });
 
+                const lockToken = 'test-lock-token-amqp';
+
                 // Act
-                const result = AzureServiceBusMessageFactory.createServiceBusReceivedMessageFromAmqp(mockAmqpMessage);
+                const result = AzureServiceBusMessageFactory.createServiceBusReceivedMessageFromAmqp(
+                    mockAmqpMessage,
+                    lockToken
+                );
 
                 // Assert
                 expect(result).to.have.property('body', testCase.body);
@@ -512,28 +520,16 @@ describe('AzureServiceBusMessageFactory', () => {
             expect(result).to.have.property('_rawAmqpMessage', mockAmqpMessage);
         });
 
-        it('should handle Rhea message without lock token', () => {
-            // Arrange
-            const mockRheaMessage = createMockRheaMessage();
-            const mockAmqpMessage = createMockAmqpMessage();
-            amqpAnnotatedMessageStub.returns(mockAmqpMessage);
-
-            // Act
-            const result = AzureServiceBusMessageFactory.createServiceBusReceivedMessageFromRhea(mockRheaMessage);
-
-            // Assert
-            expect(result).to.have.property('lockToken', undefined);
-            expect(amqpAnnotatedMessageStub).to.have.been.calledOnceWith(mockRheaMessage);
-        });
-
         it('should handle AmqpAnnotatedMessage.fromRheaMessage errors', () => {
             // Arrange
             const mockRheaMessage = createMockRheaMessage();
             amqpAnnotatedMessageStub.throws(new Error('AMQP conversion failed'));
 
+            const lockToken = 'test-lock-token-amqp';
+
             // Act & Assert
             expect(() =>
-                AzureServiceBusMessageFactory.createServiceBusReceivedMessageFromRhea(mockRheaMessage)
+                AzureServiceBusMessageFactory.createServiceBusReceivedMessageFromRhea(mockRheaMessage, lockToken)
             ).to.throw('AMQP conversion failed');
         });
 
@@ -567,8 +563,13 @@ describe('AzureServiceBusMessageFactory', () => {
 
             amqpAnnotatedMessageStub.returns(expectedAmqpMessage);
 
+            const lockToken = 'test-lock-token-amqp';
+
             // Act
-            const result = AzureServiceBusMessageFactory.createServiceBusReceivedMessageFromRhea(complexRheaMessage);
+            const result = AzureServiceBusMessageFactory.createServiceBusReceivedMessageFromRhea(
+                complexRheaMessage,
+                lockToken
+            );
 
             // Assert
             expect(result).to.have.property('body').that.deep.equals(complexRheaMessage.body);
@@ -671,8 +672,13 @@ describe('AzureServiceBusMessageFactory', () => {
                 },
             });
 
+            const lockToken = 'test-lock-token-amqp';
+
             // Act
-            const result = AzureServiceBusMessageFactory.createServiceBusReceivedMessageFromAmqp(mockAmqpMessage);
+            const result = AzureServiceBusMessageFactory.createServiceBusReceivedMessageFromAmqp(
+                mockAmqpMessage,
+                lockToken
+            );
 
             // Assert
             expect(result).to.have.property('enqueuedTimeUtc').that.is.a('date');
@@ -685,12 +691,253 @@ describe('AzureServiceBusMessageFactory', () => {
             const largeBody = 'x'.repeat(1024 * 1024); // 1MB string
             const mockAmqpMessage = createMockAmqpMessage({ body: largeBody });
 
+            const lockToken = 'test-lock-token-amqp';
+
             // Act
-            const result = AzureServiceBusMessageFactory.createServiceBusReceivedMessageFromAmqp(mockAmqpMessage);
+            const result = AzureServiceBusMessageFactory.createServiceBusReceivedMessageFromAmqp(
+                mockAmqpMessage,
+                lockToken
+            );
 
             // Assert
             expect(result).to.have.property('body', largeBody);
             expect(result.body).to.have.length(1024 * 1024);
+        });
+    });
+
+    afterEach(() => {
+        sinon.restore();
+    });
+
+    describe('input validation', () => {
+        it('should return the original section when input is null', () => {
+            const result = AzureServiceBusMessageFactory.decodeAmqpBody(null);
+            expect(result).to.be.null;
+        });
+
+        it('should return the original section when input is undefined', () => {
+            const result = AzureServiceBusMessageFactory.decodeAmqpBody(undefined);
+            expect(result).to.be.undefined;
+        });
+
+        it('should return the original section when input is a primitive', () => {
+            const result = AzureServiceBusMessageFactory.decodeAmqpBody('not an object');
+            expect(result).to.equal('not an object');
+        });
+
+        it('should return the original section when typecode is missing', () => {
+            const section = { content: Buffer.from('test') };
+            const result = AzureServiceBusMessageFactory.decodeAmqpBody(section);
+            expect(result).to.equal(section);
+        });
+
+        it('should return the original section when content is missing', () => {
+            const section = { typecode: 117 };
+            const result = AzureServiceBusMessageFactory.decodeAmqpBody(section);
+            expect(result).to.equal(section);
+        });
+
+        it('should return the original section when typecode is not a number', () => {
+            const section = { typecode: '117', content: Buffer.from('test') };
+            const result = AzureServiceBusMessageFactory.decodeAmqpBody(section);
+            expect(result).to.equal(section);
+        });
+
+        it('should return the original section when content is not a Buffer', () => {
+            const section = { typecode: 117, content: 'not a buffer' };
+            const result = AzureServiceBusMessageFactory.decodeAmqpBody(section);
+            expect(result).to.equal(section);
+        });
+    });
+
+    describe('binary content (typecode 117)', () => {
+        it('should decode text/plain content as string', () => {
+            const textContent = 'Hello, world!';
+            const section = {
+                typecode: 117,
+                content: Buffer.from(textContent),
+            };
+
+            const result = AzureServiceBusMessageFactory.decodeAmqpBody(section, 'text/plain');
+
+            expect(result).to.equal(textContent);
+        });
+
+        it('should decode application/xml content as string', () => {
+            const xmlContent = '<root><item>value</item></root>';
+            const section = {
+                typecode: 117,
+                content: Buffer.from(xmlContent),
+            };
+
+            const result = AzureServiceBusMessageFactory.decodeAmqpBody(section, 'application/xml');
+
+            expect(result).to.equal(xmlContent);
+        });
+
+        it('should decode application/json content as parsed JSON', () => {
+            const jsonObject = { name: 'test', value: 42 };
+            const jsonContent = JSON.stringify(jsonObject);
+            const section = {
+                typecode: 117,
+                content: Buffer.from(jsonContent),
+            };
+
+            const result = AzureServiceBusMessageFactory.decodeAmqpBody(section, 'application/json');
+
+            expect(result).to.deep.equal(jsonObject);
+        });
+
+        it('should handle invalid JSON and return text for application/json content type', () => {
+            const invalidJsonContent = '{ "name": "test", value: 42 }'; // Invalid JSON (missing quotes around value)
+            const section = {
+                typecode: 117,
+                content: Buffer.from(invalidJsonContent),
+            };
+
+            const result = AzureServiceBusMessageFactory.decodeAmqpBody(section, 'application/json');
+
+            expect(result).to.equal(invalidJsonContent);
+        });
+
+        it('should handle complex nested JSON objects', () => {
+            const complexJson = {
+                id: 'test',
+                timestamp: '2023-01-01T00:00:00Z',
+                data: {
+                    items: [
+                        { id: 1, name: 'item1' },
+                        { id: 2, name: 'item2' },
+                    ],
+                    metadata: {
+                        source: 'test',
+                        version: '1.0.0',
+                    },
+                },
+            };
+            const section = {
+                typecode: 117,
+                content: Buffer.from(JSON.stringify(complexJson)),
+            };
+
+            const result = AzureServiceBusMessageFactory.decodeAmqpBody(section, 'application/json');
+
+            expect(result).to.deep.equal(complexJson);
+        });
+
+        it('should decode unknown content types as string by default', () => {
+            const content = 'some content';
+            const section = {
+                typecode: 117,
+                content: Buffer.from(content),
+            };
+
+            const result = AzureServiceBusMessageFactory.decodeAmqpBody(section, 'application/unknown');
+
+            expect(result).to.equal(content);
+        });
+
+        it('should handle content without a content type specified', () => {
+            const content = 'test content';
+            const section = {
+                typecode: 117,
+                content: Buffer.from(content),
+            };
+
+            const result = AzureServiceBusMessageFactory.decodeAmqpBody(section);
+
+            expect(result).to.equal(content);
+        });
+
+        it('should correctly handle UTF-8 special characters', () => {
+            const specialChars = 'Special chars: äöü éèê ñ 你好 👋';
+            const section = {
+                typecode: 117,
+                content: Buffer.from(specialChars, 'utf8'),
+            };
+
+            const result = AzureServiceBusMessageFactory.decodeAmqpBody(section, 'text/plain');
+
+            expect(result).to.equal(specialChars);
+        });
+
+        it('should handle empty content buffer', () => {
+            const section = {
+                typecode: 117,
+                content: Buffer.alloc(0),
+            };
+
+            const result = AzureServiceBusMessageFactory.decodeAmqpBody(section, 'text/plain');
+
+            expect(result).to.equal('');
+        });
+    });
+
+    describe('non-binary content (typecode != 117)', () => {
+        it('should return the raw content for non-binary typecodes', () => {
+            const content = Buffer.from('test content');
+            const section = {
+                typecode: 118, // Not binary (117)
+                content: content,
+            };
+
+            const result = AzureServiceBusMessageFactory.decodeAmqpBody(section, 'text/plain');
+
+            expect(result).to.equal(content);
+        });
+
+        it('should handle typecode 0 correctly', () => {
+            const content = Buffer.from('typecode 0 content');
+            const section = {
+                typecode: 0,
+                content: content,
+            };
+
+            const result = AzureServiceBusMessageFactory.decodeAmqpBody(section, 'text/plain');
+
+            expect(result).to.equal(content);
+        });
+    });
+
+    describe('edge cases', () => {
+        it('should handle very large content buffers', () => {
+            // Create a large string (1MB)
+            const largeString = 'a'.repeat(1024 * 1024);
+            const section = {
+                typecode: 117,
+                content: Buffer.from(largeString),
+            };
+
+            const result = AzureServiceBusMessageFactory.decodeAmqpBody(section, 'text/plain');
+
+            expect(result).to.have.lengthOf(1024 * 1024);
+            expect(result).to.equal(largeString);
+        });
+
+        it('should handle binary data with zeros', () => {
+            const binaryData = Buffer.from([0x00, 0x01, 0x02, 0x00, 0x03]);
+            const section = {
+                typecode: 117,
+                content: binaryData,
+            };
+
+            const result = AzureServiceBusMessageFactory.decodeAmqpBody(section);
+
+            // The result will be a string representation of the binary data
+            expect(result).to.be.a('string');
+        });
+
+        it('should handle content type with charset parameter', () => {
+            const content = 'Hello, world!';
+            const section = {
+                typecode: 117,
+                content: Buffer.from(content),
+            };
+
+            const result = AzureServiceBusMessageFactory.decodeAmqpBody(section, 'text/plain; charset=utf-8');
+
+            // The implementation ignores charset parameters, so it should still work
+            expect(result).to.equal(content);
         });
     });
 });

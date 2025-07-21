@@ -16,7 +16,6 @@ export class GrpcUriBuilder {
      */
     static build(): { uri: string; grpcMaxMessageLength: number } {
         const parsedArgs = parseArgs(process.argv.slice(2));
-        console.log('Parsed arguments:', parsedArgs);
         const { host, port, 'functions-grpc-max-message-length': grpcMaxMessageLength } = parsedArgs;
 
         const missing: string[] = [];

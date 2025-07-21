@@ -78,9 +78,6 @@ describe('registerServiceBusMessageFactory', () => {
                 AZURE_SERVICE_BUS,
                 sinon.match.func
             );
-            expect(consoleLogStub).to.have.been.calledOnceWith(
-                'There is noresolver for AzureServiceBusReceivedMessage'
-            );
         });
 
         it('should register factory with correct parameters', () => {
@@ -294,46 +291,6 @@ describe('registerServiceBusMessageFactory', () => {
             const registerCall = resourceFactoryResolverStub.registerResourceFactory.getCall(0);
 
             expect(hasFactoryCall.args[0]).to.equal(registerCall.args[0]);
-        });
-    });
-
-    describe('Logging and Debugging', () => {
-        it('should log when no resolver exists', () => {
-            // Arrange
-            resourceFactoryResolverStub.hasResourceFactory.returns(false);
-
-            // Act
-            registerServiceBusMessageFactory();
-
-            // Assert
-            expect(consoleLogStub).to.have.been.calledOnceWith(
-                'There is noresolver for AzureServiceBusReceivedMessage'
-            );
-        });
-
-        it('should not log when resolver already exists', () => {
-            // Arrange
-            resourceFactoryResolverStub.hasResourceFactory.returns(true);
-
-            // Act
-            registerServiceBusMessageFactory();
-
-            // Assert
-            expect(consoleLogStub).to.not.have.been.called;
-        });
-
-        it('should log registration attempts in order', () => {
-            // Arrange
-            resourceFactoryResolverStub.hasResourceFactory.returns(false);
-
-            // Act
-            registerServiceBusMessageFactory();
-
-            // Assert
-            expect(consoleLogStub).to.have.been.calledBefore(
-                // eslint-disable-next-line @typescript-eslint/unbound-method
-                resourceFactoryResolverStub.registerResourceFactory as sinon.SinonStub
-            );
         });
     });
 

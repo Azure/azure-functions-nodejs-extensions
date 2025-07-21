@@ -20,7 +20,6 @@ export async function run(): Promise<void> {
         };
 
         addEnvVarsToMochaOptions(options);
-        console.log(`Mocha options: ${JSON.stringify(options, undefined, 2)}`);
 
         const mocha = new Mocha(options);
 

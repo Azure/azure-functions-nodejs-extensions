@@ -3,5 +3,4 @@
 
 import { registerServiceBusMessageFactory } from './servicebus/registerServiceBusMessageFactory';
 
-console.log('Executing and registering');
 registerServiceBusMessageFactory();

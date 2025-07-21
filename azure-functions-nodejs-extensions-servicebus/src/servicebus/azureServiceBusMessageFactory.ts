@@ -10,6 +10,11 @@ import { ServiceBusMessageManager } from '../../types';
 import { ServiceBusMessageDecoder } from '../util/serviceBusMessageDecoder';
 import { ServiceBusMessageActions } from './ServiceBusMessageActions';
 
+const ENQUEUED_TIME_ANNOTATION = 'x-opt-enqueued-time';
+const SEQUENCE_NUMBER_ANNOTATION = 'x-opt-sequence-number';
+const DEAD_LETTER_REASON_ANNOTATION = 'DeadLetterReason';
+const DEAD_LETTER_ERROR_DESCRIPTION_ANNOTATION = 'DeadLetterErrorDescription';
+
 /**
  * Factory class for creating and caching Azure Blob Storage clients
  * following Azure best practices for client reuse and lifecycle management
@@ -50,17 +55,17 @@ export class AzureServiceBusMessageFactory {
      * This method extracts relevant properties and formats them into the ServiceBusReceivedMessage structure.
      *
      * @param amqpMessage - The AMQP annotated message to convert.
-     * @param lockToken - Optional lock token for the message.
+     * @param lockToken - lock token for the message.
      * @returns A ServiceBusReceivedMessage object.
      */
     static createServiceBusReceivedMessageFromAmqp(
         amqpMessage: AmqpAnnotatedMessage,
-        lockToken?: string
+        lockToken: string
     ): ServiceBusReceivedMessage {
         // Extract common properties from the AMQP message
         const receivedMessage: ServiceBusReceivedMessage = {
             // Message body
-            body: amqpMessage.body as unknown,
+            body: AzureServiceBusMessageFactory.decodeAmqpBody(amqpMessage.body, amqpMessage.properties?.contentType),
 
             // Message properties
             messageId: amqpMessage.properties?.messageId?.toString(),
@@ -87,24 +92,24 @@ export class AzureServiceBusMessageFactory {
 
             // Timestamps (convert from AMQP format if available)
             enqueuedTimeUtc:
-                amqpMessage.messageAnnotations?.['x-opt-enqueued-time'] !== undefined &&
-                (typeof amqpMessage.messageAnnotations['x-opt-enqueued-time'] === 'string' ||
-                    typeof amqpMessage.messageAnnotations['x-opt-enqueued-time'] === 'number')
-                    ? new Date(amqpMessage.messageAnnotations['x-opt-enqueued-time'])
+                amqpMessage.messageAnnotations?.[ENQUEUED_TIME_ANNOTATION] !== undefined &&
+                (typeof amqpMessage.messageAnnotations[ENQUEUED_TIME_ANNOTATION] === 'string' ||
+                    typeof amqpMessage.messageAnnotations[ENQUEUED_TIME_ANNOTATION] === 'number')
+                    ? new Date(amqpMessage.messageAnnotations[ENQUEUED_TIME_ANNOTATION])
                     : undefined,
 
             // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
             sequenceNumber:
-                amqpMessage.messageAnnotations?.['x-opt-sequence-number'] !== undefined
+                amqpMessage.messageAnnotations?.[SEQUENCE_NUMBER_ANNOTATION] !== undefined
                     ? // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
-                      LongActual.fromNumber(Number(amqpMessage.messageAnnotations['x-opt-sequence-number']))
+                      LongActual.fromNumber(Number(amqpMessage.messageAnnotations[SEQUENCE_NUMBER_ANNOTATION]))
                     : undefined,
 
             // Dead letter properties
-            deadLetterReason: amqpMessage.applicationProperties?.['DeadLetterReason'] as string | undefined,
-            deadLetterErrorDescription: amqpMessage.applicationProperties?.['DeadLetterErrorDescription'] as
-                | string
-                | undefined,
+            deadLetterReason: amqpMessage.applicationProperties?.[DEAD_LETTER_REASON_ANNOTATION] as string | undefined,
+            deadLetterErrorDescription: amqpMessage.applicationProperties?.[
+                DEAD_LETTER_ERROR_DESCRIPTION_ANNOTATION
+            ] as string | undefined,
 
             // State
             state: 'active' as const,
@@ -123,9 +128,53 @@ export class AzureServiceBusMessageFactory {
      */
     static createServiceBusReceivedMessageFromRhea(
         rheaMessage: rhea.Message,
-        lockToken?: string
+        lockToken: string
     ): ServiceBusReceivedMessage {
         const amqpMessage = AmqpAnnotatedMessage.fromRheaMessage(rheaMessage);
         return AzureServiceBusMessageFactory.createServiceBusReceivedMessageFromAmqp(amqpMessage, lockToken);
+    }
+
+    /**
+     * Decodes the body of an AMQP message section based on its typecode and content type.
+     * Supports decoding binary data, plain text, and JSON content.
+     *
+     * @param section - The AMQP message section containing a typecode and content buffer.
+     * @returns The decoded message body or undefined if decoding fails.
+     */
+    static decodeAmqpBody(section: unknown, contentType?: string): unknown {
+        if (
+            typeof section === 'object' &&
+            section !== null &&
+            'typecode' in section &&
+            'content' in section &&
+            typeof (section as Record<string, unknown>).typecode === 'number' &&
+            Buffer.isBuffer((section as Record<string, unknown>).content)
+        ) {
+            const { typecode, content } = section as { typecode: number; content: Buffer };
+            //typecode = 117 is Binary content
+            if (typecode === 117) {
+                const text = content.toString('utf8');
+
+                switch (contentType) {
+                    case 'text/plain':
+                    case 'application/xml':
+                        return text;
+
+                    case 'application/json':
+                        try {
+                            return JSON.parse(text);
+                        } catch {
+                            return text; // fallback if not valid JSON
+                        }
+
+                    default:
+                        return text; // unknown content type convert binary to string and return
+                }
+            }
+
+            return content;
+        }
+        // Not a valid AMQP body section
+        return section;
     }
 }
