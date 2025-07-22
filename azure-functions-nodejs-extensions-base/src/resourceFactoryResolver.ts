@@ -45,7 +45,7 @@ export class ResourceFactoryResolver {
      * @returns An instance of the client for the specified resource type.
      * @throws Error - If no factory is registered for the specified resource type.
      */
-    createClient(resourceType: string, modelBindingData: ModelBindingData): unknown {
+    createClient(resourceType: string, modelBindingData: ModelBindingData | ModelBindingData[]): unknown {
         const resourceFactory = this.resourceFactories.get(resourceType);
         if (!resourceFactory) {
             throw new Error(
