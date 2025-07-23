@@ -46,7 +46,7 @@ Using in Azure Functions
 
 ```javascript
 import "@azure/functions-extensions-servicebus";
-import {ServiceBusMessageManager} from "@azure/functions-extensions-servicebus"
+import {ServiceBusMessageContext} from "@azure/functions-extensions-servicebus"
 import { app, InvocationContext } from "@azure/functions";
 
 export async function serviceBusTrigger1(
@@ -60,10 +60,10 @@ export async function serviceBusTrigger1(
   try {
     //Actual Message
     context.log("triggerMetadata: ", context.triggerMetadata);
-    context.log('Completing the message', serviceBusMessageManager.messages[0]);
+    context.log('Completing the message', ServiceBusMessageContext.messages[0]);
     //Use serviceBusMessageActions to action on the messages
-    await serviceBusMessageManager.serviceBusMessageActions.complete(serviceBusMessageManager.messages[0]);
-    context.log('Completing the body', serviceBusMessageManager.messages[0].body);
+    await ServiceBusMessageContext.serviceBusMessageActions.complete(ServiceBusMessageContext.messages[0]);
+    context.log('Completing the body', ServiceBusMessageContext.messages[0].body);
   }
 }
 

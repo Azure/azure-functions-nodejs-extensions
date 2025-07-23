@@ -4,7 +4,7 @@
 import { ServiceBusReceivedMessage } from '@azure/service-bus';
 import { ServiceBusMessageActions } from '../src/servicebus/ServiceBusMessageActions';
 
-export interface ServiceBusMessageManager {
+export interface ServiceBusMessageContext {
     messages: ServiceBusReceivedMessage | ServiceBusReceivedMessage[];
     serviceBusMessageActions: ServiceBusMessageActions;
 }

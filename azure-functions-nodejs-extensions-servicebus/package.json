@@ -83,7 +83,7 @@
     },
     "dependencies": {
         "@azure/core-amqp": "^4.3.6",
-        "@azure/functions-extensions-base": "^0.1.0-preview",
+        "@azure/functions-extensions-base": "^0.2.0-preview",
         "@azure/service-bus": "^7.9.5",
         "@grpc/grpc-js": "^1.13.4",
         "@grpc/proto-loader": "^0.7.15"

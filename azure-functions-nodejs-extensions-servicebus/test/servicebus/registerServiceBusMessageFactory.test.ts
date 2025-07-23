@@ -7,7 +7,7 @@ import sinon from 'sinon';
 import sinonChai from 'sinon-chai';
 import { AzureServiceBusMessageFactory } from '../../src/servicebus/azureServiceBusMessageFactory';
 import { registerServiceBusMessageFactory } from '../../src/servicebus/registerServiceBusMessageFactory';
-import { ServiceBusMessageManager } from '../../types';
+import { ServiceBusMessageContext } from '../../types';
 
 // Configure chai with sinon-chai
 chai.use(sinonChai);
@@ -52,7 +52,7 @@ describe('registerServiceBusMessageFactory', () => {
         azureServiceBusMessageFactoryStub = sinon
             .stub(AzureServiceBusMessageFactory, 'buildServiceBusMessageFromModelBindingData')
             // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-            .returns(createMockServiceBusMessage() as unknown as ServiceBusMessageManager);
+            .returns(createMockServiceBusMessage() as unknown as ServiceBusMessageContext);
 
         // Stub console methods
         consoleLogStub = sinon.stub(console, 'log');

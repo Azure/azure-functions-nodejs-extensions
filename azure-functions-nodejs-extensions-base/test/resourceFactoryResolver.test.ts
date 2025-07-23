@@ -1,9 +1,9 @@
 // Copyright (c) .NET Foundation. All rights reserved.
 // Licensed under the MIT License.
 
+import { expect } from 'chai';
 import { ResourceFactoryResolver } from '../src/resourceFactoryResolver';
 import { ModelBindingData, ResourceFactory } from '../types';
-import { expect } from 'chai';
 
 describe('ResourceFactoryResolver - Advanced Tests', () => {
     let resolver: ResourceFactoryResolver;
@@ -30,11 +30,11 @@ describe('ResourceFactoryResolver - Advanced Tests', () => {
             const resultA = { name: 'Client A', dependency: null as any };
 
             const factoryC = () => resultC;
-            const factoryB = (data: ModelBindingData) => {
+            const factoryB = (data: ModelBindingData | ModelBindingData[]) => {
                 resultB.dependency = resolver.createClient(typeC, data);
                 return resultB;
             };
-            const factoryA = (data: ModelBindingData) => {
+            const factoryA = (data: ModelBindingData | ModelBindingData[]) => {
                 resultA.dependency = resolver.createClient(typeB, data);
                 return resultA;
             };
@@ -64,12 +64,12 @@ describe('ResourceFactoryResolver - Advanced Tests', () => {
             let counter = 0;
 
             // First factory implementation
-            const factory1 = (data: ModelBindingData) => {
+            const factory1 = (data: ModelBindingData | ModelBindingData[]) => {
                 return { version: 1, data, id: ++counter };
             };
 
             // Second factory implementation
-            const factory2 = (data: ModelBindingData) => {
+            const factory2 = (data: ModelBindingData | ModelBindingData[]) => {
                 return { version: 2, data, id: ++counter };
             };
 
@@ -180,8 +180,12 @@ describe('ResourceFactoryResolver - Advanced Tests', () => {
             };
 
             let receivedSize = 0;
-            const factory = (data: ModelBindingData) => {
-                receivedSize = data.content?.length || 0;
+            const factory = (data: ModelBindingData | ModelBindingData[]) => {
+                if (Array.isArray(data)) {
+                    receivedSize = data.reduce((sum, item) => sum + (item.content?.length || 0), 0);
+                } else {
+                    receivedSize = data.content?.length || 0;
+                }
                 return { size: receivedSize };
             };
 
@@ -204,12 +208,20 @@ describe('ResourceFactoryResolver - Advanced Tests', () => {
                 version: null,
             };
 
-            const factory = (data: ModelBindingData) => {
+            const factory = (data: ModelBindingData | ModelBindingData[]) => {
                 return {
-                    hasContent: data.content !== null && data.content !== undefined,
-                    hasContentType: data.contentType !== null && data.contentType !== undefined,
-                    hasSource: data.source !== null && data.source !== undefined,
-                    hasVersion: data.version !== null && data.version !== undefined,
+                    hasContent: Array.isArray(data)
+                        ? data.every((item) => item.content !== null && item.content !== undefined)
+                        : data.content !== null && data.content !== undefined,
+                    hasContentType: Array.isArray(data)
+                        ? data.every((item) => item.contentType !== null && item.contentType !== undefined)
+                        : data.contentType !== null && data.contentType !== undefined,
+                    hasSource: Array.isArray(data)
+                        ? data.every((item) => item.source !== null && item.source !== undefined)
+                        : data.source !== null && data.source !== undefined,
+                    hasVersion: Array.isArray(data)
+                        ? data.every((item) => item.version !== null && item.version !== undefined)
+                        : data.version !== null && data.version !== undefined,
                 };
             };
 

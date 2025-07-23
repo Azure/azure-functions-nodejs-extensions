@@ -11,7 +11,7 @@ import sinonChai from 'sinon-chai';
 import { AzureServiceBusMessageFactory } from '../../src/servicebus/azureServiceBusMessageFactory';
 import { ServiceBusMessageActions } from '../../src/servicebus/ServiceBusMessageActions';
 import { ServiceBusMessageDecoder } from '../../src/util/serviceBusMessageDecoder';
-import { ServiceBusMessageManager } from '../../types';
+import { ServiceBusMessageContext } from '../../types';
 
 // Configure chai with sinon-chai
 chai.use(sinonChai);
@@ -125,7 +125,7 @@ describe('AzureServiceBusMessageFactory', () => {
 
     describe('buildServiceBusMessageFromModelBindingData', () => {
         describe('Single ModelBindingData Processing', () => {
-            it('should build ServiceBusMessageManager from single ModelBindingData', () => {
+            it('should build ServiceBusMessageContext from single ModelBindingData', () => {
                 // Arrange
                 const mockModelBindingData = createMockModelBindingData();
                 const mockDecodedResult = createMockDecodedResult();
@@ -210,7 +210,7 @@ describe('AzureServiceBusMessageFactory', () => {
         });
 
         describe('Array ModelBindingData Processing', () => {
-            it('should build ServiceBusMessageManager from array of ModelBindingData', () => {
+            it('should build ServiceBusMessageContext from array of ModelBindingData', () => {
                 // Arrange
                 const mockModelBindingDataArray = [
                     createMockModelBindingData(Buffer.from('message 1')),
@@ -623,7 +623,7 @@ describe('AzureServiceBusMessageFactory', () => {
                 AzureServiceBusMessageFactory.buildServiceBusMessageFromModelBindingData(mockModelBindingData);
 
             // Assert - TypeScript compilation should pass
-            expect(result).to.satisfy((manager: ServiceBusMessageManager) => {
+            expect(result).to.satisfy((manager: ServiceBusMessageContext) => {
                 return typeof manager.messages === 'object' && typeof manager.serviceBusMessageActions === 'object';
             });
         });
