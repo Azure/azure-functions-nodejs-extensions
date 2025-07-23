@@ -138,7 +138,7 @@ describe('AzureServiceBusMessageFactory', () => {
                 // Assert
                 expect(result).to.be.an('object');
                 expect(result).to.have.property('messages').that.is.an('object'); // Single message, not array
-                expect(result).to.have.property('serviceBusMessageActions', serviceBusMessageActionsStub);
+                expect(result).to.have.property('actions', serviceBusMessageActionsStub);
                 expect(serviceBusMessageDecoderStub).to.have.been.calledOnceWith(mockModelBindingData.content);
             });
 
@@ -180,7 +180,7 @@ describe('AzureServiceBusMessageFactory', () => {
                     // Assert
                     expect(serviceBusMessageDecoderStub.getCall(index)).to.have.been.calledWith(testCase.content);
                     expect(result).to.have.property('messages');
-                    expect(result).to.have.property('serviceBusMessageActions');
+                    expect(result).to.have.property('actions');
                 });
             });
 
@@ -233,7 +233,7 @@ describe('AzureServiceBusMessageFactory', () => {
                 // Assert
                 expect(result).to.be.an('object');
                 expect(result).to.have.property('messages').that.is.an('array').with.length(3);
-                expect(result).to.have.property('serviceBusMessageActions', serviceBusMessageActionsStub);
+                expect(result).to.have.property('actions', serviceBusMessageActionsStub);
                 expect(serviceBusMessageDecoderStub).to.have.been.calledThrice;
             });
 
@@ -278,7 +278,7 @@ describe('AzureServiceBusMessageFactory', () => {
 
                 // Assert
                 expect(result).to.have.property('messages').that.is.an('array').with.length(0);
-                expect(result).to.have.property('serviceBusMessageActions', serviceBusMessageActionsStub);
+                expect(result).to.have.property('actions', serviceBusMessageActionsStub);
                 expect(serviceBusMessageDecoderStub).to.not.have.been.called;
             });
 
@@ -308,7 +308,7 @@ describe('AzureServiceBusMessageFactory', () => {
                 // Assert
                 // eslint-disable-next-line @typescript-eslint/unbound-method
                 expect(ServiceBusMessageActions.getInstance as sinon.SinonStub).to.have.been.calledOnce;
-                expect(result.serviceBusMessageActions).to.equal(serviceBusMessageActionsStub);
+                expect(result.actions).to.equal(serviceBusMessageActionsStub);
             });
 
             it('should handle ServiceBusMessageActions getInstance error', () => {
@@ -624,7 +624,7 @@ describe('AzureServiceBusMessageFactory', () => {
 
             // Assert - TypeScript compilation should pass
             expect(result).to.satisfy((manager: ServiceBusMessageContext) => {
-                return typeof manager.messages === 'object' && typeof manager.serviceBusMessageActions === 'object';
+                return typeof manager.messages === 'object' && typeof manager.actions === 'object';
             });
         });
 
@@ -645,7 +645,7 @@ describe('AzureServiceBusMessageFactory', () => {
             expect(results).to.have.length(concurrentCalls);
             results.forEach((result) => {
                 expect(result).to.have.property('messages');
-                expect(result).to.have.property('serviceBusMessageActions');
+                expect(result).to.have.property('actions');
             });
         });
     });

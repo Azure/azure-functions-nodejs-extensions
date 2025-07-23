@@ -54,7 +54,7 @@ export class AzureServiceBusMessageFactory {
 
         return {
             messages,
-            serviceBusMessageActions: client,
+            actions: client,
         };
     }
 
