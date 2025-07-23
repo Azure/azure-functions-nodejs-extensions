@@ -6,5 +6,5 @@ import { ServiceBusMessageActions } from '../src/servicebus/ServiceBusMessageAct
 
 export interface ServiceBusMessageContext {
     messages: ServiceBusReceivedMessage | ServiceBusReceivedMessage[];
-    serviceBusMessageActions: ServiceBusMessageActions;
+    actions: ServiceBusMessageActions;
 }
