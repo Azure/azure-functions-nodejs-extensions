@@ -6,7 +6,7 @@ import { ModelBindingData } from '@azure/functions-extensions-base';
 import { ServiceBusReceivedMessage } from '@azure/service-bus';
 import LongActual from 'long';
 import rhea = require('rhea');
-import { ServiceBusMessageManager } from '../../types';
+import { ServiceBusMessageContext } from '../../types';
 import { ServiceBusMessageDecoder } from '../util/serviceBusMessageDecoder';
 import { ServiceBusMessageActions } from './ServiceBusMessageActions';
 
@@ -29,15 +29,15 @@ const DEAD_LETTER_ERROR_DESCRIPTION_ANNOTATION = 'DeadLetterErrorDescription';
  */
 export class AzureServiceBusMessageFactory {
     /**
-     * Builds a ServiceBusMessageManager instance from model binding data.
+     * Builds a ServiceBusMessageContext instance from model binding data.
      * This method extracts the Service Bus message content from the provided model binding data,
      * @param modelBindingData - The model binding data containing the Service Bus message content.
      * This can be a single ModelBindingData object or an array of ModelBindingData objects.
-     * @returns A ServiceBusMessageManager instance.
+     * @returns A ServiceBusMessageContext instance.
      */
     static buildServiceBusMessageFromModelBindingData(
         modelBindingData: ModelBindingData | ModelBindingData[]
-    ): ServiceBusMessageManager {
+    ): ServiceBusMessageContext {
         const client = ServiceBusMessageActions.getInstance();
 
         const toMessage = (data: ModelBindingData) => {
