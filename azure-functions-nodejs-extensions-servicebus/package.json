@@ -65,12 +65,10 @@
         "globby": "^11.0.0",
         "grpc_tools_node_protoc_ts": "^5.3.3",
         "grpc-tools": "^1.13.0",
-        "minimist": "^1.2.8",
         "mocha": "^11.1.0",
         "mocha-junit-reporter": "^2.0.2",
         "mocha-multi-reporters": "^1.5.1",
         "prettier": "^2.4.1",
-        "rhea": "^3.0.4",
         "sinon": "^20.0.0",
         "sinon-chai": "^3.7.0",
         "ts-loader": "^9.3.1",
@@ -86,6 +84,8 @@
         "@azure/functions-extensions-base": "^0.2.0-preview",
         "@azure/service-bus": "^7.9.5",
         "@grpc/grpc-js": "^1.13.4",
-        "@grpc/proto-loader": "^0.7.15"
+        "@grpc/proto-loader": "^0.7.15",
+        "minimist": "^1.2.8",
+        "rhea": "^3.0.4"
     }
 }
