@@ -11,8 +11,14 @@ export function registerStorageBlobClientFactory(): void {
         if (!ResourceFactoryResolver.getInstance().hasResourceFactory(AZURE_STORAGE_BLOBS)) {
             ResourceFactoryResolver.getInstance().registerResourceFactory(
                 AZURE_STORAGE_BLOBS,
-                (modelBindingData: ModelBindingData) => {
-                    return CacheableAzureStorageBlobClientFactory.buildClientFromModelBindingData(modelBindingData);
+                (modelBindingData: ModelBindingData | ModelBindingData[]) => {
+                    console.log('here4 Registering client creation code from blob', modelBindingData);
+                    if (Array.isArray(modelBindingData)) {
+                        // If it's an array, use the first element
+                        throw new Error(`Batch request is not supported for blob`);
+                    } else {
+                        return CacheableAzureStorageBlobClientFactory.buildClientFromModelBindingData(modelBindingData);
+                    }
                 }
             );
         }
