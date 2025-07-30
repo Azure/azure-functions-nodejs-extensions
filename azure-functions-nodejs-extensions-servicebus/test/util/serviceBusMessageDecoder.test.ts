@@ -2,10 +2,9 @@
 // Licensed under the MIT License.
 
 import chai, { expect } from 'chai';
+import rhea from 'rhea';
 import sinon from 'sinon';
 import sinonChai from 'sinon-chai';
-import rhea = require('rhea');
-
 import { LockTokenUtil } from '../../src/util/lockTokenUtil';
 import { ServiceBusMessageDecoder } from '../../src/util/serviceBusMessageDecoder';
 
