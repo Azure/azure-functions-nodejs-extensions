@@ -107,10 +107,6 @@ export class CacheableAzureStorageBlobClientFactory {
      * Creates the appropriate connection strategy based on the connection name and URL
      */
     static createConnectionStrategy(connectionName: string, connectionUrl: string): StorageBlobServiceClientStrategy {
-        // Check for system-assigned managed identity
-        if (isSystemBasedManagedIdentity(connectionName)) {
-            return new ManagedIdentitySystemStrategy(connectionUrl);
-        }
         // Check User-assigned managed identity
         if (isUserBasedManagedIdentity(connectionName)) {
             const clientId = process.env[`${connectionName}__clientId`];
@@ -119,7 +115,10 @@ export class CacheableAzureStorageBlobClientFactory {
             }
             return new ManagedIdentityUserStrategy(connectionUrl, clientId);
         }
-
+        // Check for system-assigned managed identity
+        if (isSystemBasedManagedIdentity(connectionName)) {
+            return new ManagedIdentitySystemStrategy(connectionUrl);
+        }
         // Default to connection string
         return new ConnectionStringStrategy(connectionUrl);
     }

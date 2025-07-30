@@ -7,6 +7,10 @@ import { createHash } from 'crypto';
 import * as sinon from 'sinon';
 import { StorageBlobClientOptions } from 'types/storage';
 import { CacheableAzureStorageBlobClientFactory } from '../../src/storage-blob/cacheableStorageBlobClientFactory';
+// Add these imports to the existing test file
+import { ConnectionStringStrategy } from '../../src/storage-blob/connectionStringStrategy';
+import { ManagedIdentitySystemStrategy } from '../../src/storage-blob/managedIdentitySystemStrategy';
+import { ManagedIdentityUserStrategy } from '../../src/storage-blob/managedIdentityUserStrategy';
 import { StorageBlobClient } from '../../src/storage-blob/storageBlobClient';
 import { StorageBlobServiceClientStrategy } from '../../src/storage-blob/storageBlobServiceClientStrategy';
 import * as utils from '../../src/storage-blob/utils';
@@ -375,6 +379,270 @@ describe('CacheableAzureStorageBlobClientFactory', () => {
             expect(() => {
                 CacheableAzureStorageBlobClientFactory.buildClientFromModelBindingData(sampleData);
             }).to.throw(`${expectedError.message}`);
+        });
+    });
+});
+
+// Add this describe block to the existing test file after the existing tests
+describe('createConnectionStrategy', () => {
+    let originalEnv: NodeJS.ProcessEnv;
+
+    beforeEach(() => {
+        // Store original environment variables
+        originalEnv = { ...process.env };
+
+        // Clear relevant environment variables
+        delete process.env.TestConnection__clientId;
+        delete process.env.TestConnection__credential;
+        delete process.env.TestConnection__serviceUri;
+        delete process.env.TestConnection__blobServiceUri;
+    });
+
+    afterEach(() => {
+        // Restore original environment variables
+        process.env = originalEnv;
+        sinon.restore();
+    });
+
+    describe('order of authentication strategy checks', () => {
+        it('should prioritize user-assigned managed identity over system-assigned when both are configured', () => {
+            // Arrange - Set up environment for both user and system managed identity
+            process.env.TestConnection__clientId = 'test-client-id';
+            process.env.TestConnection__credential = 'ManagedIdentity';
+            process.env.TestConnection__serviceUri = 'https://test.blob.core.windows.net';
+            // Also set system-assigned variables to ensure user-assigned takes precedence
+            process.env.TestConnection__blobServiceUri = 'https://test.blob.core.windows.net';
+
+            // Act
+            const strategy = CacheableAzureStorageBlobClientFactory.createConnectionStrategy(
+                'TestConnection',
+                'https://test.blob.core.windows.net'
+            );
+
+            // Assert
+            expect(strategy).to.be.instanceOf(ManagedIdentityUserStrategy);
+        });
+
+        it('should prioritize system-assigned managed identity over connection string when both are available', () => {
+            // Arrange - Set up environment for system managed identity only
+            process.env.TestConnection__serviceUri = 'https://test.blob.core.windows.net';
+            // Connection string would be available as fallback
+
+            // Act
+            const strategy = CacheableAzureStorageBlobClientFactory.createConnectionStrategy(
+                'TestConnection',
+                'DefaultEndpointsProtocol=https;AccountName=test;AccountKey=key;EndpointSuffix=core.windows.net'
+            );
+
+            // Assert
+            expect(strategy).to.be.instanceOf(ManagedIdentitySystemStrategy);
+        });
+
+        it('should fall back to connection string when no managed identity is configured', () => {
+            // Arrange - No managed identity environment variables set
+
+            // Act
+            const strategy = CacheableAzureStorageBlobClientFactory.createConnectionStrategy(
+                'TestConnection',
+                'DefaultEndpointsProtocol=https;AccountName=test;AccountKey=key;EndpointSuffix=core.windows.net'
+            );
+
+            // Assert
+            expect(strategy).to.be.instanceOf(ConnectionStringStrategy);
+        });
+    });
+
+    describe('user-assigned managed identity strategy', () => {
+        it('should create ManagedIdentityUserStrategy when all required environment variables are present', () => {
+            // Arrange
+            process.env.TestConnection__clientId = 'test-client-id';
+            process.env.TestConnection__credential = 'ManagedIdentity';
+            process.env.TestConnection__serviceUri = 'https://test.blob.core.windows.net';
+
+            // Act
+            const strategy = CacheableAzureStorageBlobClientFactory.createConnectionStrategy(
+                'TestConnection',
+                'https://test.blob.core.windows.net'
+            );
+
+            // Assert
+            expect(strategy).to.be.instanceOf(ManagedIdentityUserStrategy);
+        });
+
+        it('should throw error when user-assigned managed identity is detected but clientId is missing', () => {
+            // Arrange - Set up partial user-assigned managed identity configuration
+            process.env.TestConnection__credential = 'ManagedIdentity';
+            process.env.TestConnection__serviceUri = 'https://test.blob.core.windows.net';
+            // Intentionally omit clientId
+
+            // Stub the utility function to return true (simulating detection)
+            sinon.stub(utils, 'isUserBasedManagedIdentity').returns(true);
+
+            // Act & Assert
+            expect(() => {
+                CacheableAzureStorageBlobClientFactory.createConnectionStrategy(
+                    'TestConnection',
+                    'https://test.blob.core.windows.net'
+                );
+            }).to.throw('Environment variable TestConnection__clientId is not defined.');
+        });
+
+        it('should not check for system-assigned managed identity when user-assigned is detected', () => {
+            // Arrange
+            process.env.TestConnection__clientId = 'test-client-id';
+            process.env.TestConnection__credential = 'ManagedIdentity';
+            process.env.TestConnection__serviceUri = 'https://test.blob.core.windows.net';
+
+            // Spy on utility functions to verify call order
+            const isUserBasedSpy = sinon.spy(utils, 'isUserBasedManagedIdentity');
+            const isSystemBasedSpy = sinon.spy(utils, 'isSystemBasedManagedIdentity');
+
+            // Act
+            const strategy = CacheableAzureStorageBlobClientFactory.createConnectionStrategy(
+                'TestConnection',
+                'https://test.blob.core.windows.net'
+            );
+
+            // Assert
+            expect(isUserBasedSpy.calledOnce).to.be.true;
+            expect(isSystemBasedSpy.called).to.be.false; // Should not be called since user-assigned was found
+            expect(strategy).to.be.instanceOf(ManagedIdentityUserStrategy);
+        });
+    });
+
+    describe('system-assigned managed identity strategy', () => {
+        it('should create ManagedIdentitySystemStrategy when serviceUri is present', () => {
+            // Arrange
+            process.env.TestConnection__serviceUri = 'https://test.blob.core.windows.net';
+
+            // Act
+            const strategy = CacheableAzureStorageBlobClientFactory.createConnectionStrategy(
+                'TestConnection',
+                'https://test.blob.core.windows.net'
+            );
+
+            // Assert
+            expect(strategy).to.be.instanceOf(ManagedIdentitySystemStrategy);
+        });
+
+        it('should create ManagedIdentitySystemStrategy when blobServiceUri is present', () => {
+            // Arrange
+            process.env.TestConnection__blobServiceUri = 'https://test.blob.core.windows.net';
+
+            // Act
+            const strategy = CacheableAzureStorageBlobClientFactory.createConnectionStrategy(
+                'TestConnection',
+                'https://test.blob.core.windows.net'
+            );
+
+            // Assert
+            expect(strategy).to.be.instanceOf(ManagedIdentitySystemStrategy);
+        });
+
+        it('should not check for connection string when system-assigned managed identity is detected', () => {
+            // Arrange
+            process.env.TestConnection__serviceUri = 'https://test.blob.core.windows.net';
+
+            // Spy on utility functions
+            const isUserBasedSpy = sinon.spy(utils, 'isUserBasedManagedIdentity');
+            const isSystemBasedSpy = sinon.spy(utils, 'isSystemBasedManagedIdentity');
+
+            // Act
+            const strategy = CacheableAzureStorageBlobClientFactory.createConnectionStrategy(
+                'TestConnection',
+                'https://test.blob.core.windows.net'
+            );
+
+            // Assert
+            expect(isUserBasedSpy.calledOnce).to.be.true;
+            expect(isSystemBasedSpy.calledOnce).to.be.true;
+            expect(isUserBasedSpy.calledBefore(isSystemBasedSpy)).to.be.true; // Verify order
+            expect(strategy).to.be.instanceOf(ManagedIdentitySystemStrategy);
+        });
+    });
+
+    describe('connection string strategy (fallback)', () => {
+        it('should create ConnectionStringStrategy when no managed identity environment variables are set', () => {
+            // Arrange - No environment variables set (clean state from beforeEach)
+
+            // Act
+            const strategy = CacheableAzureStorageBlobClientFactory.createConnectionStrategy(
+                'TestConnection',
+                'DefaultEndpointsProtocol=https;AccountName=test;AccountKey=key;EndpointSuffix=core.windows.net'
+            );
+
+            // Assert
+            expect(strategy).to.be.instanceOf(ConnectionStringStrategy);
+        });
+
+        it('should verify all checks are performed in correct order before falling back to connection string', () => {
+            // Arrange - No environment variables set
+            const isUserBasedSpy = sinon.spy(utils, 'isUserBasedManagedIdentity');
+            const isSystemBasedSpy = sinon.spy(utils, 'isSystemBasedManagedIdentity');
+
+            // Act
+            const strategy = CacheableAzureStorageBlobClientFactory.createConnectionStrategy(
+                'TestConnection',
+                'DefaultEndpointsProtocol=https;AccountName=test;AccountKey=key;EndpointSuffix=core.windows.net'
+            );
+
+            // Assert
+            expect(isUserBasedSpy.calledOnce).to.be.true;
+            expect(isSystemBasedSpy.calledOnce).to.be.true;
+            expect(isUserBasedSpy.calledBefore(isSystemBasedSpy)).to.be.true;
+            expect(strategy).to.be.instanceOf(ConnectionStringStrategy);
+        });
+    });
+
+    describe('edge cases and validation', () => {
+        it('should handle partial user-assigned managed identity configuration correctly', () => {
+            // Arrange - Only some user-assigned managed identity variables set
+            process.env.TestConnection__clientId = 'test-client-id';
+            // Missing credential and serviceUri
+
+            // Act
+            const strategy = CacheableAzureStorageBlobClientFactory.createConnectionStrategy(
+                'TestConnection',
+                'DefaultEndpointsProtocol=https;AccountName=test;AccountKey=key;EndpointSuffix=core.windows.net'
+            );
+
+            // Assert - Should fall back to system-assigned check, then connection string
+            expect(strategy).to.be.instanceOf(ConnectionStringStrategy);
+        });
+
+        it('should pass correct parameters to each strategy constructor', () => {
+            // Test ManagedIdentityUserStrategy parameters
+            process.env.TestConnection__clientId = 'test-client-id';
+            process.env.TestConnection__credential = 'ManagedIdentity';
+            process.env.TestConnection__serviceUri = 'https://test.blob.core.windows.net';
+
+            const userStrategy = CacheableAzureStorageBlobClientFactory.createConnectionStrategy(
+                'TestConnection',
+                'https://test.blob.core.windows.net'
+            ) as ManagedIdentityUserStrategy;
+
+            expect(userStrategy).to.be.instanceOf(ManagedIdentityUserStrategy);
+
+            // Clear and test ManagedIdentitySystemStrategy parameters
+            delete process.env.TestConnection__clientId;
+            delete process.env.TestConnection__credential;
+
+            const systemStrategy = CacheableAzureStorageBlobClientFactory.createConnectionStrategy(
+                'TestConnection',
+                'https://test.blob.core.windows.net'
+            ) as ManagedIdentitySystemStrategy;
+
+            expect(systemStrategy).to.be.instanceOf(ManagedIdentitySystemStrategy);
+
+            // Clear and test ConnectionStringStrategy parameters
+            delete process.env.TestConnection__serviceUri;
+
+            const connectionStrategy = CacheableAzureStorageBlobClientFactory.createConnectionStrategy(
+                'TestConnection',
+                'DefaultEndpointsProtocol=https;AccountName=test;AccountKey=key;EndpointSuffix=core.windows.net'
+            ) as ConnectionStringStrategy;
+
+            expect(connectionStrategy).to.be.instanceOf(ConnectionStringStrategy);
         });
     });
 });
