@@ -1,0 +1,111 @@
+parameters:
+  - name: PoolName
+    type: string
+    default: ''
+  - name: node_versions
+    type: object
+    default:
+      # 3.8 is EOL. Don't run tests for it
+      node18:
+        NODE_VERSION: '18.x'
+      node20:
+        NODE_VERSION: '20.x'
+      node22:
+        NODE_VERSION: '22.x'
+      node24:
+        NODE_VERSION: '24.x'
+
+jobs:
+  - job: "BaseTests"
+    displayName: "Base Extension Tests"
+    dependsOn: []
+    strategy:
+      matrix: ${{ parameters.node_versions }}
+    condition: always()
+    steps:
+      - task: NodeTool@0
+        inputs:
+          versionSpec: $(NODE_VERSION)
+      - bash: |
+          cd azure-functions-nodejs-extensions-base
+        displayName: 'Install Node.js'
+      - script: npm ci
+        displayName: 'npm ci'
+      - script: npm run build
+        displayName: 'npm run build'
+      - script: npm run lint
+        displayName: 'npm run lint'
+      - script: npm run updateVersion -- --validate
+        displayName: 'validate version'
+      - script: npm test
+        displayName: 'Run unit tests'
+      - task: PublishTestResults@2
+        displayName: 'Publish Unit Test Results'
+        inputs:
+            testResultsFiles: 'test/unit-test-results.xml'
+            testRunTitle: '$(Agent.JobName)'
+        condition: succeededOrFailed()
+
+  - job: "BlobTests"
+    displayName: "Blob Extension Tests"
+    dependsOn: []
+    strategy:
+      matrix: ${{ parameters.node_versions }}
+    condition: always()
+    steps:
+      - task: NodeTool@0
+        inputs:
+          versionSpec: $(NODE_VERSION)
+      - bash: |
+          cd azure-functions-nodejs-extensions-blob
+        displayName: 'Install Node.js'
+      - script: npm ci
+        displayName: 'npm ci'
+      - script: npm run build
+        displayName: 'npm run build'
+      - script: npm run lint
+        displayName: 'npm run lint'
+      - script: npm run updateVersion -- --validate
+        displayName: 'validate version'
+      - script: npm test
+        displayName: 'Run unit tests'
+      - task: PublishTestResults@2
+        displayName: 'Publish Unit Test Results'
+        inputs:
+            testResultsFiles: 'test/unit-test-results.xml'
+            testRunTitle: '$(Agent.JobName)'
+        condition: succeededOrFailed()
+
+  - job: "ServiceBusTests"
+    displayName: "ServiceBus Extension Tests"
+    dependsOn: []
+    pool:
+      name: ${{ parameters.PoolName }}
+      image: 1es-ubuntu-22.04
+      os: linux
+    strategy:
+      matrix: ${{ parameters.node_versions }}
+    condition: always()
+    steps:
+      - task: NodeTool@0
+        inputs:
+          versionSpec: $(NODE_VERSION)
+      - bash: |
+          cd azure-functions-nodejs-extensions-servicebus
+        displayName: 'Install Node.js'
+      - script: npm ci
+        displayName: 'npm ci'
+      - script: npm run build
+        displayName: 'npm run build'
+      - script: npm run lint
+        displayName: 'npm run lint'
+      - script: npm run updateVersion -- --validate
+        displayName: 'validate version'
+      - script: npm test
+        displayName: 'Run unit tests'
+      - task: PublishTestResults@2
+        displayName: 'Publish Unit Test Results'
+        inputs:
+            testResultsFiles: 'test/unit-test-results.xml'
+            testRunTitle: '$(Agent.JobName)'
+        condition: succeededOrFailed()
