@@ -53,7 +53,7 @@ extends:
       - stage: RunLinuxUnitTests
         dependsOn: []
         jobs:
-          - template: /eng/templates/official/jobs/unit-tests.yml@self
+          - template: /eng/templates/official/jobs/tests.yml@self
         pool:
           name: 1es-pool-azfunc
           image: 1es-ubuntu-22.04
@@ -61,4 +61,4 @@ extends:
       - stage: RunWindowsUnitTests
         dependsOn: []
         jobs:
-          - template: /eng/templates/official/jobs/unit-tests.yml@self
+          - template: /eng/templates/official/jobs/tests.yml@self
