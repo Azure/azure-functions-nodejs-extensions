@@ -1,3 +1,8 @@
+parameters:
+    - name: IsPrerelease
+      type: boolean
+      default: true
+
 trigger:
   batch: true
   branches:

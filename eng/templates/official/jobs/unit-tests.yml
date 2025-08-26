@@ -29,20 +29,30 @@ jobs:
       - bash: |
           cd azure-functions-nodejs-extensions-base
         displayName: 'Install Node.js'
-      - script: npm ci
+      - bash: |
+          cd azure-functions-nodejs-extensions-base
+          npm ci
         displayName: 'npm ci'
-      - script: npm run build
+      - bash: |
+          cd azure-functions-nodejs-extensions-base
+          npm run build
         displayName: 'npm run build'
-      - script: npm run lint
+      - bash: |
+          cd azure-functions-nodejs-extensions-base
+          npm run lint
         displayName: 'npm run lint'
-      - script: npm run updateVersion -- --validate
+      - bash: |
+          cd azure-functions-nodejs-extensions-base
+          npm run updateVersion -- --validate
         displayName: 'validate version'
-      - script: npm test
+      - bash: |
+          cd azure-functions-nodejs-extensions-base
+          npm test
         displayName: 'Run unit tests'
       - task: PublishTestResults@2
         displayName: 'Publish Unit Test Results'
         inputs:
-            testResultsFiles: 'test/unit-test-results.xml'
+            testResultsFiles: 'azure-functions-nodejs-extensions-base/test/unit-test-results.xml'
             testRunTitle: '$(Agent.JobName)'
         condition: succeededOrFailed()
 
@@ -59,30 +69,36 @@ jobs:
       - bash: |
           cd azure-functions-nodejs-extensions-blob
         displayName: 'Install Node.js'
-      - script: npm ci
+      - bash: |
+          cd azure-functions-nodejs-extensions-blob
+          npm ci
         displayName: 'npm ci'
-      - script: npm run build
+      - bash: |
+          cd azure-functions-nodejs-extensions-blob
+          npm run build
         displayName: 'npm run build'
-      - script: npm run lint
+      - bash: |
+          cd azure-functions-nodejs-extensions-blob
+          npm run lint
         displayName: 'npm run lint'
-      - script: npm run updateVersion -- --validate
+      - bash: |
+          cd azure-functions-nodejs-extensions-blob
+          npm run updateVersion -- --validate
         displayName: 'validate version'
-      - script: npm test
+      - bash: |
+          cd azure-functions-nodejs-extensions-blob
+          npm test
         displayName: 'Run unit tests'
       - task: PublishTestResults@2
         displayName: 'Publish Unit Test Results'
         inputs:
-            testResultsFiles: 'test/unit-test-results.xml'
+            testResultsFiles: 'azure-functions-nodejs-extensions-blob/test/unit-test-results.xml'
             testRunTitle: '$(Agent.JobName)'
         condition: succeededOrFailed()
 
   - job: "ServiceBusTests"
     displayName: "ServiceBus Extension Tests"
     dependsOn: []
-    pool:
-      name: ${{ parameters.PoolName }}
-      image: 1es-ubuntu-22.04
-      os: linux
     strategy:
       matrix: ${{ parameters.node_versions }}
     condition: always()
@@ -93,19 +109,29 @@ jobs:
       - bash: |
           cd azure-functions-nodejs-extensions-servicebus
         displayName: 'Install Node.js'
-      - script: npm ci
+      - bash: |
+          cd azure-functions-nodejs-extensions-servicebus
+          npm ci
         displayName: 'npm ci'
-      - script: npm run build
+      - bash: |
+          cd azure-functions-nodejs-extensions-servicebus
+          npm run build
         displayName: 'npm run build'
-      - script: npm run lint
+      - bash: |
+          cd azure-functions-nodejs-extensions-servicebus
+          npm run lint
         displayName: 'npm run lint'
-      - script: npm run updateVersion -- --validate
+      - bash: |
+          cd azure-functions-nodejs-extensions-servicebus
+          npm run updateVersion -- --validate
         displayName: 'validate version'
-      - script: npm test
+      - bash: |
+          cd azure-functions-nodejs-extensions-servicebus
+          npm test
         displayName: 'Run unit tests'
       - task: PublishTestResults@2
         displayName: 'Publish Unit Test Results'
         inputs:
-            testResultsFiles: 'test/unit-test-results.xml'
+            testResultsFiles: 'azure-functions-nodejs-extensions-servicebus/test/unit-test-results.xml'
             testRunTitle: '$(Agent.JobName)'
         condition: succeededOrFailed()

@@ -29,11 +29,6 @@ jobs:
             npm ci
         - bash: |
             cd $(EXTENSION_DIRECTORY)
-            npm run updateVersion -- --buildNumber $(Build.BuildNumber)
-          displayName: 'npm run updateVersion'
-          condition: and(succeeded(), eq(${{ parameters.IsPrerelease }}, true))          
-        - bash: | 
-            cd $(EXTENSION_DIRECTORY)
             npm run build
             npm run minify
             npm prune --production

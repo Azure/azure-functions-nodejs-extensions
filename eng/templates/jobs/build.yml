@@ -1,6 +1,6 @@
 jobs:
   - job: "Build"
-    displayName: 'Build Python Extensions'
+    displayName: 'Build Node Extensions'
 
     strategy:
       matrix:
@@ -13,6 +13,13 @@ jobs:
         service_bus_extension:
           EXTENSION_DIRECTORY: 'azure-functions-nodejs-extensions-servicebus'
           EXTENSION_NAME: 'ServiceBus'
+    templateContext:
+      outputParentDirectory: $(Build.ArtifactStagingDirectory)
+      outputs:
+        - output: pipelineArtifact
+          path: $(Build.ArtifactStagingDirectory)/$(EXTENSION_DIRECTORY)
+          artifact: $(EXTENSION_DIRECTORY)
+
     steps:
         - task: NodeTool@0
           inputs:
@@ -20,12 +27,7 @@ jobs:
           displayName: 'Install Node.js'
         - bash: |
             cd $(EXTENSION_DIRECTORY)
-            npm ci
-        - bash: |
-            cd $(EXTENSION_DIRECTORY)
-            npm run updateVersion -- --buildNumber $(Build.BuildNumber)
-          displayName: 'npm run updateVersion'
-          condition: and(succeeded(), eq(${{ parameters.IsPrerelease }}, true))          
+            npm ci 
         - bash: | 
             cd $(EXTENSION_DIRECTORY)
             npm run build
@@ -33,4 +35,26 @@ jobs:
             npm prune --production
             npm pack
           displayName: 'npm run build'
-    
+        - task: CopyFiles@2
+          displayName: 'Copy files to staging'
+          inputs:
+            sourceFolder: '$(Build.SourcesDirectory)/$(EXTENSION_DIRECTORY)'
+            contents: |
+              dist/**
+              src/**
+              types/**
+              LICENSE
+              package.json
+              README.md
+            targetFolder: '$(Build.ArtifactStagingDirectory)/dropInput/$(EXTENSION_DIRECTORY)'
+            cleanTargetFolder: true
+        - bash: | 
+            npm prune --production
+          displayName: 'npm prune --production' # so that only production dependencies are included in SBOM
+        - bash: | 
+            npm pack
+          displayName: 'npm pack'
+          workingDirectory: '$(Build.ArtifactStagingDirectory)/dropInput/$(EXTENSION_DIRECTORY)'
+        - script: mkdir $(EXTENSION_DIRECTORY) && mv dropInput/$(EXTENSION_DIRECTORY)/*.tgz $(EXTENSION_DIRECTORY)
+          displayName: 'Move package to dropOutput'
+          workingDirectory: '$(Build.ArtifactStagingDirectory)'

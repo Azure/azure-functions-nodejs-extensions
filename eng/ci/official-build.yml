@@ -1,3 +1,8 @@
+parameters:
+    - name: IsPrerelease
+      type: boolean
+      default: true
+
 trigger:
   batch: true
   branches:
@@ -42,10 +47,18 @@ extends:
     stages:
       - stage: Build
         jobs:
-          - template: /eng/templates/official/jobs/build-artifacts.yml@self
-      - stage: RunUnitTests
-        dependsOn: Build
+          - template: /eng/templates/jobs/build.yml@self
+            parameters:
+              IsPrerelease: ${{ parameters.IsPrerelease }}
+      - stage: RunLinuxUnitTests
+        dependsOn: []
         jobs:
           - template: /eng/templates/official/jobs/unit-tests.yml@self
-            parameters:
-              PoolName: 1es-pool-azfunc
+        pool:
+          name: 1es-pool-azfunc
+          image: 1es-ubuntu-22.04
+          os: linux
+      - stage: RunWindowsUnitTests
+        dependsOn: []
+        jobs:
+          - template: /eng/templates/official/jobs/unit-tests.yml@self
