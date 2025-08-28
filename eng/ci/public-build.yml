@@ -1,8 +1,3 @@
-parameters:
-    - name: IsPrerelease
-      type: boolean
-      default: true
-
 trigger:
   batch: true
   branches:
@@ -47,10 +42,10 @@ extends:
     stages:
       - stage: Build
         jobs:
-          - template: /eng/templates/jobs/build.yml@self
+          - template: /eng/templates/jobs/minimal-build.yml@self
       - stage: RunUnitTests
         dependsOn: Build
         jobs:
-          - template: /eng/templates/official/jobs/unit-tests.yml@self
+          - template: /eng/templates/official/jobs/tests.yml@self
             parameters:
               PoolName: 1es-pool-azfunc-public
