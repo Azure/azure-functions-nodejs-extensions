@@ -46,34 +46,43 @@ Using in Azure Functions
 
 ```javascript
 import "@azure/functions-extensions-servicebus";
-import {ServiceBusMessageContext} from "@azure/functions-extensions-servicebus"
+import { ServiceBusMessageContext } from "@azure/functions-extensions-servicebus"
 import { app, InvocationContext } from "@azure/functions";
 
 export async function serviceBusTrigger1(
-  serviceBusClient: ServiceBusClient,
-  message: unknown,
+  serviceBusMessageContext: ServiceBusMessageContext, 
   context: InvocationContext
 ): Promise<void> {
-  context.log(
-  `Service Bus function processed message: ${JSON.stringify(message)}`
-  );
   try {
     //Actual Message
     context.log("triggerMetadata: ", context.triggerMetadata);
-    context.log('Completing the message', ServiceBusMessageContext.messages[0]);
-    //Use serviceBusMessageActions to action on the messages
-    await ServiceBusMessageContext.serviceBusMessageActions.complete(ServiceBusMessageContext.messages[0]);
-    context.log('Completing the body', ServiceBusMessageContext.messages[0].body);
+    if (Array.isArray(serviceBusMessageContext.messages)) {
+      context.log('Completing the message', serviceBusMessageContext.messages[0]);
+      //Use serviceBusMessageActions to action on the messages
+      await serviceBusMessageContext.actions.complete(serviceBusMessageContext.messages[0]);
+      context.log('Completing the body', serviceBusMessageContext.messages[0].body);
+    } else {
+      context.log('Completing the message', serviceBusMessageContext.messages);
+      await serviceBusMessageContext.actions.complete(serviceBusMessageContext.messages);
+      context.log('Completing the body', serviceBusMessageContext.messages.body);
+    }
+  } catch (error) {
+    context.log('Error processing Service Bus message:', error);
   }
 }
 
-app.serviceBusQueue("serviceBusTrigger1", {
-  connection: "ServiceBusConnection",
-  queueName: "myqueue",
+app.serviceBusQueue("serviceBusTrigger", {
+  connection: "AzureWebJobsServiceBus",
+  queueName: "testqueue",
+  cardinality: "many",
   sdkBinding: true, //Ensure this is set to true
   autoCompleteMessages: false, //Exposing this so that customer can take action on the messages
   handler: serviceBusTrigger1,
 });
+
+// https://learn.microsoft.com/en-us/azure/azure-functions/functions-bindings-service-bus?tabs=isolated-process%2Cextensionv5&pivots=programming-language-javascript
+// autoCompleteMessages
+
 ```
 
 4. **Run locally**:
