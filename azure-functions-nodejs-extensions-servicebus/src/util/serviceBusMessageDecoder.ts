@@ -18,8 +18,17 @@ export class ServiceBusMessageDecoder {
 
         const lockToken = LockTokenUtil.extractFromMessage(content, index);
         const amqpSlice = content.subarray(index + LockTokenUtil.X_OPT_LOCK_TOKEN.length);
-        const decodedMessage = rhea.message.decode(Buffer.from(amqpSlice));
 
-        return { decodedMessage: decodedMessage as unknown as rhea.Message & { body: unknown }, lockToken };
+        // Suppress rhea warnings about message structure by temporarily overriding console.warn
+        // This prevents warnings like "WARNING: expected described message section got {...}"
+        const originalWarn = console.warn;
+        try {
+            console.warn = () => {};
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-explicit-any
+            const decodedMessage = rhea.message.decode(Buffer.from(amqpSlice) as any);
+            return { decodedMessage: decodedMessage as unknown as rhea.Message & { body: unknown }, lockToken };
+        } finally {
+            console.warn = originalWarn;
+        }
     }
 }
