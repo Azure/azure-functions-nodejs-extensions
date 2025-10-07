@@ -33,7 +33,7 @@ export class AzureServiceBusMessageFactory {
      * This method extracts the Service Bus message content from the provided model binding data,
      * @param modelBindingData - The model binding data containing the Service Bus message content.
      * This can be a single ModelBindingData object or an array of ModelBindingData objects.
-     * @returns A ServiceBusMessageContext instance.
+     * @returns A ServiceBusMessageContext instance with messages always returned as an array.
      */
     static buildServiceBusMessageFromModelBindingData(
         modelBindingData: ModelBindingData | ModelBindingData[]
@@ -50,7 +50,7 @@ export class AzureServiceBusMessageFactory {
 
         const messages = Array.isArray(modelBindingData)
             ? modelBindingData.map(toMessage)
-            : toMessage(modelBindingData);
+            : [toMessage(modelBindingData)];
 
         return {
             messages,

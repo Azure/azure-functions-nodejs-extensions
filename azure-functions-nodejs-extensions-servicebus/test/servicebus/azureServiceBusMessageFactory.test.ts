@@ -137,7 +137,8 @@ describe('AzureServiceBusMessageFactory', () => {
 
                 // Assert
                 expect(result).to.be.an('object');
-                expect(result).to.have.property('messages').that.is.an('object'); // Single message, not array
+                expect(result).to.have.property('messages').that.is.an('array'); // Now always returns array
+                expect(result.messages).to.have.lengthOf(1); // Single message wrapped in array
                 expect(result).to.have.property('actions', serviceBusMessageActionsStub);
                 expect(serviceBusMessageDecoderStub).to.have.been.calledOnceWith(mockModelBindingData.content);
             });
@@ -154,9 +155,11 @@ describe('AzureServiceBusMessageFactory', () => {
                     AzureServiceBusMessageFactory.buildServiceBusMessageFromModelBindingData(mockModelBindingData);
 
                 // Assert
-                expect(result.messages).to.have.property('messageId');
-                expect(result.messages).to.have.property('lockToken', 'test-lock-123');
-                expect(result.messages).to.have.property('body', 'test message body');
+                expect(result.messages).to.be.an('array');
+                expect(result.messages).to.have.lengthOf(1);
+                expect(result.messages[0]).to.have.property('messageId');
+                expect(result.messages[0]).to.have.property('lockToken', 'test-lock-123');
+                expect(result.messages[0]).to.have.property('body', 'test message body');
                 sinon.assert.calledOnceWithExactly(amqpAnnotatedMessageStub, mockRheaMessage);
             });
 
