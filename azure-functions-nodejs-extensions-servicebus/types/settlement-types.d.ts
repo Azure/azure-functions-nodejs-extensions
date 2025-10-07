@@ -77,7 +77,7 @@ interface SettlementService {
 }
 
 // Ensure SettlementService extends grpc.Client
-type SettlementServiceClient = SettlementService & grpc.Client;
+export type SettlementServiceClient = SettlementService & grpc.Client;
 
 // Client implementation with Promise-based methods
 /**

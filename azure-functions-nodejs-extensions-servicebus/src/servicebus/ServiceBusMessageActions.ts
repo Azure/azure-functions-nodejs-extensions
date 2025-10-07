@@ -3,7 +3,6 @@
 
 import { ServiceBusReceivedMessage } from '@azure/service-bus';
 import * as grpc from '@grpc/grpc-js';
-import path from 'path';
 import {
     AbandonRequest,
     CompleteRequest,
@@ -20,7 +19,7 @@ import {
 import { createGrpcClient } from '../grpcClientFactory';
 import { GrpcUriBuilder } from '../util/grpcUriBuilder';
 
-const PROTO_PATH = path.join(__dirname, '/proto/settlement.proto');
+// Using the original proto-loader approach with better path resolution
 
 // Client implementation with Promise-based methods
 export class ServiceBusMessageActions implements IServiceBusMessageActions {
@@ -30,7 +29,6 @@ export class ServiceBusMessageActions implements IServiceBusMessageActions {
     private constructor() {
         const { uri, grpcMaxMessageLength } = GrpcUriBuilder.build();
         this.client = createGrpcClient<SettlementServiceClient>({
-            protoPath: PROTO_PATH,
             serviceName: 'Settlement',
             address: uri,
             credentials: grpc.credentials.createInsecure(),

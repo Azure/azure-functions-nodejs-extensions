@@ -133,7 +133,6 @@ describe('ServiceBusMessageActions', () => {
 
             expect(grpcUriBuilderStub).to.have.been.calledOnce;
             expect(createGrpcClientStub).to.have.been.calledOnceWith({
-                protoPath: sinon.match.string,
                 serviceName: 'Settlement',
                 address: mockUri,
                 credentials: sinon.match.instanceOf(grpc.ChannelCredentials),
@@ -673,7 +672,6 @@ describe('ServiceBusMessageActions', () => {
 
             expect(createGrpcClientStub).to.have.been.calledOnceWith(
                 sinon.match({
-                    protoPath: sinon.match(/settlement\.proto$/),
                     serviceName: 'Settlement',
                     address: mockUri,
                     credentials: sinon.match.instanceOf(grpc.ChannelCredentials),
@@ -702,6 +700,7 @@ describe('ServiceBusMessageActions', () => {
 
             expect(createGrpcClientStub).to.have.been.calledWith(
                 sinon.match({
+                    serviceName: 'Settlement',
                     address: 'https://custom-endpoint:443',
                     grpcMaxMessageLength: 8388608,
                 })
