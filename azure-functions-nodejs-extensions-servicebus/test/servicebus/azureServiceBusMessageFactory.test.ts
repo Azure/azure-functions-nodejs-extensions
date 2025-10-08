@@ -942,5 +942,377 @@ describe('AzureServiceBusMessageFactory', () => {
             // The implementation ignores charset parameters, so it should still work
             expect(result).to.equal(content);
         });
+
+        it('should handle enqueuedTimeUtc and lockedUntilUtc timestamps correctly', () => {
+            // Arrange
+            const enqueuedTime = Date.now();
+            const lockedUntilTime = Date.now() + 60000; // 1 minute from now
+            const mockAmqpMessage = createMockAmqpMessage({
+                messageAnnotations: {
+                    'x-opt-enqueued-time': enqueuedTime,
+                    'x-opt-locked-until': lockedUntilTime,
+                    'x-opt-sequence-number': 12345,
+                },
+            });
+
+            const lockToken = 'test-lock-token-timestamps';
+
+            // Act
+            const result = AzureServiceBusMessageFactory.createServiceBusReceivedMessageFromAmqp(
+                mockAmqpMessage,
+                lockToken
+            );
+
+            // Assert
+            expect(result).to.have.property('enqueuedTimeUtc').that.is.a('date');
+            expect(result.enqueuedTimeUtc?.getTime()).to.equal(enqueuedTime);
+            expect(result).to.have.property('lockedUntilUtc').that.is.a('date');
+            expect(result.lockedUntilUtc?.getTime()).to.equal(lockedUntilTime);
+        });
+
+        it('should handle missing timestamp annotations gracefully', () => {
+            // Arrange
+            const mockAmqpMessage = createMockAmqpMessage({
+                messageAnnotations: {
+                    // No timestamp annotations
+                },
+            });
+
+            const lockToken = 'test-lock-token-no-timestamps';
+
+            // Act
+            const result = AzureServiceBusMessageFactory.createServiceBusReceivedMessageFromAmqp(
+                mockAmqpMessage,
+                lockToken
+            );
+
+            // Assert
+            expect(result).to.have.property('enqueuedTimeUtc').that.is.undefined;
+            expect(result).to.have.property('lockedUntilUtc').that.is.undefined;
+        });
+
+        it('should handle string format for lockedUntilUtc annotation', () => {
+            // Arrange
+            const lockedUntilString = new Date(Date.now() + 30000).toISOString(); // 30 seconds from now
+            const mockAmqpMessage = createMockAmqpMessage({
+                messageAnnotations: {
+                    'x-opt-locked-until': lockedUntilString,
+                },
+            });
+
+            const lockToken = 'test-lock-token-string-locked-until';
+
+            // Act
+            const result = AzureServiceBusMessageFactory.createServiceBusReceivedMessageFromAmqp(
+                mockAmqpMessage,
+                lockToken
+            );
+
+            // Assert
+            expect(result).to.have.property('lockedUntilUtc').that.is.a('date');
+            expect(result.lockedUntilUtc?.toISOString()).to.equal(lockedUntilString);
+        });
+
+        it('should handle enqueuedSequenceNumber and deadLetterSource annotations correctly', () => {
+            // Arrange
+            const enqueuedSeqNumber = 98765;
+            const deadLetterSourceQueue = 'original-queue';
+            const mockAmqpMessage = createMockAmqpMessage({
+                messageAnnotations: {
+                    'x-opt-offset': enqueuedSeqNumber,
+                    'x-opt-deadletter-source': deadLetterSourceQueue,
+                },
+            });
+
+            const lockToken = 'test-lock-token-additional-props';
+
+            // Act
+            const result = AzureServiceBusMessageFactory.createServiceBusReceivedMessageFromAmqp(
+                mockAmqpMessage,
+                lockToken
+            );
+
+            // Assert
+            expect(result).to.have.property('enqueuedSequenceNumber', enqueuedSeqNumber);
+            expect(result).to.have.property('deadLetterSource', deadLetterSourceQueue);
+        });
+
+        it('should handle all AMQP annotations comprehensively', () => {
+            // Arrange
+            const enqueuedTime = Date.now();
+            const lockedUntilTime = Date.now() + 60000;
+            const sequenceNumber = 12345;
+            const enqueuedSeqNumber = 67890;
+            const deadLetterSourceQueue = 'source-queue';
+
+            const mockAmqpMessage = createMockAmqpMessage({
+                messageAnnotations: {
+                    'x-opt-enqueued-time': enqueuedTime,
+                    'x-opt-locked-until': lockedUntilTime,
+                    'x-opt-sequence-number': sequenceNumber,
+                    'x-opt-offset': enqueuedSeqNumber,
+                    'x-opt-deadletter-source': deadLetterSourceQueue,
+                },
+                applicationProperties: {
+                    DeadLetterReason: 'MaxDeliveryCountExceeded',
+                    DeadLetterErrorDescription: 'Processing failed multiple times',
+                },
+            });
+
+            const lockToken = 'test-lock-token-comprehensive';
+
+            // Act
+            const result = AzureServiceBusMessageFactory.createServiceBusReceivedMessageFromAmqp(
+                mockAmqpMessage,
+                lockToken
+            );
+
+            // Assert - Verify all properties are correctly set
+            expect(result).to.have.property('enqueuedTimeUtc').that.is.a('date');
+            expect(result.enqueuedTimeUtc?.getTime()).to.equal(enqueuedTime);
+            expect(result).to.have.property('lockedUntilUtc').that.is.a('date');
+            expect(result.lockedUntilUtc?.getTime()).to.equal(lockedUntilTime);
+            expect(result).to.have.property('sequenceNumber');
+            expect(LongActual.isLong(result.sequenceNumber)).to.be.true;
+            expect(result).to.have.property('enqueuedSequenceNumber', enqueuedSeqNumber);
+            expect(result).to.have.property('deadLetterSource', deadLetterSourceQueue);
+            expect(result).to.have.property('deadLetterReason', 'MaxDeliveryCountExceeded');
+            expect(result).to.have.property('deadLetterErrorDescription', 'Processing failed multiple times');
+            expect(result).to.have.property('lockToken', lockToken);
+        });
+
+        it('should handle Date objects in message annotations correctly', () => {
+            // Arrange - This simulates the real-world scenario where Date objects are in messageAnnotations
+            const enqueuedDate = new Date('2025-10-07T22:13:23.130Z');
+            const lockedUntilDate = new Date('2025-10-07T22:14:30.039Z');
+            const sequenceNumber = 155;
+
+            const mockAmqpMessage = createMockAmqpMessage({
+                messageAnnotations: {
+                    'x-opt-enqueued-time': enqueuedDate, // Already Date objects
+                    'x-opt-locked-until': lockedUntilDate, // Already Date objects
+                    'x-opt-sequence-number': sequenceNumber,
+                },
+            });
+
+            const lockToken = 'b8f86525-3908-432a-a2f8-b7063f535876';
+
+            // Act
+            const result = AzureServiceBusMessageFactory.createServiceBusReceivedMessageFromAmqp(
+                mockAmqpMessage,
+                lockToken
+            );
+
+            // Assert - These should NOT be undefined anymore
+            expect(result).to.have.property('enqueuedTimeUtc').that.is.a('date');
+            expect(result.enqueuedTimeUtc?.toISOString()).to.equal(enqueuedDate.toISOString());
+            expect(result).to.have.property('lockedUntilUtc').that.is.a('date');
+            expect(result.lockedUntilUtc?.toISOString()).to.equal(lockedUntilDate.toISOString());
+            expect(result).to.have.property('sequenceNumber');
+            expect(LongActual.isLong(result.sequenceNumber)).to.be.true;
+            expect(result.sequenceNumber?.toNumber()).to.equal(sequenceNumber);
+
+            // enqueuedSequenceNumber should fallback to x-opt-sequence-number when x-opt-offset is not provided
+            expect(result.enqueuedSequenceNumber).to.equal(sequenceNumber);
+        });
+
+        it('should handle enqueuedSequenceNumber when x-opt-offset annotation is present', () => {
+            // Arrange - Test when x-opt-offset is actually provided
+            const enqueuedSeqNumber = 42;
+            const mockAmqpMessage = createMockAmqpMessage({
+                messageAnnotations: {
+                    'x-opt-offset': enqueuedSeqNumber, // This should populate enqueuedSequenceNumber
+                    'x-opt-sequence-number': 155,
+                },
+            });
+
+            const lockToken = 'test-lock-token-enqueued-seq';
+
+            // Act
+            const result = AzureServiceBusMessageFactory.createServiceBusReceivedMessageFromAmqp(
+                mockAmqpMessage,
+                lockToken
+            );
+
+            // Assert - enqueuedSequenceNumber should now be populated
+            expect(result).to.have.property('enqueuedSequenceNumber', enqueuedSeqNumber);
+            expect(result.enqueuedSequenceNumber).to.be.a('number');
+            expect(result).to.have.property('sequenceNumber');
+            expect(result.sequenceNumber?.toNumber()).to.equal(155);
+        });
+
+        it('should validate all annotation mappings for debugging', () => {
+            // Arrange - Comprehensive test to validate all annotation mappings
+            const testAnnotations = {
+                'x-opt-enqueued-time': new Date('2025-10-07T22:13:23.130Z'),
+                'x-opt-locked-until': new Date('2025-10-07T22:14:30.039Z'),
+                'x-opt-sequence-number': 155,
+                'x-opt-offset': 98765, // This should be enqueuedSequenceNumber
+                'x-opt-deadletter-source': 'original-queue',
+            };
+
+            const mockAmqpMessage = createMockAmqpMessage({
+                messageAnnotations: testAnnotations,
+                applicationProperties: {
+                    DeadLetterReason: 'TestReason',
+                    DeadLetterErrorDescription: 'TestDescription',
+                },
+            });
+
+            const lockToken = 'test-lock-token-comprehensive-validation';
+
+            // Act
+            const result = AzureServiceBusMessageFactory.createServiceBusReceivedMessageFromAmqp(
+                mockAmqpMessage,
+                lockToken
+            );
+
+            // Verify all mappings
+            expect(result.enqueuedTimeUtc).to.be.a('date');
+            expect(result.lockedUntilUtc).to.be.a('date');
+            expect(result.sequenceNumber?.toNumber()).to.equal(155);
+            expect(result.enqueuedSequenceNumber).to.equal(98765); // Should not be undefined!
+            expect(result.deadLetterSource).to.equal('original-queue');
+            expect(result.deadLetterReason).to.equal('TestReason');
+            expect(result.deadLetterErrorDescription).to.equal('TestDescription');
+        });
+
+        it('should match real-world Service Bus message format exactly', () => {
+            // Arrange - This exactly replicates the user's actual message structure
+            const mockAmqpMessage = createMockAmqpMessage({
+                header: { timeToLive: 1209600000 },
+                messageAnnotations: {
+                    'x-opt-enqueued-time': new Date('2025-10-07T22:13:23.130Z'),
+                    'x-opt-sequence-number': 155,
+                    'x-opt-locked-until': new Date('2025-10-07T22:14:30.039Z'),
+                    // Note: NO 'x-opt-offset' annotation - this is why enqueuedSequenceNumber is undefined
+                },
+                properties: {
+                    absoluteExpiryTime: 1761084810471,
+                    creationTime: 1759875210471,
+                    messageId: '0d5d0ae0b473475f9da34b55f65d9b4a',
+                },
+                body: {
+                    typecode: 117,
+                    content: Buffer.from('Tst 2'),
+                },
+            });
+
+            const lockToken = 'b8f86525-3908-432a-a2f8-b7063f535876';
+
+            // Act
+            const result = AzureServiceBusMessageFactory.createServiceBusReceivedMessageFromAmqp(
+                mockAmqpMessage,
+                lockToken
+            );
+
+            // Assert - This validates the exact behavior the user is experiencing
+            expect(result.body).to.equal('Tst 2');
+            expect(result.messageId).to.equal('0d5d0ae0b473475f9da34b55f65d9b4a');
+            expect(result.timeToLive).to.equal(1209600000);
+            expect(result.lockToken).to.equal(lockToken);
+
+            // These should now be properly populated (was undefined before our fix)
+            expect(result.enqueuedTimeUtc).to.be.a('date');
+            expect(result.enqueuedTimeUtc?.toISOString()).to.equal('2025-10-07T22:13:23.130Z');
+            expect(result.lockedUntilUtc).to.be.a('date');
+            expect(result.lockedUntilUtc?.toISOString()).to.equal('2025-10-07T22:14:30.039Z');
+            expect(result.sequenceNumber?.toNumber()).to.equal(155);
+
+            // This now correctly falls back to x-opt-sequence-number when 'x-opt-offset' annotation is not present
+            expect(result.enqueuedSequenceNumber).to.equal(155);
+
+            // These are also correctly undefined because they're not in the real message
+            expect(result.deadLetterSource).to.be.undefined;
+            expect(result.deadLetterReason).to.be.undefined;
+            expect(result.deadLetterErrorDescription).to.be.undefined;
+
+            expect(result.state).to.equal('active');
+        });
+
+        it('should investigate x-opt-sequence-number vs enqueuedSequenceNumber mapping issue', () => {
+            // Arrange - Testing user's scenario where they expect enqueuedSequenceNumber from x-opt-sequence-number
+            const mockAmqpMessage = createMockAmqpMessage({
+                messageAnnotations: {
+                    'x-opt-sequence-number': 155,
+                    // x-opt-offset is missing - but user expects enqueuedSequenceNumber to be populated
+                },
+            });
+
+            const lockToken = 'test-lock-token';
+
+            // Act
+            const result = AzureServiceBusMessageFactory.createServiceBusReceivedMessageFromAmqp(
+                mockAmqpMessage,
+                lockToken
+            );
+
+            // Assert - Current behavior based on Azure documentation
+            console.log('=== AMQP ANNOTATION MAPPING DEBUG ===');
+            console.log('Input AMQP messageAnnotations:', mockAmqpMessage.messageAnnotations);
+            console.log('sequenceNumber (from x-opt-sequence-number):', result.sequenceNumber?.toNumber());
+            console.log('enqueuedSequenceNumber (from x-opt-offset):', result.enqueuedSequenceNumber);
+
+            // According to Azure docs: x-opt-sequence-number -> SequenceNumber
+            expect(result.sequenceNumber?.toNumber()).to.equal(155);
+            // Now with fallback: enqueuedSequenceNumber gets x-opt-sequence-number when x-opt-offset is missing
+            expect(result.enqueuedSequenceNumber).to.equal(155);
+
+            // BUT: If user's real AMQP message shows x-opt-sequence-number should map to enqueuedSequenceNumber,
+            // then there might be a disconnect between documentation and reality
+        });
+
+        it('should fallback enqueuedSequenceNumber to x-opt-sequence-number when x-opt-offset is missing', () => {
+            // Arrange - Test fallback mapping scenario (user's reported issue)
+            const mockAmqpMessage = createMockAmqpMessage({
+                messageAnnotations: {
+                    'x-opt-sequence-number': 155,
+                    // x-opt-offset is missing - enqueuedSequenceNumber should fallback to x-opt-sequence-number
+                },
+            });
+
+            const lockToken = 'test-lock-token';
+
+            // Act
+            const result = AzureServiceBusMessageFactory.createServiceBusReceivedMessageFromAmqp(
+                mockAmqpMessage,
+                lockToken
+            );
+
+            console.log('=== TESTING FALLBACK BEHAVIOR (FIXED) ===');
+            console.log('User expectation: enqueuedSequenceNumber should have value 155');
+            console.log('Fixed sequenceNumber:', result.sequenceNumber?.toNumber());
+            console.log('Fixed enqueuedSequenceNumber:', result.enqueuedSequenceNumber);
+
+            // After fix: Both should have the same value when x-opt-offset is missing
+            expect(result.sequenceNumber?.toNumber()).to.equal(155);
+            expect(result.enqueuedSequenceNumber).to.equal(155); // Now this should work!
+        });
+
+        it('should prioritize x-opt-offset over x-opt-sequence-number for enqueuedSequenceNumber when both exist', () => {
+            // Arrange - Test priority when both annotations exist
+            const mockAmqpMessage = createMockAmqpMessage({
+                messageAnnotations: {
+                    'x-opt-sequence-number': 155,
+                    'x-opt-offset': 999, // This should take priority for enqueuedSequenceNumber
+                },
+            });
+
+            const lockToken = 'test-lock-token';
+
+            // Act
+            const result = AzureServiceBusMessageFactory.createServiceBusReceivedMessageFromAmqp(
+                mockAmqpMessage,
+                lockToken
+            );
+
+            console.log('=== TESTING PRIORITY BEHAVIOR ===');
+            console.log('sequenceNumber (from x-opt-sequence-number):', result.sequenceNumber?.toNumber());
+            console.log('enqueuedSequenceNumber (from x-opt-offset with priority):', result.enqueuedSequenceNumber);
+
+            // x-opt-offset should take priority for enqueuedSequenceNumber
+            expect(result.sequenceNumber?.toNumber()).to.equal(155);
+            expect(result.enqueuedSequenceNumber).to.equal(999); // Should use x-opt-offset, not fallback
+        });
     });
 });
