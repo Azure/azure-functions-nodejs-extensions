@@ -6,109 +6,7 @@ import * as protoLoader from '@grpc/proto-loader';
 import * as fs from 'fs';
 import * as os from 'os';
 import * as path from 'path';
-
-// Embedded protobuf definition as string - eliminates the need for external .proto files
-const SETTLEMENT_PROTO_CONTENT = `
-syntax = "proto3";
-
-import "google/protobuf/empty.proto";
-import "google/protobuf/wrappers.proto";
-import "google/protobuf/timestamp.proto";
-
-// this namespace will be shared between isolated worker and WebJobs extension so make it somewhat generic
-option csharp_namespace = "Microsoft.Azure.ServiceBus.Grpc";
-
-// The settlement service definition.
-service Settlement {
-  // Completes a message
-  rpc Complete (CompleteRequest) returns (google.protobuf.Empty) {}
-
-  // Abandons a message
-  rpc Abandon (AbandonRequest) returns (google.protobuf.Empty) {}
-
-  // Deadletters a message
-  rpc Deadletter (DeadletterRequest) returns (google.protobuf.Empty) {}
-
-  // Defers a message
-  rpc Defer (DeferRequest) returns (google.protobuf.Empty) {}
-
-  // Renew message lock
-  rpc RenewMessageLock (RenewMessageLockRequest) returns (google.protobuf.Empty) {}
-
-  // Get session state
-  rpc GetSessionState (GetSessionStateRequest) returns (GetSessionStateResponse) {}
-
-  // Set session state
-  rpc SetSessionState (SetSessionStateRequest) returns (google.protobuf.Empty) {}
-
-  // Release session
-  rpc ReleaseSession (ReleaseSessionRequest) returns (google.protobuf.Empty) {}
-
-  // Renew session lock
-  rpc RenewSessionLock (RenewSessionLockRequest) returns (RenewSessionLockResponse) {}
-}
-
-// The complete message request containing the locktoken.
-message CompleteRequest {
-  string locktoken = 1;
-}
-
-// The abandon message request containing the locktoken and properties to modify.
-message AbandonRequest {
-  string locktoken = 1;
-  bytes propertiesToModify = 2;
-}
-
-// The deadletter message request containing the locktoken and properties to modify along with the reason/description.
-message DeadletterRequest {
-  string locktoken = 1;
-  bytes propertiesToModify = 2;
-  google.protobuf.StringValue deadletterReason = 3;
-  google.protobuf.StringValue deadletterErrorDescription = 4;
-}
-
-// The defer message request containing the locktoken and properties to modify.
-message DeferRequest {
-  string locktoken = 1;
-  bytes propertiesToModify = 2;
-}
-
-// The renew message lock request containing the locktoken.
-message RenewMessageLockRequest {
-  string locktoken = 1;
-}
-
-// The get message request.
-message GetSessionStateRequest {
-  string sessionId = 1;
-}
-
-// The set message request.
-message SetSessionStateRequest {
-  string sessionId = 1;
-  bytes sessionState = 2;
-}
-
-// Get response containing the session state.
-message GetSessionStateResponse {
-  bytes sessionState = 1;
-}
-
-// Release session.
-message ReleaseSessionRequest {
-  string sessionId = 1;
-}
-
-// Renew session lock.
-message RenewSessionLockRequest {
-  string sessionId = 1;
-}
-
-// Renew session lock.
-message RenewSessionLockResponse {
-  google.protobuf.Timestamp lockedUntil = 1;
-}
-`;
+import { SETTLEMENT_PROTO_CONTENT } from './constants/settlementProtoConstant';
 
 // Cache for the loaded package definition to avoid repeated parsing
 let cachedPackageDefinition: grpc.GrpcObject | null = null;
@@ -143,7 +41,7 @@ export function createGrpcClient<T extends grpc.Client = grpc.Client>({
     if (!cachedPackageDefinition) {
         // Create a temporary proto file from the embedded content
         const tempDir = os.tmpdir();
-        const tempProtoFile = path.join(tempDir, `settlement-${Date.now()}.proto`);
+        const tempProtoFile = path.join(tempDir, `settlement.proto`);
 
         try {
             // Write the proto content to a temporary file
