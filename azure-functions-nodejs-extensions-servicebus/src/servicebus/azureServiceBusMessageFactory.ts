@@ -11,7 +11,10 @@ import { ServiceBusMessageDecoder } from '../util/serviceBusMessageDecoder';
 import { ServiceBusMessageActions } from './ServiceBusMessageActions';
 
 const ENQUEUED_TIME_ANNOTATION = 'x-opt-enqueued-time';
+const LOCKED_UNTIL_ANNOTATION = 'x-opt-locked-until';
 const SEQUENCE_NUMBER_ANNOTATION = 'x-opt-sequence-number';
+const ENQUEUED_SEQUENCE_NUMBER_ANNOTATION = 'x-opt-offset';
+const DEAD_LETTER_SOURCE_ANNOTATION = 'x-opt-deadletter-source';
 const DEAD_LETTER_REASON_ANNOTATION = 'DeadLetterReason';
 const DEAD_LETTER_ERROR_DESCRIPTION_ANNOTATION = 'DeadLetterErrorDescription';
 
@@ -33,7 +36,7 @@ export class AzureServiceBusMessageFactory {
      * This method extracts the Service Bus message content from the provided model binding data,
      * @param modelBindingData - The model binding data containing the Service Bus message content.
      * This can be a single ModelBindingData object or an array of ModelBindingData objects.
-     * @returns A ServiceBusMessageContext instance.
+     * @returns A ServiceBusMessageContext instance with messages always returned as an array.
      */
     static buildServiceBusMessageFromModelBindingData(
         modelBindingData: ModelBindingData | ModelBindingData[]
@@ -44,13 +47,14 @@ export class AzureServiceBusMessageFactory {
             if (!data.content) {
                 throw new Error('ModelBindingData.content is null or undefined.');
             }
+
             const { decodedMessage, lockToken } = ServiceBusMessageDecoder.decode(data.content);
             return this.createServiceBusReceivedMessageFromRhea(decodedMessage, lockToken);
         };
 
         const messages = Array.isArray(modelBindingData)
             ? modelBindingData.map(toMessage)
-            : toMessage(modelBindingData);
+            : [toMessage(modelBindingData)];
 
         return {
             messages,
@@ -99,12 +103,13 @@ export class AzureServiceBusMessageFactory {
             _rawAmqpMessage: amqpMessage,
 
             // Timestamps (convert from AMQP format if available)
-            enqueuedTimeUtc:
-                amqpMessage.messageAnnotations?.[ENQUEUED_TIME_ANNOTATION] !== undefined &&
-                (typeof amqpMessage.messageAnnotations[ENQUEUED_TIME_ANNOTATION] === 'string' ||
-                    typeof amqpMessage.messageAnnotations[ENQUEUED_TIME_ANNOTATION] === 'number')
-                    ? new Date(amqpMessage.messageAnnotations[ENQUEUED_TIME_ANNOTATION])
-                    : undefined,
+            enqueuedTimeUtc: AzureServiceBusMessageFactory.extractDateFromAnnotation(
+                amqpMessage.messageAnnotations?.[ENQUEUED_TIME_ANNOTATION]
+            ),
+
+            lockedUntilUtc: AzureServiceBusMessageFactory.extractDateFromAnnotation(
+                amqpMessage.messageAnnotations?.[LOCKED_UNTIL_ANNOTATION]
+            ),
 
             // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
             sequenceNumber:
@@ -113,11 +118,19 @@ export class AzureServiceBusMessageFactory {
                       LongActual.fromNumber(Number(amqpMessage.messageAnnotations[SEQUENCE_NUMBER_ANNOTATION]))
                     : undefined,
 
+            enqueuedSequenceNumber:
+                amqpMessage.messageAnnotations?.[ENQUEUED_SEQUENCE_NUMBER_ANNOTATION] !== undefined
+                    ? Number(amqpMessage.messageAnnotations[ENQUEUED_SEQUENCE_NUMBER_ANNOTATION])
+                    : amqpMessage.messageAnnotations?.[SEQUENCE_NUMBER_ANNOTATION] !== undefined
+                    ? Number(amqpMessage.messageAnnotations[SEQUENCE_NUMBER_ANNOTATION])
+                    : undefined,
+
             // Dead letter properties
             deadLetterReason: amqpMessage.applicationProperties?.[DEAD_LETTER_REASON_ANNOTATION] as string | undefined,
             deadLetterErrorDescription: amqpMessage.applicationProperties?.[
                 DEAD_LETTER_ERROR_DESCRIPTION_ANNOTATION
             ] as string | undefined,
+            deadLetterSource: amqpMessage.messageAnnotations?.[DEAD_LETTER_SOURCE_ANNOTATION] as string | undefined,
 
             // State
             state: 'active' as const,
@@ -184,5 +197,31 @@ export class AzureServiceBusMessageFactory {
         }
         // Not a valid AMQP body section
         return section;
+    }
+
+    /**
+     * Extracts a Date from an AMQP message annotation value.
+     * Handles cases where the value is already a Date, or is a string/number that can be converted to a Date.
+     *
+     * @param annotationValue - The annotation value from messageAnnotations
+     * @returns A Date object if the value can be converted, undefined otherwise
+     */
+    private static extractDateFromAnnotation(annotationValue: unknown): Date | undefined {
+        if (annotationValue === undefined || annotationValue === null) {
+            return undefined;
+        }
+
+        // If it's already a Date object, return it
+        if (annotationValue instanceof Date) {
+            return annotationValue;
+        }
+
+        // If it's a string or number, try to convert it to a Date
+        if (typeof annotationValue === 'string' || typeof annotationValue === 'number') {
+            return new Date(annotationValue);
+        }
+
+        // For any other type, return undefined
+        return undefined;
     }
 }

@@ -1,3 +1,12 @@
+// Copyright (c) .NET Foundation. All rights reserved.
+// Licensed under the MIT License.
+
+/**
+ * Embedded protobuf definition for the Settlement service.
+ * This eliminates the need for external .proto files by providing the complete
+ * proto definition as a string constant.
+ */
+export const SETTLEMENT_PROTO_CONTENT = `
 syntax = "proto3";
 
 import "google/protobuf/empty.proto";
@@ -97,3 +106,4 @@ message RenewSessionLockRequest {
 message RenewSessionLockResponse {
   google.protobuf.Timestamp lockedUntil = 1;
 }
+`;
