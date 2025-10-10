@@ -21,7 +21,6 @@ describe('ServiceBusMessageDecoder', () => {
 
     // Helper function to create test buffers
     const createTestBuffer = (includeToken = true, amqpData?: Buffer): Buffer => {
-        const tokenBuffer = includeToken ? MOCK_X_OPT_LOCK_TOKEN : Buffer.alloc(0);
         const amqpBuffer =
             amqpData ||
             Buffer.from([
@@ -38,10 +37,18 @@ describe('ServiceBusMessageDecoder', () => {
                 0x08,
             ]);
 
+        // The source code uses content.subarray(16) which discards the first 16 bytes
+        // So we need exactly 16 bytes before the AMQP data
+        const prefixData = Buffer.alloc(16); // Exactly 16 bytes
+
+        // Place the lock token within the first 16 bytes if needed
+        if (includeToken && MOCK_X_OPT_LOCK_TOKEN.length <= 16) {
+            MOCK_X_OPT_LOCK_TOKEN.copy(prefixData, 0);
+        }
+
         return Buffer.concat([
-            Buffer.from('prefix-data'), // Simulate prefix data
-            tokenBuffer,
-            amqpBuffer,
+            prefixData, // Exactly 16 bytes that will be discarded
+            amqpBuffer, // AMQP data starts at byte 16
         ]);
     };
 
@@ -487,7 +494,10 @@ describe('ServiceBusMessageDecoder', () => {
             it('should handle lock token at the very end of buffer', () => {
                 // Arrange
                 const amqpData = Buffer.from([0x01, 0x02]);
-                const testBuffer = Buffer.concat([Buffer.from('prefix'), MOCK_X_OPT_LOCK_TOKEN, amqpData]);
+                // Create exactly 16 bytes of prefix data with lock token
+                const prefixData = Buffer.alloc(16);
+                MOCK_X_OPT_LOCK_TOKEN.copy(prefixData, 0);
+                const testBuffer = Buffer.concat([prefixData, amqpData]);
 
                 // Act
                 const result = ServiceBusMessageDecoder.decode(testBuffer);
@@ -515,11 +525,10 @@ describe('ServiceBusMessageDecoder', () => {
 
             it('should handle buffer with only lock token and no AMQP data', () => {
                 // Arrange
-                const testBuffer = Buffer.concat([
-                    Buffer.from('prefix'),
-                    MOCK_X_OPT_LOCK_TOKEN,
-                    // No AMQP data after token
-                ]);
+                // Create exactly 16 bytes of prefix data with lock token
+                const prefixData = Buffer.alloc(16);
+                MOCK_X_OPT_LOCK_TOKEN.copy(prefixData, 0);
+                const testBuffer = prefixData; // Only prefix, no AMQP data after
 
                 // Act
                 const result = ServiceBusMessageDecoder.decode(testBuffer);

@@ -8,3 +8,6 @@ export interface ServiceBusMessageContext {
     messages: ServiceBusReceivedMessage[];
     actions: ServiceBusMessageActions;
 }
+
+// Export the IServiceBusMessageActions interface for customer consumption
+export { IServiceBusMessageActions } from './settlement-types';

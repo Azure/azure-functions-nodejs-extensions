@@ -47,6 +47,7 @@ export class AzureServiceBusMessageFactory {
             if (!data.content) {
                 throw new Error('ModelBindingData.content is null or undefined.');
             }
+
             const { decodedMessage, lockToken } = ServiceBusMessageDecoder.decode(data.content);
             return this.createServiceBusReceivedMessageFromRhea(decodedMessage, lockToken);
         };

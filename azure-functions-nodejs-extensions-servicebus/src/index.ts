@@ -4,3 +4,7 @@
 import { registerServiceBusMessageFactory } from './servicebus/registerServiceBusMessageFactory';
 
 registerServiceBusMessageFactory();
+
+// Export types for customer consumption
+export type { ServiceBusMessageContext } from '../types';
+export type { IServiceBusMessageActions } from '../types/settlement-types';
