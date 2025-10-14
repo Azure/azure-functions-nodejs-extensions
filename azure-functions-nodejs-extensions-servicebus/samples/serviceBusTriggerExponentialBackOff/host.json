@@ -1,0 +1,25 @@
+{
+  "version": "2.0",
+  "logging": {
+    "applicationInsights": {
+      "samplingSettings": {
+        "isEnabled": true,
+        "excludedTypes": "Request"
+      }
+    }
+  },
+  "extensionBundle": {
+    "id": "Microsoft.Azure.Functions.ExtensionBundle",
+    "version": "[4.*, 5.0.0)"
+  },
+  "extensions": {
+    "serviceBus": {
+      "prefetchCount": 100,
+      "maxConcurrentCalls": 16,
+      "maxConcurrentSessions": 8,
+      "maxMessageBatchSize": 1000,
+      "sessionIdleTimeout": "00:01:00",
+      "enableCrossEntityTransactions": false
+    }
+  }
+}

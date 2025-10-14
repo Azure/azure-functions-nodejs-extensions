@@ -1,6 +1,6 @@
 {
     "name": "@azure/functions-extensions-servicebus",
-    "version": "0.3.0-preview",
+    "version": "0.3.1-preview",
     "sideEffects": true,
     "description": "Node.js Azure ServiceBus extension implementations for Azure Functions",
     "keywords": [
@@ -21,9 +21,15 @@
     },
     "main": "./dist/azure-functions-extensions-servicebus.js",
     "types": "types/index.d.ts",
+    "exports": {
+        ".": {
+            "import": "./dist/azure-functions-extensions-servicebus.js",
+            "require": "./dist/azure-functions-extensions-servicebus.js",
+            "types": "./types/index.d.ts"
+        }
+    },
     "files": [
         "dist/",
-        "src/",
         "types/",
         "LICENSE",
         "README.md"

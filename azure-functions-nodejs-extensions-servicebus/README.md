@@ -54,18 +54,16 @@ export async function serviceBusTrigger1(
   context: InvocationContext
 ): Promise<void> {
   try {
-    //Actual Message
+    // Log trigger metadata
     context.log("triggerMetadata: ", context.triggerMetadata);
-    if (Array.isArray(serviceBusMessageContext.messages)) {
-      context.log('Completing the message', serviceBusMessageContext.messages[0]);
-      //Use serviceBusMessageActions to action on the messages
-      await serviceBusMessageContext.actions.complete(serviceBusMessageContext.messages[0]);
-      context.log('Completing the body', serviceBusMessageContext.messages[0].body);
-    } else {
-      context.log('Completing the message', serviceBusMessageContext.messages);
-      await serviceBusMessageContext.actions.complete(serviceBusMessageContext.messages);
-      context.log('Completing the body', serviceBusMessageContext.messages.body);
-    }
+    
+    // Process the first message (messages is always an array)
+    const message = serviceBusMessageContext.messages[0];
+    context.log('Completing the message', message);
+    
+    // Use serviceBusMessageActions to action on the messages
+    await serviceBusMessageContext.actions.complete(message);
+    context.log('Completing the body', message.body);
   } catch (error) {
     context.log('Error processing Service Bus message:', error);
   }
