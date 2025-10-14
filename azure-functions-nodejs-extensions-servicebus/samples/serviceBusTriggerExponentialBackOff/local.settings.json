@@ -1,0 +1,8 @@
+{
+  "IsEncrypted": false,
+  "Values": {
+    "AzureWebJobsStorage": "",
+    "FUNCTIONS_WORKER_RUNTIME": "node",
+    "ServiceBusConnection__fullyQualifiedNamespace": "swap-service-bus-test.servicebus.windows.net"
+  }
+}
