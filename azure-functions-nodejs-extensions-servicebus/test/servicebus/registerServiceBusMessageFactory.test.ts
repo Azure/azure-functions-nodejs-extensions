@@ -95,7 +95,7 @@ describe('registerServiceBusMessageFactory', () => {
 
         //TODO Fix the time match with at milliseconds.
         //When you compare the obejct since it matches at the milliseconds level test become flaky.
-        
+
         // it('should create a factory function that calls AzureServiceBusMessageFactory', () => {
         //     // Arrange
         //     resourceFactoryResolverStub.hasResourceFactory.returns(false);

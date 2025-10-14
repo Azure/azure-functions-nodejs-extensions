@@ -12,5 +12,6 @@
         "paths": {
             "@azure/functions-extensions-servicebus": ["types"]
         }
-    }
+    },
+    "exclude": ["samples/**/*", "node_modules", "dist"]
 }

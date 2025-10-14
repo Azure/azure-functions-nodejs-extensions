@@ -36,9 +36,14 @@ module.exports = (_env, argv) => {
             libraryTarget: 'commonjs2',
         },
         plugins: [
-            new ForkTsCheckerWebpackPlugin({}),
+            new ForkTsCheckerWebpackPlugin({
+                typescript: {
+                    configFile: 'tsconfig.json',
+                },
+            }),
             new ESLintPlugin({
                 files: ['src/**/*.ts', 'test/**/*.ts'],
+                exclude: ['samples/**/*'],
                 fix: isDevMode,
             }),
         ],
