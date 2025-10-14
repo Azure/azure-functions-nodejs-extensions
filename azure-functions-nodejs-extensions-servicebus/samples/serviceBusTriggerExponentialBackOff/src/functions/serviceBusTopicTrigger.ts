@@ -8,10 +8,19 @@ import { ServiceBusMessageContext } from '@azure/functions-extensions-servicebus
 const messageTimestamps = new Map<string, Date[]>();
 
 /**
- * Simplified Service Bus Exponential Backoff Demo
+ * Service Bus Exponential Backoff Demo with Intentional Processing Delays
  *
  * Uses deliveryCount from Service Bus to determine retry attempts
- * Hardcoded behavior: Fails 3 times, succeeds on 4th attempt (deliveryCount 4)
+ * - Attempts 1-3: Fail and abandon (trigger exponential backoff)
+ * - Attempt 4: Success and complete message
+ *
+ * Processing Delays (intentional slow processing simulation):
+ * - Delivery 1: 2 seconds delay
+ * - Delivery 2: 4 seconds delay
+ * - Delivery 3: 8 seconds delay
+ * - Delivery 4: 16 seconds delay
+ *
+ * Uses ServiceBusMessageActions.abandon() to trigger Service Bus exponential backoff
  */
 export async function serviceBusExponentialBackoffTrigger(
     serviceBusMessageContext: ServiceBusMessageContext,
@@ -45,17 +54,33 @@ export async function serviceBusExponentialBackoffTrigger(
         context.log(`📈 Expected delay: ~${expectedDelay} seconds`);
     }
 
-    // HARDCODED BEHAVIOR: Use deliveryCount to determine success/failure
+    // HARDCODED BEHAVIOR: Add intentional processing delays, then use deliveryCount to determine success/failure
     try {
+        // Add exponential processing delay using setTimeout: 2s, 4s, 8s, 16s
+        const processingDelayMs = Math.pow(2, deliveryCount) * 1000;
+        const delaySeconds = processingDelayMs / 1000;
+
+        if (processingDelayMs > 0) {
+            context.log(`⏳ Adding ${delaySeconds}s processing delay to simulate slow processing...`);
+            await new Promise((resolve) => setTimeout(resolve, processingDelayMs));
+            context.log(`✅ Processing delay completed (${delaySeconds}s)`);
+        }
+
         if (deliveryCount <= 3) {
-            context.log(`❌ Simulated failure on delivery ${deliveryCount}/3 - triggering exponential backoff`);
+            // Fail first 3 attempts to trigger exponential backoff
+            context.log(`❌ Simulated failure on delivery ${deliveryCount}/3 - abandoning for exponential backoff`);
+
+            // Using abandon() to trigger Service Bus exponential backoff
+            // Alternative: Could use defer() to make message invisible for custom delay periods
+            // await serviceBusMessageContext.actions.defer(message);
+            await serviceBusMessageContext.actions.abandon(message);
             throw new Error(`Intentional failure for exponential backoff demo (delivery ${deliveryCount})`);
         }
 
         // Success on 4th delivery (deliveryCount = 4)
         context.log(`✅ SUCCESS on delivery ${deliveryCount}! Processing message.`);
         await serviceBusMessageContext.actions.complete(message);
-        context.log(`🎉 Message completed successfully after ${deliveryCount} deliveries`);
+        context.log(`🎉 Message completed successfully after ${deliveryCount} deliveries (with processing delays)`);
 
         // Clean up
         messageTimestamps.delete(messageId);
