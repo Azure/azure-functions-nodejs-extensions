@@ -12,7 +12,7 @@
     },
     "dependencies": {
         "@azure/functions": "4.7.4-preview",
-        "@azure/functions-extensions-servicebus": "0.3.1-preview"
+        "@azure/functions-extensions-servicebus": "0.3.3-preview"
     },
     "devDependencies": {
         "@types/node": "^20.x",
