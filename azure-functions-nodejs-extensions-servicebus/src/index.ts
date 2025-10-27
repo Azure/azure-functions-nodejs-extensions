@@ -8,3 +8,6 @@ registerServiceBusMessageFactory();
 // Export types for customer consumption
 export type { ServiceBusMessageContext } from '../types';
 export type { IServiceBusMessageActions } from '../types/settlement-types';
+
+// Export AMQP property encoding utilities
+export { convertPropertiesToAmqpBytes, validateAmqpProperties } from './util/amqpPropertyEncoder';

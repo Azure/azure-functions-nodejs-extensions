@@ -249,7 +249,11 @@ describe('ServiceBusMessageActions', () => {
         it('should abandon a message with custom properties', async () => {
             mockGrpcClient.abandon.callsArgWith(1, null);
             const message = createMockMessage();
-            const customProperties = new Uint8Array([1, 2, 3]);
+            const customProperties = {
+                '0': 1,
+                '1': 2,
+                '2': 3,
+            };
 
             await serviceActions.abandon(message, customProperties);
 
@@ -257,7 +261,7 @@ describe('ServiceBusMessageActions', () => {
             expect(mockGrpcClient.abandon).to.have.been.calledOnceWith(
                 sinon.match({
                     locktoken: message.lockToken,
-                    propertiesToModify: customProperties,
+                    propertiesToModify: sinon.match.instanceOf(Uint8Array),
                 }),
                 sinon.match.func
             );
@@ -313,7 +317,11 @@ describe('ServiceBusMessageActions', () => {
         it('should deadletter a message with custom parameters', async () => {
             mockGrpcClient.deadletter.callsArgWith(1, null);
             const message = createMockMessage();
-            const customProperties = new Uint8Array([4, 5, 6]);
+            const customProperties = {
+                '0': 4,
+                '1': 5,
+                '2': 6,
+            };
             const reason = 'Processing failed';
             const errorDescription = 'Invalid message format';
 
@@ -323,7 +331,7 @@ describe('ServiceBusMessageActions', () => {
             expect(mockGrpcClient.deadletter).to.have.been.calledOnceWith(
                 sinon.match({
                     locktoken: message.lockToken,
-                    propertiesToModify: customProperties,
+                    propertiesToModify: sinon.match.instanceOf(Uint8Array),
                     deadletterReason: reason,
                     deadletterErrorDescription: errorDescription,
                 }),
@@ -381,7 +389,11 @@ describe('ServiceBusMessageActions', () => {
         it('should defer a message with custom properties', async () => {
             mockGrpcClient.defer.callsArgWith(1, null);
             const message = createMockMessage();
-            const customProperties = new Uint8Array([7, 8, 9]);
+            const customProperties = {
+                '0': 7,
+                '1': 8,
+                '2': 9,
+            };
 
             await serviceActions.defer(message, customProperties);
 
@@ -389,7 +401,7 @@ describe('ServiceBusMessageActions', () => {
             expect(mockGrpcClient.defer).to.have.been.calledOnceWith(
                 sinon.match({
                     locktoken: message.lockToken,
-                    propertiesToModify: customProperties,
+                    propertiesToModify: sinon.match.instanceOf(Uint8Array),
                 }),
                 sinon.match.func
             );
@@ -650,8 +662,11 @@ describe('ServiceBusMessageActions', () => {
         it('should handle large message properties', async () => {
             mockGrpcClient.abandon.callsArgWith(1, null);
             const message = createMockMessage();
-            const largeProperties = new Uint8Array(1024 * 1024); // 1MB
-            largeProperties.fill(42);
+            // Create a large properties object (100 properties for testing)
+            const largeProperties: Record<string, number> = {};
+            for (let i = 0; i < 100; i++) {
+                largeProperties[i.toString()] = 42;
+            }
 
             await serviceActions.abandon(message, largeProperties);
 
@@ -659,7 +674,7 @@ describe('ServiceBusMessageActions', () => {
             expect(mockGrpcClient.abandon).to.have.been.calledOnceWith(
                 sinon.match({
                     locktoken: message.lockToken,
-                    propertiesToModify: largeProperties,
+                    propertiesToModify: sinon.match.instanceOf(Uint8Array),
                 }),
                 sinon.match.func
             );
