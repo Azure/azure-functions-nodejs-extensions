@@ -17,7 +17,7 @@ import {
     SettlementServiceClient,
 } from '../../types/settlement-types';
 import { createGrpcClient } from '../grpcClientFactory';
-import { convertPropertiesToAmqpBytes } from '../util/amqpPropertyEncoder';
+import { encodePropertiesForOperation } from '../util/amqpPropertyEncoder';
 import { GrpcUriBuilder } from '../util/grpcUriBuilder';
 
 // Using the original proto-loader approach with better path resolution
@@ -89,19 +89,7 @@ export class ServiceBusMessageActions implements IServiceBusMessageActions {
      */
     async abandon(message: ServiceBusReceivedMessage, propertiesToModify?: Record<string, any>): Promise<void> {
         const locktoken = this.validateLockToken(message);
-
-        let encodedProperties = new Uint8Array();
-        if (propertiesToModify && Object.keys(propertiesToModify).length > 0) {
-            try {
-                encodedProperties = new Uint8Array(convertPropertiesToAmqpBytes(propertiesToModify));
-            } catch (error) {
-                throw new Error(
-                    `Failed to encode properties for abandon operation: ${
-                        error instanceof Error ? error.message : String(error)
-                    }`
-                );
-            }
-        }
+        const encodedProperties = encodePropertiesForOperation(propertiesToModify, 'abandon');
 
         return new Promise((resolve, reject) => {
             const request: AbandonRequest = {
@@ -141,19 +129,7 @@ export class ServiceBusMessageActions implements IServiceBusMessageActions {
         deadletterErrorDescription?: string
     ): Promise<void> {
         const locktoken = this.validateLockToken(message);
-
-        let encodedProperties = new Uint8Array();
-        if (propertiesToModify && Object.keys(propertiesToModify).length > 0) {
-            try {
-                encodedProperties = new Uint8Array(convertPropertiesToAmqpBytes(propertiesToModify));
-            } catch (error) {
-                throw new Error(
-                    `Failed to encode properties for deadletter operation: ${
-                        error instanceof Error ? error.message : String(error)
-                    }`
-                );
-            }
-        }
+        const encodedProperties = encodePropertiesForOperation(propertiesToModify, 'deadletter');
 
         return new Promise((resolve, reject) => {
             const request: DeadletterRequest = {
@@ -188,19 +164,7 @@ export class ServiceBusMessageActions implements IServiceBusMessageActions {
      */
     async defer(message: ServiceBusReceivedMessage, propertiesToModify?: Record<string, any>): Promise<void> {
         const locktoken = this.validateLockToken(message);
-
-        let encodedProperties = new Uint8Array();
-        if (propertiesToModify && Object.keys(propertiesToModify).length > 0) {
-            try {
-                encodedProperties = new Uint8Array(convertPropertiesToAmqpBytes(propertiesToModify));
-            } catch (error) {
-                throw new Error(
-                    `Failed to encode properties for defer operation: ${
-                        error instanceof Error ? error.message : String(error)
-                    }`
-                );
-            }
-        }
+        const encodedProperties = encodePropertiesForOperation(propertiesToModify, 'defer');
 
         return new Promise((resolve, reject) => {
             const request: DeferRequest = {

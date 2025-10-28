@@ -196,6 +196,51 @@ export function convertPropertiesToAmqpBytes(propertiesToModify: Record<string, 
 }
 
 /**
+ * Encodes properties for Service Bus message operations with proper error handling
+ *
+ * This function provides a safe wrapper around AMQP property encoding specifically
+ * designed for Service Bus message operations (abandon, deadletter, defer).
+ * It handles null/undefined properties and provides operation-specific error messages.
+ *
+ * @param propertiesToModify - Optional properties to modify on the message
+ * @param operationName - The name of the operation (for error messages)
+ * @returns Encoded properties as Uint8Array, or empty array if no properties provided
+ * @throws Error with operation-specific context if encoding fails
+ *
+ * @example
+ * ```typescript
+ * // For abandon operation
+ * const encoded = encodePropertiesForOperation(
+ *   { messageId: 'test-123', priority: 1 },
+ *   'abandon'
+ * );
+ *
+ * // For operations without properties
+ * const empty = encodePropertiesForOperation(undefined, 'defer');
+ * // Returns: new Uint8Array()
+ * ```
+ */
+export function encodePropertiesForOperation(
+    propertiesToModify: Record<string, any> | undefined,
+    operationName: string
+): Uint8Array {
+    // Return empty array if no properties provided
+    if (!propertiesToModify || Object.keys(propertiesToModify).length === 0) {
+        return new Uint8Array();
+    }
+
+    try {
+        return new Uint8Array(convertPropertiesToAmqpBytes(propertiesToModify));
+    } catch (error) {
+        throw new Error(
+            `Failed to encode properties for ${operationName} operation: ${
+                error instanceof Error ? error.message : String(error)
+            }`
+        );
+    }
+}
+
+/**
  * Attempts to create an AMQP property value from a JavaScript value with intelligent type detection
  *
  * Performs automatic type detection and conversion:

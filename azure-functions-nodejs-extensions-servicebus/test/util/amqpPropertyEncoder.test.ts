@@ -2,7 +2,11 @@
 // Licensed under the MIT License.
 
 import { expect } from 'chai';
-import { convertPropertiesToAmqpBytes, validateAmqpProperties } from '../../src/util/amqpPropertyEncoder';
+import {
+    convertPropertiesToAmqpBytes,
+    encodePropertiesForOperation,
+    validateAmqpProperties,
+} from '../../src/util/amqpPropertyEncoder';
 
 describe('AMQP Property Encoder', () => {
     describe('convertPropertiesToAmqpBytes', () => {
@@ -379,6 +383,240 @@ describe('AMQP Property Encoder', () => {
             const result = convertPropertiesToAmqpBytes(properties);
             expect(result).to.be.instanceOf(Uint8Array);
             expect(result.length).to.be.greaterThan(0);
+        });
+    });
+
+    describe('encodePropertiesForOperation', () => {
+        describe('Successful Encoding', () => {
+            it('should encode properties with operation-specific context', () => {
+                const properties = {
+                    messageId: 'test-123',
+                    priority: 1,
+                    customFlag: true,
+                };
+
+                const result = encodePropertiesForOperation(properties, 'abandon');
+                expect(result).to.be.instanceOf(Uint8Array);
+                expect(result.length).to.be.greaterThan(0);
+            });
+
+            it('should handle different operation names', () => {
+                const properties = { testKey: 'testValue' };
+
+                const abandonResult = encodePropertiesForOperation(properties, 'abandon');
+                const deadletterResult = encodePropertiesForOperation(properties, 'deadletter');
+                const deferResult = encodePropertiesForOperation(properties, 'defer');
+
+                expect(abandonResult).to.be.instanceOf(Uint8Array);
+                expect(deadletterResult).to.be.instanceOf(Uint8Array);
+                expect(deferResult).to.be.instanceOf(Uint8Array);
+
+                // All should produce the same encoding for the same properties
+                expect(abandonResult).to.deep.equal(deadletterResult);
+                expect(deadletterResult).to.deep.equal(deferResult);
+            });
+
+            it('should handle complex property types', () => {
+                const properties = {
+                    stringValue: 'test',
+                    numberValue: 42,
+                    booleanValue: true,
+                    dateValue: new Date('2023-12-25T10:30:00Z'),
+                    urlValue: new URL('https://example.com'),
+                    bufferValue: Buffer.from('binary data'),
+                    arrayValue: [1, 2, 3],
+                    bigintValue: BigInt(123),
+                };
+
+                const result = encodePropertiesForOperation(properties, 'test-operation');
+                expect(result).to.be.instanceOf(Uint8Array);
+                expect(result.length).to.be.greaterThan(0);
+            });
+        });
+
+        describe('Empty/Null Properties Handling', () => {
+            it('should return empty Uint8Array for undefined properties', () => {
+                const result = encodePropertiesForOperation(undefined, 'abandon');
+                expect(result).to.be.instanceOf(Uint8Array);
+                expect(result.length).to.equal(0);
+            });
+
+            it('should return empty Uint8Array for null properties', () => {
+                const result = encodePropertiesForOperation(undefined, 'deadletter');
+                expect(result).to.be.instanceOf(Uint8Array);
+                expect(result.length).to.equal(0);
+            });
+
+            it('should return empty Uint8Array for empty object', () => {
+                const result = encodePropertiesForOperation({}, 'defer');
+                expect(result).to.be.instanceOf(Uint8Array);
+                expect(result.length).to.equal(0);
+            });
+
+            it('should handle object with only falsy values', () => {
+                const properties = {
+                    emptyString: '',
+                    zeroNumber: 0,
+                    falseBoolean: false,
+                };
+
+                const result = encodePropertiesForOperation(properties, 'test');
+                expect(result).to.be.instanceOf(Uint8Array);
+                expect(result.length).to.be.greaterThan(0);
+            });
+        });
+
+        describe('Error Handling with Operation Context', () => {
+            it('should provide operation-specific error messages for abandon', () => {
+                const properties = {
+                    unsupportedType: Symbol('test'),
+                };
+
+                expect(() => encodePropertiesForOperation(properties, 'abandon')).to.throw(
+                    /Failed to encode properties for abandon operation:/
+                );
+            });
+
+            it('should provide operation-specific error messages for deadletter', () => {
+                const properties = {
+                    unsupportedFunction: () => 'test',
+                };
+
+                expect(() => encodePropertiesForOperation(properties, 'deadletter')).to.throw(
+                    /Failed to encode properties for deadletter operation:/
+                );
+            });
+
+            it('should provide operation-specific error messages for defer', () => {
+                const properties = {
+                    unsupportedType: new WeakMap(),
+                };
+
+                expect(() => encodePropertiesForOperation(properties, 'defer')).to.throw(
+                    /Failed to encode properties for defer operation:/
+                );
+            });
+
+            it('should include original error message in context', () => {
+                const properties = {
+                    unsupportedType: Symbol('test-symbol'),
+                };
+
+                try {
+                    encodePropertiesForOperation(properties, 'test-operation');
+                    expect.fail('Should have thrown an error');
+                } catch (error) {
+                    expect(error).to.be.instanceOf(Error);
+                    const errorMessage = (error as Error).message;
+                    expect(errorMessage).to.include('Failed to encode properties for test-operation operation:');
+                    expect(errorMessage).to.include('unsupportedType');
+                    expect(errorMessage).to.include('symbol');
+                }
+            });
+
+            it('should handle custom operation names in error messages', () => {
+                const properties = {
+                    invalidType: new Set([1, 2, 3]),
+                };
+
+                expect(() => encodePropertiesForOperation(properties, 'custom-operation-name')).to.throw(
+                    /Failed to encode properties for custom-operation-name operation:/
+                );
+            });
+        });
+
+        describe('Integration and Performance', () => {
+            it('should handle large property objects efficiently', () => {
+                const largeProperties: Record<string, number> = {};
+                for (let i = 0; i < 100; i++) {
+                    largeProperties[`property${i}`] = i;
+                }
+
+                const startTime = process.hrtime.bigint();
+                const result = encodePropertiesForOperation(largeProperties, 'performance-test');
+                const endTime = process.hrtime.bigint();
+
+                expect(result).to.be.instanceOf(Uint8Array);
+                expect(result.length).to.be.greaterThan(0);
+
+                // Should complete within reasonable time (less than 100ms)
+                const durationMs = Number(endTime - startTime) / 1_000_000;
+                expect(durationMs).to.be.lessThan(100);
+            });
+
+            it('should produce consistent results for identical inputs', () => {
+                const properties = {
+                    key1: 'value1',
+                    key2: 42,
+                    key3: true,
+                };
+
+                const result1 = encodePropertiesForOperation(properties, 'test');
+                const result2 = encodePropertiesForOperation(properties, 'test');
+                const result3 = encodePropertiesForOperation(properties, 'different-operation');
+
+                expect(result1).to.deep.equal(result2);
+                expect(result1).to.deep.equal(result3);
+            });
+
+            it('should handle concurrent encoding operations', async () => {
+                const properties = {
+                    concurrentKey: 'concurrentValue',
+                    timestamp: new Date(),
+                };
+
+                const promises = Array.from({ length: 10 }, (_, i) =>
+                    Promise.resolve(encodePropertiesForOperation(properties, `concurrent-${i}`))
+                );
+
+                const results = await Promise.all(promises);
+
+                // All results should be identical for the same properties
+                const firstResult = results[0];
+                results.forEach((result, index) => {
+                    expect(result).to.deep.equal(firstResult, `Result ${index} should match the first result`);
+                });
+            });
+        });
+
+        describe('Validation and Edge Cases', () => {
+            it('should handle properties with special characters in keys', () => {
+                const properties = {
+                    'key-with-dashes': 'value1',
+                    'key.with.dots': 'value2',
+                    'key with spaces': 'value3',
+                    key_with_underscores: 'value4',
+                    'key@with#special$chars%': 'value5',
+                };
+
+                const result = encodePropertiesForOperation(properties, 'special-chars-test');
+                expect(result).to.be.instanceOf(Uint8Array);
+                expect(result.length).to.be.greaterThan(0);
+            });
+
+            it('should handle unicode property keys and values', () => {
+                const properties = {
+                    ключ: 'значение', // Cyrillic
+                    键: '值', // Chinese
+                    キー: '値', // Japanese
+                    '🔑': '🎯', // Emojis
+                };
+
+                const result = encodePropertiesForOperation(properties, 'unicode-test');
+                expect(result).to.be.instanceOf(Uint8Array);
+                expect(result.length).to.be.greaterThan(0);
+            });
+
+            it('should validate operation name parameter', () => {
+                const properties = { key: 'value' };
+
+                // Should work with various operation name formats
+                expect(() => encodePropertiesForOperation(properties, '')).to.not.throw();
+                expect(() => encodePropertiesForOperation(properties, 'a')).to.not.throw();
+                expect(() =>
+                    encodePropertiesForOperation(properties, 'very-long-operation-name-with-many-characters')
+                ).to.not.throw();
+            });
         });
     });
 });
