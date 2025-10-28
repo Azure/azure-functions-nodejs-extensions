@@ -66,6 +66,11 @@ export class ServiceBusMessageActions implements IServiceBusMessageActions {
             const request: CompleteRequest = { locktoken };
             this.client.complete(request, (error: grpc.ServiceError | null) => {
                 if (error) {
+                    console.error('Complete request failed:', {
+                        code: error.code,
+                        message: error.message,
+                        details: error.details,
+                    });
                     reject(error);
                 } else {
                     resolve();
@@ -106,6 +111,11 @@ export class ServiceBusMessageActions implements IServiceBusMessageActions {
 
             this.client.abandon(request, (error: grpc.ServiceError | null) => {
                 if (error) {
+                    console.error('Abandon request failed:', {
+                        code: error.code,
+                        message: error.message,
+                        details: error.details,
+                    });
                     reject(error);
                 } else {
                     resolve();
@@ -155,6 +165,11 @@ export class ServiceBusMessageActions implements IServiceBusMessageActions {
 
             this.client.deadletter(request, (error: grpc.ServiceError | null) => {
                 if (error) {
+                    console.error('Deadletter request failed:', {
+                        code: error.code,
+                        message: error.message,
+                        details: error.details,
+                    });
                     reject(error);
                 } else {
                     resolve();
@@ -195,6 +210,11 @@ export class ServiceBusMessageActions implements IServiceBusMessageActions {
 
             this.client.defer(request, (error: grpc.ServiceError | null) => {
                 if (error) {
+                    console.error('Defer request failed:', {
+                        code: error.code,
+                        message: error.message,
+                        details: error.details,
+                    });
                     reject(error);
                 } else {
                     resolve();
@@ -217,6 +237,11 @@ export class ServiceBusMessageActions implements IServiceBusMessageActions {
 
             this.client.renewMessageLock(request, (error: grpc.ServiceError | null) => {
                 if (error) {
+                    console.error('Renew message lock request failed:', {
+                        code: error.code,
+                        message: error.message,
+                        details: error.details,
+                    });
                     reject(error);
                 } else {
                     resolve();
@@ -239,6 +264,11 @@ export class ServiceBusMessageActions implements IServiceBusMessageActions {
 
             this.client.setSessionState(request, (error: grpc.ServiceError | null) => {
                 if (error) {
+                    console.error('Set session state request failed:', {
+                        code: error.code,
+                        message: error.message,
+                        details: error.details,
+                    });
                     reject(error);
                 } else {
                     resolve();
@@ -260,6 +290,11 @@ export class ServiceBusMessageActions implements IServiceBusMessageActions {
 
             this.client.releaseSession(request, (error: grpc.ServiceError | null) => {
                 if (error) {
+                    console.error('Release session request failed:', {
+                        code: error.code,
+                        message: error.message,
+                        details: error.details,
+                    });
                     reject(error);
                 } else {
                     resolve();
@@ -283,6 +318,11 @@ export class ServiceBusMessageActions implements IServiceBusMessageActions {
                 request,
                 (error: grpc.ServiceError | null, response?: RenewSessionLockResponse) => {
                     if (error) {
+                        console.error('Renew session lock request failed:', {
+                            code: error.code,
+                            message: error.message,
+                            details: error.details,
+                        });
                         reject(error);
                     } else if (response && response.lockedUntil) {
                         resolve(response.lockedUntil);
