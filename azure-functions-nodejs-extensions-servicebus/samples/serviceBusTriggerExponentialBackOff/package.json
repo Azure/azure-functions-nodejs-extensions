@@ -1,5 +1,5 @@
 {
-    "name": "servicebussamplewithcomplete",
+    "name": "serviceBusTriggerExponentialBackOff",
     "version": "1.0.0",
     "description": "",
     "scripts": {
@@ -12,12 +12,13 @@
     },
     "dependencies": {
         "@azure/functions": "4.7.4-preview",
-        "@azure/functions-extensions-servicebus": "0.3.1-preview"
+        "@azure/functions-extensions-servicebus": "0.3.5-preview",
+        "@azure/identity": "^4.13.0"
     },
     "devDependencies": {
         "@types/node": "^20.x",
-        "typescript": "^4.0.0",
         "rimraf": "^5.0.0",
+        "typescript": "^4.0.0",
         "undici": "^5.13.0"
     },
     "main": "dist/src/{index.js,functions/*.js}"

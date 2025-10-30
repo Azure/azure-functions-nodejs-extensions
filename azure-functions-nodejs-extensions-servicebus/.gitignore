@@ -1,0 +1,63 @@
+# Dependencies
+node_modules/
+.npm
+
+# Build outputs
+dist/
+*.tsbuildinfo
+
+# Compiled JavaScript from TypeScript source
+# Prevent .js files in src/ directory to avoid compilation conflicts
+src/**/*.js
+src/**/*.js.map
+
+# Test results
+test-results.xml
+unit-test-results.xml
+
+# Environment files
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# Coverage directory used by tools like istanbul
+coverage/
+*.lcov
+
+# nyc test coverage
+.nyc_output
+
+# Azurite storage files
+__azurite_db_*.json
+__blobstorage__/
+__queuestorage__/
+__tablestorage__/
+
+# Azure Functions local settings
+local.settings.json
