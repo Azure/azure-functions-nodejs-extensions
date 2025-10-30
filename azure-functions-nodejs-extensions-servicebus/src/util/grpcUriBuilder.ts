@@ -1,7 +1,7 @@
 // Copyright (c) .NET Foundation. All rights reserved.
 // Licensed under the MIT License.
 
-import parseArgs from 'minimist';
+import minimist from 'minimist';
 
 /**
  *  GrpcUriBuilder is a utility class to build a gRPC URI from command line arguments.
@@ -15,7 +15,7 @@ export class GrpcUriBuilder {
      * @throws Error if 'host' or 'port' arguments are missing.
      */
     static build(): { uri: string; grpcMaxMessageLength: number } {
-        const parsedArgs = parseArgs(process.argv.slice(2));
+        const parsedArgs = minimist(process.argv.slice(2));
         const { host, port, 'functions-grpc-max-message-length': grpcMaxMessageLength } = parsedArgs;
 
         const missing: string[] = [];

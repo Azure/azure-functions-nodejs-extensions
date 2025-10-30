@@ -108,7 +108,7 @@ export interface IServiceBusMessageActions {
      * @returns A promise that resolves when the operation is successful.
      * @throws Error if the lockToken is missing or the gRPC call fails.
      */
-    abandon(message: ServiceBusReceivedMessage, propertiesToModify?: Uint8Array): Promise<void>;
+    abandon(message: ServiceBusReceivedMessage, propertiesToModify?: Record<string, any>): Promise<void>;
 
     /**
      * Deadletters the specified message, moving it to the dead-letter queue.
@@ -122,7 +122,7 @@ export interface IServiceBusMessageActions {
      */
     deadletter(
         message: ServiceBusReceivedMessage,
-        propertiesToModify?: Uint8Array,
+        propertiesToModify?: Record<string, any>,
         deadletterReason?: string,
         deadletterErrorDescription?: string
     ): Promise<void>;
@@ -135,7 +135,7 @@ export interface IServiceBusMessageActions {
      * @returns A promise that resolves when the operation is successful.
      * @throws Error if the lockToken is missing or the gRPC call fails.
      */
-    defer(message: ServiceBusReceivedMessage, propertiesToModify?: Uint8Array): Promise<void>;
+    defer(message: ServiceBusReceivedMessage, propertiesToModify?: Record<string, any>): Promise<void>;
 
     /**
      * Renews the lock on the specified message, extending its lock duration.

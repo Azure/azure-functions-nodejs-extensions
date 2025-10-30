@@ -1,82 +1,110 @@
-// Copyright (c) .NET Foundation. All rights reserved.
-// Licensed under the MIT License.
 
-import { app, InvocationContext } from '@azure/functions';
-import { ServiceBusMessageContext } from '@azure/functions-extensions-servicebus';
+import {ServiceBusMessageContext} from "@azure/functions-extensions-servicebus"
+import { app, InvocationContext } from "@azure/functions";
+import {ServiceBusMessageActions} from "@azure/functions-extensions-servicebus"
+import { ServiceBusClient } from "@azure/service-bus";
+import { DefaultAzureCredential } from "@azure/identity";
 
-/**
- * Azure Service Bus Exponential Backoff Sample
- *
- * This sample demonstrates how Service Bus automatically handles exponential backoff
- * when messages are abandoned. The pattern simulates a failing service that eventually
- * succeeds after multiple retry attempts.
- *
- * Flow:
- * - Attempts 1-3: Simulate failure and abandon message (triggers Service Bus retry with exponential backoff)
- * - Attempt 4+: Process successfully and complete message
- * - Max retries: Send to dead letter queue
- */
-export async function serviceBusExponentialBackoffTrigger(
-    serviceBusMessageContext: ServiceBusMessageContext,
-    context: InvocationContext
-): Promise<void> {
-    const message = serviceBusMessageContext.messages[0];
-    if (!message) {
-        context.log('No message received');
+//This a SDKbinding = true
+export async function serviceBusQueueTrigger(serviceBusMessageContext: ServiceBusMessageContext, context: InvocationContext, ): Promise<void> {
+    //context.log('Service bus queue function processed message:', serviceBusMessageManager);
+    const serviceBusMessageActions = serviceBusMessageContext.actions as ServiceBusMessageActions;
+    const receivedMessage = serviceBusMessageContext.messages[0];
+    
+    context.log('Processing message', receivedMessage);
+    context.log('Message body', receivedMessage.body);
+    
+    // Check current retry count
+    const currentRetryCount = Number(receivedMessage.applicationProperties?.retryCount) || 0;
+    const maxRetries = 3; // Maximum number of retries allowed
+    
+    context.log(`Current retry count: ${currentRetryCount}, Max retries: ${maxRetries}`);
+    
+    // If max retries exceeded, dead-letter the message
+    if (currentRetryCount >= maxRetries) {
+        context.log(`Message has exceeded maximum retry count (${maxRetries}). Dead-lettering message.`);
+        await serviceBusMessageActions.deadletter(receivedMessage);
         return;
     }
-
-    const messageId = String(message.messageId || 'unknown');
-    const deliveryCount = message.deliveryCount || 0;
-
-    context.log(`Processing message ${messageId}, delivery attempt: ${deliveryCount}`);
-
+    
     try {
-        // Simulate processing time that increases with each retry (2s, 4s, 8s, 16s...)
-        const processingDelayMs = Math.pow(2, deliveryCount) * 1000;
-        context.log(`Simulating ${processingDelayMs / 1000}s processing time...`);
-        await new Promise((resolve) => setTimeout(resolve, processingDelayMs));
-
-        // Fail first 3 attempts to demonstrate exponential backoff behavior
-        if (deliveryCount <= 3) {
-            context.log(`Simulated failure on attempt ${deliveryCount} - abandoning message`);
-            await serviceBusMessageContext.actions.abandon(message);
-            throw new Error(`Intentional failure for demo (attempt ${deliveryCount})`);
+        // Get the Service Bus connection string from environment variables
+        let connectionString = process.env.ServiceBusConnection;
+        let serviceBusClient: ServiceBusClient;
+        
+        // Check if we have a full connection string with shared access key
+        if (connectionString && connectionString.includes('SharedAccessKey')) {
+            // Use connection string with shared access key
+            serviceBusClient = new ServiceBusClient(connectionString);
+            context.log('Using connection string with shared access key');
+        } else {
+            // Use managed identity with fully qualified namespace
+            const fullyQualifiedNamespace = process.env.ServiceBusConnection__fullyQualifiedNamespace;
+            if (fullyQualifiedNamespace) {
+                // Create credential for managed identity
+                const credential = new DefaultAzureCredential();
+                serviceBusClient = new ServiceBusClient(fullyQualifiedNamespace, credential);
+                context.log(`Using managed identity with namespace: ${fullyQualifiedNamespace}`);
+            } else {
+                throw new Error("Neither valid ServiceBusConnection nor ServiceBusConnection__fullyQualifiedNamespace found in environment variables");
+            }
         }
+        
+        // Create sender for the same queue (or you can specify a different queue/topic)
+        const sender = serviceBusClient.createSender("testqueue");
+        
+        // Schedule the message for 10 seconds later (you can adjust this as needed)
+        const scheduledEnqueueTime = new Date(Date.now() + 10 * 1000); // 10 seconds from now
 
-        // Success after retries - complete the message
-        context.log(`Success on attempt ${deliveryCount}! Completing message.`);
-        await serviceBusMessageContext.actions.complete(message);
+        const retryCnt = (Number(receivedMessage.applicationProperties?.retryCount) || 0) + 1;
+        if(retryCnt <= 3) {
+            // Create a new message with the same body and properties
+            const messageToSchedule = {
+                body: receivedMessage.body,
+                messageId: `scheduled-${receivedMessage.messageId}`,
+                contentType: receivedMessage.contentType,
+                correlationId: receivedMessage.correlationId,
+                subject: receivedMessage.subject,
+                applicationProperties: {
+                    ...receivedMessage.applicationProperties,
+                    retryCount: retryCnt,
+                    originalMessageId: receivedMessage.messageId,
+                    scheduledAt: new Date().toISOString(),
+                    originalEnqueueTime: receivedMessage.enqueuedTimeUtc?.toISOString()
+                },
+                scheduledEnqueueTime: scheduledEnqueueTime
+            };
+        
+            // Schedule the message
+            const sequenceNumbers = await sender.scheduleMessages([messageToSchedule], scheduledEnqueueTime);
+            
+            const newRetryCount = (Number(receivedMessage.applicationProperties?.retryCount) || 0) + 1;
+            context.log(`Message scheduled successfully with sequence number: ${sequenceNumbers[0]}`);
+            context.log(`Message will be delivered at: ${scheduledEnqueueTime.toISOString()}`);
+            context.log(`Retry count incremented to: ${newRetryCount}`);
+        }
+        
+        // Close the sender and client
+        await sender.close();
+        await serviceBusClient.close();
+        
+        // Complete the original message after successful scheduling
+        await serviceBusMessageActions.complete(receivedMessage);
+        context.log('Original message completed successfully');
+        
     } catch (error) {
-        context.log(`Processing failed: ${String(error)}`);
-
-        // Send to dead letter queue if max retries exceeded
-        if (deliveryCount >= 5) {
-            context.log('Max retries reached - sending to dead letter queue');
-            await serviceBusMessageContext.actions.deadletter(
-                message,
-                undefined,
-                'MaxRetryExceeded',
-                `Failed after ${deliveryCount} attempts`
-            );
-        }
-
-        throw error; // Re-throw to maintain failure semantics
+        context.error('Error processing message:', error);
+        // In case of error, you might want to abandon or dead-letter the message
+        await serviceBusMessageActions.abandon(receivedMessage);
+        throw error;
     }
 }
 
-/**
- * Register Service Bus trigger for exponential backoff demonstration
- *
- * Key settings for this sample:
- * - autoCompleteMessages: false (allows manual message handling)
- * - cardinality: 'one' (processes one message at a time for clarity)
- */
-app.serviceBusQueue('serviceBusExponentialBackoffTrigger', {
+app.serviceBusQueue('serviceBusQueueTrigger1', {
     connection: 'ServiceBusConnection',
     queueName: 'testqueue',
     sdkBinding: true,
     autoCompleteMessages: false,
-    cardinality: 'one',
-    handler: serviceBusExponentialBackoffTrigger,
+    cardinality: "many",
+    handler: serviceBusQueueTrigger
 });

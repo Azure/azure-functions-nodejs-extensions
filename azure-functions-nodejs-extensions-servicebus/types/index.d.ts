@@ -9,5 +9,5 @@ export interface ServiceBusMessageContext {
     actions: ServiceBusMessageActions;
 }
 
-// Export the IServiceBusMessageActions interface for customer consumption
-export { IServiceBusMessageActions } from './settlement-types';
+export { ServiceBusMessageActions } from '../src/servicebus/ServiceBusMessageActions';
+export type { IServiceBusMessageActions } from './settlement-types';

@@ -17,6 +17,7 @@ import {
     SettlementServiceClient,
 } from '../../types/settlement-types';
 import { createGrpcClient } from '../grpcClientFactory';
+import { encodePropertiesForOperation } from '../util/amqpPropertyEncoder';
 import { GrpcUriBuilder } from '../util/grpcUriBuilder';
 
 // Using the original proto-loader approach with better path resolution
@@ -86,12 +87,14 @@ export class ServiceBusMessageActions implements IServiceBusMessageActions {
      * @returns A promise that resolves when the operation is successful.
      * @throws Error if the lockToken is missing or the gRPC call fails.
      */
-    async abandon(message: ServiceBusReceivedMessage, propertiesToModify?: Uint8Array): Promise<void> {
+    async abandon(message: ServiceBusReceivedMessage, propertiesToModify?: Record<string, any>): Promise<void> {
         const locktoken = this.validateLockToken(message);
+        const encodedProperties = encodePropertiesForOperation(propertiesToModify, 'abandon');
+
         return new Promise((resolve, reject) => {
             const request: AbandonRequest = {
                 locktoken,
-                propertiesToModify: propertiesToModify || new Uint8Array(),
+                propertiesToModify: encodedProperties,
             };
 
             this.client.abandon(request, (error: grpc.ServiceError | null) => {
@@ -121,15 +124,17 @@ export class ServiceBusMessageActions implements IServiceBusMessageActions {
      */
     async deadletter(
         message: ServiceBusReceivedMessage,
-        propertiesToModify?: Uint8Array,
+        propertiesToModify?: Record<string, any>,
         deadletterReason?: string,
         deadletterErrorDescription?: string
     ): Promise<void> {
         const locktoken = this.validateLockToken(message);
+        const encodedProperties = encodePropertiesForOperation(propertiesToModify, 'deadletter');
+
         return new Promise((resolve, reject) => {
             const request: DeadletterRequest = {
                 locktoken,
-                propertiesToModify: propertiesToModify || new Uint8Array(),
+                propertiesToModify: encodedProperties,
                 deadletterReason,
                 deadletterErrorDescription,
             };
@@ -157,12 +162,14 @@ export class ServiceBusMessageActions implements IServiceBusMessageActions {
      * @returns A promise that resolves when the operation is successful.
      * @throws Error if the lockToken is missing or the gRPC call fails.
      */
-    async defer(message: ServiceBusReceivedMessage, propertiesToModify?: Uint8Array): Promise<void> {
+    async defer(message: ServiceBusReceivedMessage, propertiesToModify?: Record<string, any>): Promise<void> {
         const locktoken = this.validateLockToken(message);
+        const encodedProperties = encodePropertiesForOperation(propertiesToModify, 'defer');
+
         return new Promise((resolve, reject) => {
             const request: DeferRequest = {
                 locktoken,
-                propertiesToModify: propertiesToModify || new Uint8Array(),
+                propertiesToModify: encodedProperties,
             };
 
             this.client.defer(request, (error: grpc.ServiceError | null) => {
@@ -194,7 +201,7 @@ export class ServiceBusMessageActions implements IServiceBusMessageActions {
 
             this.client.renewMessageLock(request, (error: grpc.ServiceError | null) => {
                 if (error) {
-                    console.error('RenewMessageLock request failed:', {
+                    console.error('Renew message lock request failed:', {
                         code: error.code,
                         message: error.message,
                         details: error.details,
@@ -221,7 +228,7 @@ export class ServiceBusMessageActions implements IServiceBusMessageActions {
 
             this.client.setSessionState(request, (error: grpc.ServiceError | null) => {
                 if (error) {
-                    console.error('SetSessionState request failed:', {
+                    console.error('Set session state request failed:', {
                         code: error.code,
                         message: error.message,
                         details: error.details,
@@ -247,7 +254,7 @@ export class ServiceBusMessageActions implements IServiceBusMessageActions {
 
             this.client.releaseSession(request, (error: grpc.ServiceError | null) => {
                 if (error) {
-                    console.error('ReleaseSession request failed:', {
+                    console.error('Release session request failed:', {
                         code: error.code,
                         message: error.message,
                         details: error.details,
@@ -275,7 +282,7 @@ export class ServiceBusMessageActions implements IServiceBusMessageActions {
                 request,
                 (error: grpc.ServiceError | null, response?: RenewSessionLockResponse) => {
                     if (error) {
-                        console.error('RenewSessionLock request failed:', {
+                        console.error('Renew session lock request failed:', {
                             code: error.code,
                             message: error.message,
                             details: error.details,
@@ -285,7 +292,6 @@ export class ServiceBusMessageActions implements IServiceBusMessageActions {
                         resolve(response.lockedUntil);
                     } else {
                         const err = new Error('No response or lockedUntil returned from renewSessionLock');
-                        console.error(err);
                         reject(err);
                     }
                 }
