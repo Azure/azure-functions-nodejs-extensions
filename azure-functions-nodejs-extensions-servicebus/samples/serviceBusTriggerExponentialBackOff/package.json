@@ -11,8 +11,8 @@
         "test": "echo \"No tests yet...\""
     },
     "dependencies": {
-        "@azure/functions": "4.7.4-preview",
-        "@azure/functions-extensions-servicebus": "0.3.5-preview",
+        "@azure/functions": "^4.9.0",
+        "@azure/functions-extensions-servicebus": "0.3.6-preview",
         "@azure/identity": "^4.13.0"
     },
     "devDependencies": {
