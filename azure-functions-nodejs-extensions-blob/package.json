@@ -78,6 +78,6 @@
     "dependencies": {
         "@azure/identity": "^4.9.1",
         "@azure/storage-blob": "^12.27.0",
-        "@azure/functions-extensions-base": "^0.2.0-preview"
+        "@azure/functions-extensions-base": "^0.2.0"
     }
 }
