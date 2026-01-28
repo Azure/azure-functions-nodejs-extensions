@@ -76,8 +76,8 @@ export class AzureServiceBusMessageFactory {
     ): ServiceBusReceivedMessage {
         // Extract common properties from the AMQP message
         const receivedMessage: ServiceBusReceivedMessage = {
-            // Message body
-            body: AzureServiceBusMessageFactory.decodeAmqpBody(amqpMessage.body, amqpMessage.properties?.contentType),
+            // Message body - return raw Buffer without automatic parsing
+            body: AzureServiceBusMessageFactory.decodeAmqpBody(amqpMessage.body),
 
             // Message properties
             messageId: amqpMessage.properties?.messageId?.toString(),
@@ -156,13 +156,18 @@ export class AzureServiceBusMessageFactory {
     }
 
     /**
-     * Decodes the body of an AMQP message section based on its typecode and content type.
-     * Supports decoding binary data, plain text, and JSON content.
+     * Decodes the body of an AMQP message section based on its typecode.
+     * Returns the raw binary content as a Buffer without any automatic parsing.
+     *
+     * This approach aligns with the Python Azure Functions Extension behavior,
+     * where the message body is returned as-is without automatic JSON parsing.
+     * Users who need to parse JSON can do so explicitly with their own logic,
+     * allowing for custom revivers and full control over the parsing process.
      *
      * @param section - The AMQP message section containing a typecode and content buffer.
-     * @returns The decoded message body or undefined if decoding fails.
+     * @returns The raw Buffer content for binary messages, or the original section if not a valid AMQP body.
      */
-    static decodeAmqpBody(section: unknown, contentType?: string): unknown {
+    static decodeAmqpBody(section: unknown): Buffer | unknown {
         if (
             typeof section === 'object' &&
             section !== null &&
@@ -172,25 +177,10 @@ export class AzureServiceBusMessageFactory {
             Buffer.isBuffer((section as Record<string, unknown>).content)
         ) {
             const { typecode, content } = section as { typecode: number; content: Buffer };
-            //typecode = 117 is Binary content
+            // typecode = 117 is Binary content
+            // Return raw Buffer without any parsing - consistent with Python Extension behavior
             if (typecode === 117) {
-                const text = content.toString('utf8');
-
-                switch (contentType) {
-                    case 'text/plain':
-                    case 'application/xml':
-                        return text;
-
-                    case 'application/json':
-                        try {
-                            return JSON.parse(text);
-                        } catch {
-                            return text; // fallback if not valid JSON
-                        }
-
-                    default:
-                        return text; // unknown content type convert binary to string and return
-                }
+                return content;
             }
 
             return content;
