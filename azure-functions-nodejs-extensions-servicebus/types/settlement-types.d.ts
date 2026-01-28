@@ -16,8 +16,8 @@ export interface AbandonRequest {
 export interface DeadletterRequest {
     locktoken: string;
     propertiesToModify: Uint8Array;
-    deadletterReason?: string;
-    deadletterErrorDescription?: string;
+    deadletterReason?: { value: string };
+    deadletterErrorDescription?: { value: string };
 }
 
 export interface DeferRequest {

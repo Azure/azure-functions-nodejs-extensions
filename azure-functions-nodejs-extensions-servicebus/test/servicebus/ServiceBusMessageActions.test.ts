@@ -332,8 +332,8 @@ describe('ServiceBusMessageActions', () => {
                 sinon.match({
                     locktoken: message.lockToken,
                     propertiesToModify: sinon.match.instanceOf(Uint8Array),
-                    deadletterReason: reason,
-                    deadletterErrorDescription: errorDescription,
+                    deadletterReason: { value: reason },
+                    deadletterErrorDescription: { value: errorDescription },
                 }),
                 sinon.match.func
             );
