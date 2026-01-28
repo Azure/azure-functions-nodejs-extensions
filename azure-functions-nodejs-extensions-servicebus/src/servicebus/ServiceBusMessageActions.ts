@@ -135,8 +135,10 @@ export class ServiceBusMessageActions implements IServiceBusMessageActions {
             const request: DeadletterRequest = {
                 locktoken,
                 propertiesToModify: encodedProperties,
-                deadletterReason,
-                deadletterErrorDescription,
+                deadletterReason: deadletterReason ? { value: deadletterReason } : undefined,
+                deadletterErrorDescription: deadletterErrorDescription
+                    ? { value: deadletterErrorDescription }
+                    : undefined,
             };
 
             this.client.deadletter(request, (error: grpc.ServiceError | null) => {
