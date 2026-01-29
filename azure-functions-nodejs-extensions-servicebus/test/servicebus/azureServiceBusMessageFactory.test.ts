@@ -753,32 +753,35 @@ describe('AzureServiceBusMessageFactory', () => {
         });
     });
 
-    describe('binary content (typecode 117)', () => {
-        it('should decode text/plain content as string', () => {
+    describe('binary content (typecode 117) - returns raw Buffer', () => {
+        it('should return raw Buffer for text/plain content without parsing', () => {
             const textContent = 'Hello, world!';
             const section = {
                 typecode: 117,
                 content: Buffer.from(textContent),
             };
 
-            const result = AzureServiceBusMessageFactory.decodeAmqpBody(section, 'text/plain');
+            const result = AzureServiceBusMessageFactory.decodeAmqpBody(section);
 
-            expect(result).to.equal(textContent);
+            expect(Buffer.isBuffer(result)).to.be.true;
+            expect((result as Buffer).toString('utf8')).to.equal(textContent);
         });
 
-        it('should decode application/xml content as string', () => {
+        it('should return raw Buffer for application/xml content without parsing', () => {
             const xmlContent = '<root><item>value</item></root>';
             const section = {
                 typecode: 117,
                 content: Buffer.from(xmlContent),
             };
 
-            const result = AzureServiceBusMessageFactory.decodeAmqpBody(section, 'application/xml');
+            const result = AzureServiceBusMessageFactory.decodeAmqpBody(section);
 
-            expect(result).to.equal(xmlContent);
+            expect(Buffer.isBuffer(result)).to.be.true;
+            expect((result as Buffer).toString('utf8')).to.equal(xmlContent);
         });
 
-        it('should decode application/json content as parsed JSON', () => {
+        it('should return raw Buffer for application/json content WITHOUT automatic JSON parsing', () => {
+            // This is the key behavior change - JSON is no longer automatically parsed
             const jsonObject = { name: 'test', value: 42 };
             const jsonContent = JSON.stringify(jsonObject);
             const section = {
@@ -786,61 +789,55 @@ describe('AzureServiceBusMessageFactory', () => {
                 content: Buffer.from(jsonContent),
             };
 
-            const result = AzureServiceBusMessageFactory.decodeAmqpBody(section, 'application/json');
+            const result = AzureServiceBusMessageFactory.decodeAmqpBody(section);
 
-            expect(result).to.deep.equal(jsonObject);
+            // Should return Buffer, NOT parsed JSON object
+            expect(Buffer.isBuffer(result)).to.be.true;
+            expect((result as Buffer).toString('utf8')).to.equal(jsonContent);
+            // User can parse manually if needed
+            expect(JSON.parse((result as Buffer).toString('utf8'))).to.deep.equal(jsonObject);
         });
 
-        it('should handle invalid JSON and return text for application/json content type', () => {
-            const invalidJsonContent = '{ "name": "test", value: 42 }'; // Invalid JSON (missing quotes around value)
+        it('should allow users to parse JSON with custom reviver', () => {
+            // This test demonstrates the user scenario from Issue #27
+            // Users want to control JSON parsing to handle special values
+            const jsonContent = '{"timestamp": "2025-01-28T10:00:00Z", "value": 42}';
             const section = {
                 typecode: 117,
-                content: Buffer.from(invalidJsonContent),
+                content: Buffer.from(jsonContent),
             };
 
-            const result = AzureServiceBusMessageFactory.decodeAmqpBody(section, 'application/json');
+            const result = AzureServiceBusMessageFactory.decodeAmqpBody(section);
 
-            expect(result).to.equal(invalidJsonContent);
+            // User can now parse with custom reviver to convert dates
+            const customReviver = (key: string, value: unknown) => {
+                if (key === 'timestamp' && typeof value === 'string') {
+                    return new Date(value);
+                }
+                return value;
+            };
+
+            expect(Buffer.isBuffer(result)).to.be.true;
+            const parsed = JSON.parse((result as Buffer).toString('utf8'), customReviver);
+            expect(parsed.timestamp).to.be.instanceof(Date);
+            expect(parsed.timestamp.toISOString()).to.equal('2025-01-28T10:00:00.000Z');
+            expect(parsed.value).to.equal(42);
         });
 
-        it('should handle complex nested JSON objects', () => {
-            const complexJson = {
-                id: 'test',
-                timestamp: '2023-01-01T00:00:00Z',
-                data: {
-                    items: [
-                        { id: 1, name: 'item1' },
-                        { id: 2, name: 'item2' },
-                    ],
-                    metadata: {
-                        source: 'test',
-                        version: '1.0.0',
-                    },
-                },
-            };
-            const section = {
-                typecode: 117,
-                content: Buffer.from(JSON.stringify(complexJson)),
-            };
-
-            const result = AzureServiceBusMessageFactory.decodeAmqpBody(section, 'application/json');
-
-            expect(result).to.deep.equal(complexJson);
-        });
-
-        it('should decode unknown content types as string by default', () => {
+        it('should return raw Buffer for unknown content types', () => {
             const content = 'some content';
             const section = {
                 typecode: 117,
                 content: Buffer.from(content),
             };
 
-            const result = AzureServiceBusMessageFactory.decodeAmqpBody(section, 'application/unknown');
+            const result = AzureServiceBusMessageFactory.decodeAmqpBody(section);
 
-            expect(result).to.equal(content);
+            expect(Buffer.isBuffer(result)).to.be.true;
+            expect((result as Buffer).toString('utf8')).to.equal(content);
         });
 
-        it('should handle content without a content type specified', () => {
+        it('should return raw Buffer when no content type is specified', () => {
             const content = 'test content';
             const section = {
                 typecode: 117,
@@ -849,19 +846,21 @@ describe('AzureServiceBusMessageFactory', () => {
 
             const result = AzureServiceBusMessageFactory.decodeAmqpBody(section);
 
-            expect(result).to.equal(content);
+            expect(Buffer.isBuffer(result)).to.be.true;
+            expect((result as Buffer).toString('utf8')).to.equal(content);
         });
 
-        it('should correctly handle UTF-8 special characters', () => {
+        it('should correctly handle UTF-8 special characters in raw Buffer', () => {
             const specialChars = 'Special chars: äöü éèê ñ 你好 👋';
             const section = {
                 typecode: 117,
                 content: Buffer.from(specialChars, 'utf8'),
             };
 
-            const result = AzureServiceBusMessageFactory.decodeAmqpBody(section, 'text/plain');
+            const result = AzureServiceBusMessageFactory.decodeAmqpBody(section);
 
-            expect(result).to.equal(specialChars);
+            expect(Buffer.isBuffer(result)).to.be.true;
+            expect((result as Buffer).toString('utf8')).to.equal(specialChars);
         });
 
         it('should handle empty content buffer', () => {
@@ -870,9 +869,10 @@ describe('AzureServiceBusMessageFactory', () => {
                 content: Buffer.alloc(0),
             };
 
-            const result = AzureServiceBusMessageFactory.decodeAmqpBody(section, 'text/plain');
+            const result = AzureServiceBusMessageFactory.decodeAmqpBody(section);
 
-            expect(result).to.equal('');
+            expect(Buffer.isBuffer(result)).to.be.true;
+            expect((result as Buffer).length).to.equal(0);
         });
     });
 
@@ -884,7 +884,7 @@ describe('AzureServiceBusMessageFactory', () => {
                 content: content,
             };
 
-            const result = AzureServiceBusMessageFactory.decodeAmqpBody(section, 'text/plain');
+            const result = AzureServiceBusMessageFactory.decodeAmqpBody(section);
 
             expect(result).to.equal(content);
         });
@@ -896,7 +896,7 @@ describe('AzureServiceBusMessageFactory', () => {
                 content: content,
             };
 
-            const result = AzureServiceBusMessageFactory.decodeAmqpBody(section, 'text/plain');
+            const result = AzureServiceBusMessageFactory.decodeAmqpBody(section);
 
             expect(result).to.equal(content);
         });
@@ -904,17 +904,17 @@ describe('AzureServiceBusMessageFactory', () => {
 
     describe('edge cases', () => {
         it('should handle very large content buffers', () => {
-            // Create a large string (1MB)
-            const largeString = 'a'.repeat(1024 * 1024);
+            // Create a large buffer (1MB)
+            const largeBuffer = Buffer.alloc(1024 * 1024, 'a');
             const section = {
                 typecode: 117,
-                content: Buffer.from(largeString),
+                content: largeBuffer,
             };
 
-            const result = AzureServiceBusMessageFactory.decodeAmqpBody(section, 'text/plain');
+            const result = AzureServiceBusMessageFactory.decodeAmqpBody(section);
 
-            expect(result).to.have.lengthOf(1024 * 1024);
-            expect(result).to.equal(largeString);
+            expect(Buffer.isBuffer(result)).to.be.true;
+            expect((result as Buffer).length).to.equal(1024 * 1024);
         });
 
         it('should handle binary data with zeros', () => {
@@ -926,21 +926,23 @@ describe('AzureServiceBusMessageFactory', () => {
 
             const result = AzureServiceBusMessageFactory.decodeAmqpBody(section);
 
-            // The result will be a string representation of the binary data
-            expect(result).to.be.a('string');
+            // The result should be the raw Buffer
+            expect(Buffer.isBuffer(result)).to.be.true;
+            expect(result).to.deep.equal(binaryData);
         });
 
-        it('should handle content type with charset parameter', () => {
-            const content = 'Hello, world!';
+        it('should preserve binary data integrity for non-UTF8 content', () => {
+            // Binary data that is not valid UTF-8
+            const binaryData = Buffer.from([0xFF, 0xFE, 0x00, 0x01, 0x80, 0x81]);
             const section = {
                 typecode: 117,
-                content: Buffer.from(content),
+                content: binaryData,
             };
 
-            const result = AzureServiceBusMessageFactory.decodeAmqpBody(section, 'text/plain; charset=utf-8');
+            const result = AzureServiceBusMessageFactory.decodeAmqpBody(section);
 
-            // The implementation ignores charset parameters, so it should still work
-            expect(result).to.equal(content);
+            expect(Buffer.isBuffer(result)).to.be.true;
+            expect(result).to.deep.equal(binaryData);
         });
 
         it('should handle enqueuedTimeUtc and lockedUntilUtc timestamps correctly', () => {
@@ -1206,8 +1208,9 @@ describe('AzureServiceBusMessageFactory', () => {
                 lockToken
             );
 
-            // Assert - This validates the exact behavior the user is experiencing
-            expect(result.body).to.equal('Tst 2');
+            // Assert - body is now raw Buffer (not automatically converted to string)
+            expect(Buffer.isBuffer(result.body)).to.be.true;
+            expect((result.body as Buffer).toString('utf8')).to.equal('Tst 2');
             expect(result.messageId).to.equal('0d5d0ae0b473475f9da34b55f65d9b4a');
             expect(result.timeToLive).to.equal(1209600000);
             expect(result.lockToken).to.equal(lockToken);

@@ -1,6 +1,6 @@
 {
     "name": "@azure/functions-extensions-servicebus",
-    "version": "0.3.6-preview",
+    "version": "0.4.0",
     "sideEffects": true,
     "description": "Node.js Azure ServiceBus extension implementations for Azure Functions",
     "keywords": [
