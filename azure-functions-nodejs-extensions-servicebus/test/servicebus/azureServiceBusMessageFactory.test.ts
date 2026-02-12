@@ -818,7 +818,10 @@ describe('AzureServiceBusMessageFactory', () => {
             };
 
             expect(Buffer.isBuffer(result)).to.be.true;
-            const parsed = JSON.parse((result as Buffer).toString('utf8'), customReviver);
+            const parsed = JSON.parse((result as Buffer).toString('utf8'), customReviver) as {
+                timestamp: Date;
+                value: number;
+            };
             expect(parsed.timestamp).to.be.instanceof(Date);
             expect(parsed.timestamp.toISOString()).to.equal('2025-01-28T10:00:00.000Z');
             expect(parsed.value).to.equal(42);
@@ -933,7 +936,7 @@ describe('AzureServiceBusMessageFactory', () => {
 
         it('should preserve binary data integrity for non-UTF8 content', () => {
             // Binary data that is not valid UTF-8
-            const binaryData = Buffer.from([0xFF, 0xFE, 0x00, 0x01, 0x80, 0x81]);
+            const binaryData = Buffer.from([0xff, 0xfe, 0x00, 0x01, 0x80, 0x81]);
             const section = {
                 typecode: 117,
                 content: binaryData,
