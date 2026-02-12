@@ -13,6 +13,7 @@ trigger:
 # CI only, does not trigger on PRs.
 pr: none
 
+
 schedules:
   - cron: '0 0 * * MON'
     displayName: At 12:00 AM, only on Monday
