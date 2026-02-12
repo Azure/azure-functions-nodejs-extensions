@@ -11,7 +11,11 @@ trigger:
       - release/*
 
 # CI only, does not trigger on PRs.
-pr: none
+pr:   
+  branches:
+    include:
+      - main
+      - release/*
 
 schedules:
   - cron: '0 0 * * MON'
