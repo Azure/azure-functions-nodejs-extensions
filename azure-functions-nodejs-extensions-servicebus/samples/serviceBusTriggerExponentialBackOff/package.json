@@ -12,8 +12,9 @@
     },
     "dependencies": {
         "@azure/functions": "^4.11.0",
-        "@azure/functions-extensions-servicebus": "0.3.6-preview",
-        "@azure/identity": "^4.13.0"
+        "@azure/functions-extensions-servicebus": "0.4.0",
+        "@azure/identity": "^4.13.0",
+        "@azure/service-bus": "^7.9.5"
     },
     "devDependencies": {
         "@types/node": "^20.x",
