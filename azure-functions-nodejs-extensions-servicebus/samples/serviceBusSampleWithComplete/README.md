@@ -2,21 +2,29 @@
 
 This sample demonstrates the basic usage of Azure Service Bus triggers with manual message completion using the Service Bus Node.js extensions for Azure Functions.
 
+## v0.4.0 Breaking Change
+
+> **Important**: This sample uses `@azure/functions-extensions-servicebus` v0.4.0, which contains a **breaking change** ([Issue #27](https://github.com/Azure/azure-functions-nodejs-extensions/issues/27), [PR #36](https://github.com/Azure/azure-functions-nodejs-extensions/pull/36)):
+>
+> - **Before (v0.3.x)**: `message.body` was automatically parsed (e.g., JSON strings were parsed into JS objects)
+> - **After (v0.4.0)**: `message.body` returns a raw `Buffer` — you must parse it explicitly
+
 ## Overview
 
 This sample shows how to:
 - Set up a Service Bus queue trigger with SDK binding enabled
-- Process Service Bus messages manually
+- **Parse `message.body` as a `Buffer`** (v0.4.0 breaking change)
 - Complete messages explicitly using the ServiceBusMessageContext
-- Access message properties and metadata
+- Abandon messages with modified application properties for retry tracking
 - Handle multiple messages with cardinality set to 'many'
 
 ## Key Features
 
 - **SDK Binding**: Uses `sdkBinding: true` for advanced Service Bus operations
 - **Manual Completion**: `autoCompleteMessages: false` allows explicit message handling  
-- **Multiple Messages**: `cardinality: 'many'` processes multiple messages per invocation
-- **Message Access**: Full access to message properties, body, and trigger metadata
+- **Buffer Body Handling**: Explicitly parses `message.body` from `Buffer` to JSON (v0.4.0)
+- **Keyless Authentication**: Uses Managed Identity / RBAC (no connection strings)
+- **Retry with Abandon**: Tracks retry count via `applicationProperties`, completes after max retries
 
 ## Code Structure
 
@@ -27,13 +35,26 @@ export async function serviceBusQueueTrigger(
     serviceBusMessageContext: ServiceBusMessageContext,
     context: InvocationContext
 ): Promise<void> {
-    // Complete the first message
-    await serviceBusMessageContext.actions.complete(serviceBusMessageContext.messages[0]);
-    
-    // Log trigger metadata and message details
-    context.log('triggerMetadata: ', context.triggerMetadata);
-    context.log('Completing the message', serviceBusMessageContext.messages[0]);
-    context.log('Completing the body', serviceBusMessageContext.messages[0].body);
+    const message = serviceBusMessageContext.messages[0];
+
+    // v0.4.0: message.body is a Buffer - parse it explicitly
+    const bodyBuffer = message.body as Buffer;
+    const bodyText = bodyBuffer.toString('utf8');
+    const bodyData = JSON.parse(bodyText);
+    context.log('Parsed message body:', bodyData);
+
+    // Retry logic using applicationProperties
+    const currentRetryCount = message.applicationProperties?.retryCnt
+        ? parseInt(message.applicationProperties.retryCnt as string)
+        : 0;
+
+    if (currentRetryCount >= 3) {
+        await serviceBusMessageContext.actions.complete(message);
+    } else {
+        await serviceBusMessageContext.actions.abandon(message, {
+            retryCnt: (currentRetryCount + 1).toString(),
+        });
+    }
 }
 ```
 
@@ -50,9 +71,39 @@ app.serviceBusQueue('serviceBusQueueTrigger1', {
 });
 ```
 
-## Configuration
+## Prerequisites
 
-### Connection Settings (`local.settings.json`)
+- Node.js 20+
+- [Azure Functions Core Tools](https://learn.microsoft.com/en-us/azure/azure-functions/functions-run-local) v4
+- Azure CLI (logged in via `az login`)
+- Azure Service Bus namespace with a queue named `testqueue`
+- RBAC role: **Azure Service Bus Data Owner** on the namespace
+
+## Quick Start
+
+### 1. Set up Azure resources
+
+```bash
+# Create resource group and Service Bus namespace
+az group create --name rg-sb-test --location eastus
+az servicebus namespace create --name <your-namespace> --resource-group rg-sb-test --sku Standard
+az servicebus queue create --name testqueue --namespace-name <your-namespace> --resource-group rg-sb-test
+
+# Assign RBAC role for keyless authentication
+USER_ID=$(az ad signed-in-user show --query id -o tsv)
+SB_ID=$(az servicebus namespace show --name <your-namespace> --resource-group rg-sb-test --query id -o tsv)
+az role assignment create --assignee "$USER_ID" --role "Azure Service Bus Data Owner" --scope "$SB_ID"
+```
+
+### 2. Configure local settings
+
+Copy the example file and update the namespace:
+
+```bash
+cp local.settings.json.example local.settings.json
+```
+
+Edit `local.settings.json`:
 
 ```json
 {
@@ -60,10 +111,24 @@ app.serviceBusQueue('serviceBusQueueTrigger1', {
   "Values": {
     "AzureWebJobsStorage": "UseDevelopmentStorage=true",
     "FUNCTIONS_WORKER_RUNTIME": "node",
-    "ServiceBusConnection": "Endpoint=sb://your-namespace.servicebus.windows.net/;SharedAccessKeyName=RootManageSharedAccessKey;SharedAccessKey=your-key"
+    "ServiceBusConnection__fullyQualifiedNamespace": "<your-namespace>.servicebus.windows.net"
   }
 }
 ```
+
+### 3. Install, build, and run
+
+```bash
+npm install
+npm run build
+func start
+```
+
+### 4. Send test messages
+
+Send messages to your `testqueue` using Azure Portal, Service Bus Explorer, or the `sendTestMessage.js` from another sample.
+
+## Configuration
 
 ### Function Settings
 
@@ -74,55 +139,24 @@ app.serviceBusQueue('serviceBusQueueTrigger1', {
 | `cardinality` | `'many'` | Processes multiple messages per invocation |
 | `queueName` | `'testqueue'` | Target Service Bus queue name |
 
-## Quick Start
-
-1. **Prerequisites**:
-   - Azure Service Bus namespace
-   - Queue named `testqueue` in your namespace
-   - Node.js 20+ installed
-   - Azure Functions Core Tools
-
-2. **Setup**:
-   ```bash
-   # Install dependencies
-   npm install
-   
-   # Build the project
-   npm run build
-   ```
-
-3. **Configure Connection**:
-   Update `local.settings.json` with your Service Bus connection string
-
-4. **Run the Function**:
-   ```bash
-   # Start the function app
-   npm start
-   # or
-   func start
-   ```
-
-5. **Send Test Messages**:
-   Send messages to your `testqueue` using Azure Portal, Service Bus Explorer, or Azure CLI
-
 ## Expected Behavior
 
-When a message is received:
+When a JSON message is received:
 
-1. **Function Triggers**: The function is invoked with the Service Bus message(s)
-2. **Message Processing**: The function accesses the first message from the batch
-3. **Manual Completion**: Calls `complete()` to remove the message from the queue
-4. **Logging**: Outputs trigger metadata, message details, and message body
-5. **Success**: Message is successfully processed and removed from queue
+1. **Buffer Received**: `message.body` is a raw `Buffer`
+2. **Explicit Parse**: The function converts the Buffer to string and calls `JSON.parse()`
+3. **Retry Check**: Reads `retryCnt` from `applicationProperties`
+4. **Abandon or Complete**: Abandons with incremented retry count, or completes at max retries
+5. **Logging**: Outputs parsed body and trigger metadata
 
-## Sample Log Output
+## Migration from v0.3.x
 
-```
-[2025-10-13T10:30:45.123Z] Executing 'serviceBusQueueTrigger1' (Reason='New ServiceBus message detected on 'testqueue'.', Id=abc123-def456)
-[2025-10-13T10:30:45.124Z] triggerMetadata: { DeliveryCount: 1, EnqueuedTimeUtc: '2025-10-13T10:30:44.000Z', ... }
-[2025-10-13T10:30:45.125Z] Completing the message ServiceBusReceivedMessage { messageId: '12345', body: 'Hello World' }
-[2025-10-13T10:30:45.126Z] Completing the body Hello World
-[2025-10-13T10:30:45.127Z] Executed 'serviceBusQueueTrigger1' (Succeeded, Id=abc123-def456, Duration=4ms)
+```typescript
+// Before (v0.3.x) — body was auto-parsed
+const data = message.body; // already a JS object
+
+// After (v0.4.0) — body is a Buffer, parse explicitly
+const data = JSON.parse((message.body as Buffer).toString('utf8'));
 ```
 
 ## Message Actions Available
@@ -130,24 +164,25 @@ When a message is received:
 With `sdkBinding: true`, you have access to all Service Bus message actions:
 
 - `complete()` - Mark message as successfully processed
-- `abandon()` - Return message to queue for retry
+- `abandon()` - Return message to queue for retry (with optional property modifications)
 - `deadletter()` - Send message to dead letter queue
 - `defer()` - Defer message processing
 
-## Important Notes
+## Authentication
 
-- **Manual Completion Required**: With `autoCompleteMessages: false`, you must explicitly complete messages
-- **Error Handling**: Unhandled exceptions will cause messages to be abandoned automatically
-- **Multiple Messages**: The sample processes only the first message but receives multiple with `cardinality: 'many'`
-- **Production Considerations**: Add proper error handling and logging for production use
+This sample uses **keyless authentication** (recommended):
+
+- The Function trigger uses `ServiceBusConnection__fullyQualifiedNamespace` in `local.settings.json`
+- No connection strings or shared access keys required
+- Requires `Azure Service Bus Data Owner` RBAC role on the namespace
 
 ## Troubleshooting
 
 ### Common Issues
 
-1. **Connection String**: Ensure your Service Bus connection string is correct in `local.settings.json`
+1. **Authentication**: Ensure you are logged in with `az login` and have the RBAC role assigned
 2. **Queue Name**: Verify the queue `testqueue` exists in your Service Bus namespace
-3. **Permissions**: Check that your connection string has appropriate permissions (Listen, Send)
+3. **RBAC Propagation**: RBAC role assignments may take up to 5 minutes to propagate
 4. **Build Errors**: Run `npm run build` to compile TypeScript before starting
 
 ### Useful Commands
@@ -162,5 +197,3 @@ npm run watch
 # Start with verbose logging
 func start --verbose
 ```
-
-This sample provides a foundation for building more complex Service Bus message processing scenarios with full control over message lifecycle management.

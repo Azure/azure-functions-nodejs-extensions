@@ -1,21 +1,18 @@
 // Simple Test Message Sender for Exponential Backoff Demo
-// Sends a message that will trigger the hardcoded 3-fail-then-succeed behavior
+// Uses keyless authentication with DefaultAzureCredential (az login)
 
 const { ServiceBusClient } = require('@azure/service-bus');
+const { DefaultAzureCredential } = require('@azure/identity');
 
-// Configuration - Update with your connection string
-const connectionString =
-    process.env.ServiceBusConnection ||
-    'Endpoint=sb://your-namespace.servicebus.windows.net/;SharedAccessKeyName=RootManageSharedAccessKey;SharedAccessKey=your-key';
+// Configuration - Update with your Service Bus namespace
+const fullyQualifiedNamespace =
+    process.env.SERVICE_BUS_NAMESPACE || 'funcext-sb-test.servicebus.windows.net';
 const queueName = 'testqueue';
 
 async function sendTestMessage() {
-    if (connectionString.includes('your-namespace')) {
-        console.log('❌ Please set the ServiceBusConnection environment variable or update the connection string');
-        process.exit(1);
-    }
-
-    const sbClient = new ServiceBusClient(connectionString);
+    // Use DefaultAzureCredential for keyless authentication
+    const credential = new DefaultAzureCredential();
+    const sbClient = new ServiceBusClient(fullyQualifiedNamespace, credential);
     const sender = sbClient.createSender(queueName);
 
     try {

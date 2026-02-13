@@ -442,3 +442,6 @@ pkg
 *.tgz
 
 **/*-test-results.xml
+
+# Azure Functions local settings (contains connection strings)
+local.settings.json
