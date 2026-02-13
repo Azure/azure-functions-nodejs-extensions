@@ -6,7 +6,7 @@ import { registerServiceBusMessageFactory } from './servicebus/registerServiceBu
 registerServiceBusMessageFactory();
 
 // Export types for customer consumption
-export type { ServiceBusMessageContext } from '../types';
+export type { ServiceBusMessage, ServiceBusMessageContext } from '../types';
 export type { IServiceBusMessageActions } from '../types/settlement-types';
 
 // Export AMQP property encoding utilities

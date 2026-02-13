@@ -3,10 +3,9 @@
 
 import { AmqpAnnotatedMessage } from '@azure/core-amqp';
 import { ModelBindingData } from '@azure/functions-extensions-base';
-import { ServiceBusReceivedMessage } from '@azure/service-bus';
 import LongActual from 'long';
 import rhea from 'rhea';
-import { ServiceBusMessageContext } from '../../types';
+import { ServiceBusMessage, ServiceBusMessageContext } from '../../types';
 import { ServiceBusMessageDecoder } from '../util/serviceBusMessageDecoder';
 import { ServiceBusMessageActions } from './ServiceBusMessageActions';
 
@@ -73,11 +72,29 @@ export class AzureServiceBusMessageFactory {
     static createServiceBusReceivedMessageFromAmqp(
         amqpMessage: AmqpAnnotatedMessage,
         lockToken: string
-    ): ServiceBusReceivedMessage {
+    ): ServiceBusMessage {
         // Extract common properties from the AMQP message
-        const receivedMessage: ServiceBusReceivedMessage = {
+        const decodedBody = AzureServiceBusMessageFactory.decodeAmqpBody(amqpMessage.body);
+
+        const receivedMessage: ServiceBusMessage = {
             // Message body - return raw Buffer without automatic parsing
-            body: AzureServiceBusMessageFactory.decodeAmqpBody(amqpMessage.body),
+            body: decodedBody,
+
+            // Convenience method: returns body as UTF-8 string
+            text(): string {
+                if (Buffer.isBuffer(decodedBody)) {
+                    return decodedBody.toString('utf8');
+                }
+                if (typeof decodedBody === 'string') {
+                    return decodedBody;
+                }
+                return JSON.stringify(decodedBody) ?? '';
+            },
+
+            // Convenience method: parses body as JSON with optional type parameter
+            json<T = unknown>(): T {
+                return JSON.parse(this.text()) as T;
+            },
 
             // Message properties
             messageId: amqpMessage.properties?.messageId?.toString(),
@@ -147,10 +164,7 @@ export class AzureServiceBusMessageFactory {
      * @param lockToken - Optional lock token for the message.
      * @returns A ServiceBusReceivedMessage object.
      */
-    static createServiceBusReceivedMessageFromRhea(
-        rheaMessage: rhea.Message,
-        lockToken: string
-    ): ServiceBusReceivedMessage {
+    static createServiceBusReceivedMessageFromRhea(rheaMessage: rhea.Message, lockToken: string): ServiceBusMessage {
         const amqpMessage = AmqpAnnotatedMessage.fromRheaMessage(rheaMessage);
         return AzureServiceBusMessageFactory.createServiceBusReceivedMessageFromAmqp(amqpMessage, lockToken);
     }
