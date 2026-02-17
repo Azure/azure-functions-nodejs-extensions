@@ -23,6 +23,13 @@ resources:
       type: git
       name: 1ESPipelineTemplates/1ESPipelineTemplates
       ref: refs/tags/release
+    - repository: eng
+      type: git
+      name: engineering
+      ref: refs/tags/release
+
+variables:
+  - template: /ci/variables/cfs.yml@eng
 
 extends:
   template: v1/1ES.Unofficial.PipelineTemplate.yml@1es
