@@ -5,17 +5,22 @@ import { expect } from 'chai';
 import { ResourceFactoryResolver } from '../src/resourceFactoryResolver';
 import { ModelBindingData, ResourceFactory } from '../types';
 
+const SINGLETON_KEY = Symbol.for('@azure/functions-extensions-base.ResourceFactoryResolver');
+
 describe('ResourceFactoryResolver - Advanced Tests', () => {
     let resolver: ResourceFactoryResolver;
 
     beforeEach(() => {
-        // Reset the singleton instance between tests
-        // Note: This approach is only for testing - normally singletons shouldn't be reset
-        const instanceKey = 'instance';
-        Reflect.set(ResourceFactoryResolver, instanceKey, undefined);
+        // Reset the globalThis singleton between tests
+        delete (globalThis as any)[SINGLETON_KEY];
 
         // Get a fresh instance
         resolver = ResourceFactoryResolver.getInstance();
+    });
+
+    afterEach(() => {
+        // Clean up globalThis after each test
+        delete (globalThis as any)[SINGLETON_KEY];
     });
 
     describe('Complex interaction scenarios', () => {
@@ -293,6 +298,56 @@ describe('ResourceFactoryResolver - Advanced Tests', () => {
 
             // Verify total registrations
             expect(types.every((type) => resolver.hasResourceFactory(type))).to.be.true;
+        });
+    });
+
+    describe('globalThis singleton behavior (Issue #26)', () => {
+        it('should store the singleton on globalThis using Symbol.for()', () => {
+            const instance = ResourceFactoryResolver.getInstance();
+
+            // The singleton should be stored on globalThis with the well-known Symbol key
+            const stored = (globalThis as any)[SINGLETON_KEY];
+            expect(stored).to.exist;
+            expect(stored).to.equal(instance);
+        });
+
+        it('should return the same instance from globalThis even after class-level reset', () => {
+            const instance1 = ResourceFactoryResolver.getInstance();
+            instance1.registerResourceFactory('TestType', () => ({ test: true }));
+
+            // Simulate what a bundler does: the class-level static field is a different copy,
+            // but globalThis should still hold the same singleton
+            const instance2 = ResourceFactoryResolver.getInstance();
+
+            expect(instance2).to.equal(instance1);
+            expect(instance2.hasResourceFactory('TestType')).to.be.true;
+        });
+
+        it('should share registered factories across multiple getInstance() calls', () => {
+            // Simulate the real-world scenario:
+            // 1. Extension package registers a factory
+            const resolver1 = ResourceFactoryResolver.getInstance();
+            resolver1.registerResourceFactory('AzureServiceBusReceivedMessage', () => ({
+                message: 'from service bus',
+            }));
+
+            // 2. Library package reads from the factory
+            const resolver2 = ResourceFactoryResolver.getInstance();
+            expect(resolver2.hasResourceFactory('AzureServiceBusReceivedMessage')).to.be.true;
+
+            const client = resolver2.createClient('AzureServiceBusReceivedMessage', {});
+            expect((client as any).message).to.equal('from service bus');
+        });
+
+        it('should survive globalThis singleton being set externally with same Symbol key', () => {
+            // Pre-set a resolver on globalThis (simulates another bundled copy setting it first)
+            const externalResolver = ResourceFactoryResolver.getInstance();
+            externalResolver.registerResourceFactory('ExternalType', () => ({ external: true }));
+
+            // getInstance() should return the existing globalThis singleton
+            const localResolver = ResourceFactoryResolver.getInstance();
+            expect(localResolver).to.equal(externalResolver);
+            expect(localResolver.hasResourceFactory('ExternalType')).to.be.true;
         });
     });
 });
