@@ -3,8 +3,15 @@
 
 import { ModelBindingData, ResourceFactory } from '../types';
 
+/**
+ * Well-known Symbol key for the process-wide singleton.
+ * Using Symbol.for() ensures the same Symbol is returned regardless of how many
+ * copies of this module are loaded (e.g., bundled inline vs. node_modules).
+ * This fixes Issue #26: https://github.com/Azure/azure-functions-nodejs-extensions/issues/26
+ */
+const SINGLETON_KEY = Symbol.for('@azure/functions-extensions-base.ResourceFactoryResolver');
+
 export class ResourceFactoryResolver {
-    private static instance: ResourceFactoryResolver;
     private resourceFactories: Map<string, ResourceFactory> = new Map();
 
     /**
@@ -15,14 +22,17 @@ export class ResourceFactoryResolver {
     }
 
     /**
-     * Gets the singleton instance of the registry
+     * Gets the singleton instance of the registry.
+     * Uses globalThis with a Symbol.for() key to ensure a single instance
+     * across bundled and non-bundled copies of this module.
      * @returns The singleton instance
      */
     static getInstance(): ResourceFactoryResolver {
-        if (!ResourceFactoryResolver.instance) {
-            ResourceFactoryResolver.instance = new ResourceFactoryResolver();
+        const g = globalThis as Record<symbol, unknown>;
+        if (!g[SINGLETON_KEY]) {
+            g[SINGLETON_KEY] = new ResourceFactoryResolver();
         }
-        return ResourceFactoryResolver.instance;
+        return g[SINGLETON_KEY] as ResourceFactoryResolver;
     }
 
     /**
