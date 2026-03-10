@@ -1321,4 +1321,230 @@ describe('AzureServiceBusMessageFactory', () => {
             expect(result.enqueuedSequenceNumber).to.equal(999); // Should use x-opt-offset, not fallback
         });
     });
+
+    describe('text() and json<T>() convenience methods', () => {
+        describe('text()', () => {
+            it('should return UTF-8 string from Buffer body', () => {
+                const mockAmqpMessage = createMockAmqpMessage({
+                    body: { typecode: 117, content: Buffer.from('hello world') },
+                });
+                const result = AzureServiceBusMessageFactory.createServiceBusReceivedMessageFromAmqp(
+                    mockAmqpMessage,
+                    'lock-token'
+                );
+
+                expect(result.text()).to.equal('hello world');
+            });
+
+            it('should return string as-is when body is already a string', () => {
+                const mockAmqpMessage = createMockAmqpMessage({ body: 'plain string' });
+                const result = AzureServiceBusMessageFactory.createServiceBusReceivedMessageFromAmqp(
+                    mockAmqpMessage,
+                    'lock-token'
+                );
+
+                expect(result.text()).to.equal('plain string');
+            });
+
+            it('should return JSON.stringify result for object body', () => {
+                const testObj = { key: 'value', num: 42 };
+                const mockAmqpMessage = createMockAmqpMessage({ body: testObj });
+                const result = AzureServiceBusMessageFactory.createServiceBusReceivedMessageFromAmqp(
+                    mockAmqpMessage,
+                    'lock-token'
+                );
+
+                expect(result.text()).to.equal(JSON.stringify(testObj));
+            });
+
+            it('should handle empty Buffer', () => {
+                const mockAmqpMessage = createMockAmqpMessage({
+                    body: { typecode: 117, content: Buffer.alloc(0) },
+                });
+                const result = AzureServiceBusMessageFactory.createServiceBusReceivedMessageFromAmqp(
+                    mockAmqpMessage,
+                    'lock-token'
+                );
+
+                expect(result.text()).to.equal('');
+            });
+
+            it('should handle Buffer with UTF-8 multi-byte characters', () => {
+                const multiByteStr = '日本語テスト 🚀';
+                const mockAmqpMessage = createMockAmqpMessage({
+                    body: { typecode: 117, content: Buffer.from(multiByteStr, 'utf8') },
+                });
+                const result = AzureServiceBusMessageFactory.createServiceBusReceivedMessageFromAmqp(
+                    mockAmqpMessage,
+                    'lock-token'
+                );
+
+                expect(result.text()).to.equal(multiByteStr);
+            });
+
+            it('should handle null body', () => {
+                const mockAmqpMessage = createMockAmqpMessage({ body: null });
+                const result = AzureServiceBusMessageFactory.createServiceBusReceivedMessageFromAmqp(
+                    mockAmqpMessage,
+                    'lock-token'
+                );
+
+                expect(result.text()).to.equal('null');
+            });
+
+            it('should handle undefined body', () => {
+                const mockAmqpMessage = createMockAmqpMessage({ body: undefined });
+                const result = AzureServiceBusMessageFactory.createServiceBusReceivedMessageFromAmqp(
+                    mockAmqpMessage,
+                    'lock-token'
+                );
+
+                // JSON.stringify(undefined) returns undefined, but we need a string
+                expect(result.text()).to.be.a('string');
+            });
+
+            it('should handle array body', () => {
+                const testArr = [1, 2, 3];
+                const mockAmqpMessage = createMockAmqpMessage({ body: testArr });
+                const result = AzureServiceBusMessageFactory.createServiceBusReceivedMessageFromAmqp(
+                    mockAmqpMessage,
+                    'lock-token'
+                );
+
+                expect(result.text()).to.equal(JSON.stringify(testArr));
+            });
+        });
+
+        describe('json<T>()', () => {
+            it('should parse JSON object from Buffer body', () => {
+                const testData = { name: 'test', count: 42 };
+                const mockAmqpMessage = createMockAmqpMessage({
+                    body: { typecode: 117, content: Buffer.from(JSON.stringify(testData)) },
+                });
+                const result = AzureServiceBusMessageFactory.createServiceBusReceivedMessageFromAmqp(
+                    mockAmqpMessage,
+                    'lock-token'
+                );
+
+                expect(result.json()).to.deep.equal(testData);
+            });
+
+            it('should parse JSON array from Buffer body', () => {
+                const testArr = [1, 'two', { three: 3 }];
+                const mockAmqpMessage = createMockAmqpMessage({
+                    body: { typecode: 117, content: Buffer.from(JSON.stringify(testArr)) },
+                });
+                const result = AzureServiceBusMessageFactory.createServiceBusReceivedMessageFromAmqp(
+                    mockAmqpMessage,
+                    'lock-token'
+                );
+
+                expect(result.json()).to.deep.equal(testArr);
+            });
+
+            it('should parse nested JSON from Buffer body', () => {
+                const testData = {
+                    level1: {
+                        level2: {
+                            value: 'deep',
+                            items: [1, 2, 3],
+                        },
+                    },
+                };
+                const mockAmqpMessage = createMockAmqpMessage({
+                    body: { typecode: 117, content: Buffer.from(JSON.stringify(testData)) },
+                });
+                const result = AzureServiceBusMessageFactory.createServiceBusReceivedMessageFromAmqp(
+                    mockAmqpMessage,
+                    'lock-token'
+                );
+
+                expect(result.json()).to.deep.equal(testData);
+            });
+
+            it('should return typed result with generic parameter', () => {
+                interface TestEvent {
+                    id: string;
+                    data: number;
+                }
+                const testData: TestEvent = { id: 'evt-1', data: 99 };
+                const mockAmqpMessage = createMockAmqpMessage({
+                    body: { typecode: 117, content: Buffer.from(JSON.stringify(testData)) },
+                });
+                const result = AzureServiceBusMessageFactory.createServiceBusReceivedMessageFromAmqp(
+                    mockAmqpMessage,
+                    'lock-token'
+                );
+
+                const parsed = result.json<TestEvent>();
+                expect(parsed.id).to.equal('evt-1');
+                expect(parsed.data).to.equal(99);
+            });
+
+            it('should throw SyntaxError for invalid JSON', () => {
+                const mockAmqpMessage = createMockAmqpMessage({
+                    body: { typecode: 117, content: Buffer.from('not valid json') },
+                });
+                const result = AzureServiceBusMessageFactory.createServiceBusReceivedMessageFromAmqp(
+                    mockAmqpMessage,
+                    'lock-token'
+                );
+
+                expect(() => result.json()).to.throw(SyntaxError);
+            });
+
+            it('should handle already-string body containing JSON', () => {
+                const testData = { message: 'hello' };
+                const mockAmqpMessage = createMockAmqpMessage({
+                    body: JSON.stringify(testData),
+                });
+                const result = AzureServiceBusMessageFactory.createServiceBusReceivedMessageFromAmqp(
+                    mockAmqpMessage,
+                    'lock-token'
+                );
+
+                expect(result.json()).to.deep.equal(testData);
+            });
+
+            it('should handle JSON with unicode characters', () => {
+                const testData = { greeting: 'こんにちは', emoji: '🎉' };
+                const mockAmqpMessage = createMockAmqpMessage({
+                    body: { typecode: 117, content: Buffer.from(JSON.stringify(testData)) },
+                });
+                const result = AzureServiceBusMessageFactory.createServiceBusReceivedMessageFromAmqp(
+                    mockAmqpMessage,
+                    'lock-token'
+                );
+
+                expect(result.json()).to.deep.equal(testData);
+            });
+        });
+
+        describe('text() and json() via buildServiceBusMessageFromModelBindingData', () => {
+            it('should have text() and json() on messages built from ModelBindingData', () => {
+                const testData = { source: 'integration-test' };
+                const mockRheaMessage = createMockRheaMessage({
+                    body: { typecode: 117, content: Buffer.from(JSON.stringify(testData)) },
+                });
+                serviceBusMessageDecoderStub.returns(
+                    createMockDecodedResult(mockRheaMessage, 'integration-lock')
+                );
+                amqpAnnotatedMessageStub.returns(
+                    createMockAmqpMessage({
+                        body: { typecode: 117, content: Buffer.from(JSON.stringify(testData)) },
+                    })
+                );
+
+                const mockModelBindingData = createMockModelBindingData();
+                const context: ServiceBusMessageContext =
+                    AzureServiceBusMessageFactory.buildServiceBusMessageFromModelBindingData(mockModelBindingData);
+
+                const message = context.messages[0];
+                expect(message).to.not.be.undefined;
+                expect(message).to.have.property('text').that.is.a('function');
+                expect(message).to.have.property('json').that.is.a('function');
+                expect(message!.json()).to.deep.equal(testData);
+            });
+        });
+    });
 });
