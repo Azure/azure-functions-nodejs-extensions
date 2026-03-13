@@ -20,7 +20,7 @@
         "@types/node": "^20.x",
         "rimraf": "^5.0.0",
         "typescript": "^4.0.0",
-        "undici": "^7.18.2"
+        "undici": "^7.24.0"
     },
     "main": "dist/src/{index.js,functions/*.js}"
 }
