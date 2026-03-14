@@ -13,4 +13,4 @@ export { ServiceBusMessageActions } from '../src/servicebus/ServiceBusMessageAct
 export type { IServiceBusMessageActions } from './settlement-types';
 
 // Body parsing helper utilities
-export { bodyAsText, parseBody } from '../src/util/bodyHelpers';
+export { messageBodyAsText, messageBodyAsJson } from '../src/util/messageBodyParser';

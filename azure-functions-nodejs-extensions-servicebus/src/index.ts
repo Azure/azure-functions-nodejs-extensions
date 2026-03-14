@@ -13,4 +13,4 @@ export type { IServiceBusMessageActions } from '../types/settlement-types';
 export { convertPropertiesToAmqpBytes, validateAmqpProperties } from './util/amqpPropertyEncoder';
 
 // Export body parsing helper utilities
-export { bodyAsText, parseBody } from './util/bodyHelpers';
+export { messageBodyAsJson, messageBodyAsText } from './util/messageBodyParser';

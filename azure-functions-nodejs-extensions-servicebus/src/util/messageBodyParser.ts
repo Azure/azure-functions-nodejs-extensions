@@ -10,22 +10,24 @@
  *
  * @example
  * ```typescript
- * import { parseBody, bodyAsText } from '@azure/functions-extensions-servicebus';
+ * import { messageBodyAsJson, messageBodyAsText } from '@azure/functions-extensions-servicebus';
  *
  * // Parse JSON body with type safety
  * interface OrderMessage { orderId: string; amount: number; }
- * const data = parseBody<OrderMessage>(message);
+ * const data = messageBodyAsJson<OrderMessage>(message);
  *
  * // Get raw text
- * const text = bodyAsText(message);
+ * const text = messageBodyAsText(message);
  *
  * // With custom reviver (e.g., Date conversion)
- * const data = parseBody<MyType>(message, (key, value) => {
+ * const data = messageBodyAsJson<MyType>(message, (key, value) => {
  *     if (key === 'createdAt' && typeof value === 'string') return new Date(value);
  *     return value;
  * });
  * ```
  */
+
+const utf8Decoder = new TextDecoder('utf-8', { fatal: true });
 
 /**
  * Returns the message body as a UTF-8 string.
@@ -33,11 +35,12 @@
  *
  * @param message - A message object with a `body` property (e.g., ServiceBusReceivedMessage)
  * @returns The body as a UTF-8 string
+ * @throws TypeError if the body is a Buffer containing invalid UTF-8 bytes
  */
-export function bodyAsText(message: { body: unknown }): string {
+export function messageBodyAsText(message: { body: unknown }): string {
     const body: unknown = message.body;
     if (Buffer.isBuffer(body)) {
-        return body.toString('utf8');
+        return utf8Decoder.decode(body);
     }
     if (typeof body === 'string') {
         return body;
@@ -51,11 +54,12 @@ export function bodyAsText(message: { body: unknown }): string {
  * @param message - A message object with a `body` property (e.g., ServiceBusReceivedMessage)
  * @param reviver - Optional JSON reviver function for custom deserialization
  * @returns The parsed body as type T
+ * @throws TypeError if the body is a Buffer containing invalid UTF-8 bytes
  * @throws SyntaxError if the body is not valid JSON
  */
-export function parseBody<T = unknown>(
+export function messageBodyAsJson<T = unknown>(
     message: { body: unknown },
     reviver?: (key: string, value: unknown) => unknown
 ): T {
-    return JSON.parse(bodyAsText(message), reviver) as T;
+    return JSON.parse(messageBodyAsText(message), reviver) as T;
 }
