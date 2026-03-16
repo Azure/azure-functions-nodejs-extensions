@@ -3,8 +3,7 @@
 
 import '@azure/functions-extensions-servicebus';
 import { app, InvocationContext } from '@azure/functions';
-import { ServiceBusMessageContext } from '@azure/functions-extensions-servicebus';
-import { parseBody, bodyAsText } from '../servicebus-helpers'; // Interim helper until #50 lands
+import { ServiceBusMessageContext, messageBodyAsJson, messageBodyAsText } from '@azure/functions-extensions-servicebus';
 
 /**
  * This sample demonstrates raw binary data access with @azure/functions-extensions-servicebus v0.4.0.
@@ -42,15 +41,19 @@ export async function serviceBusBinaryDataTrigger(
     const actions = sbContext.actions;
 
     // v0.4.0: message.body is a raw Buffer — use helpers for convenient access
-    context.log(`Received message body (${Buffer.isBuffer(message.body) ? (message.body as Buffer).length + ' bytes' : 'non-buffer'})`);
+    context.log(
+        `Received message body (${
+            Buffer.isBuffer(message.body) ? (message.body as Buffer).length + ' bytes' : 'non-buffer'
+        })`
+    );
     context.log(`Content type: ${message.contentType ?? 'not set'}`);
 
     try {
         // bodyAsText() for raw string access
-        context.log(`Raw body text: ${bodyAsText(message)}`);
+        context.log(`Raw body text: ${messageBodyAsText(message)}`);
 
         // parseBody<T>() with a custom reviver for safe number handling
-        const data = parseBody(message, safeNumberReviver);
+        const data = messageBodyAsJson(message, safeNumberReviver);
         context.log('Parsed data with custom reviver:', JSON.stringify(data));
 
         // Successfully processed - complete the message

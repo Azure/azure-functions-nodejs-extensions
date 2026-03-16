@@ -3,8 +3,7 @@
 
 import '@azure/functions-extensions-servicebus'; // Ensure the Service Bus extension is imported
 import { app, InvocationContext } from '@azure/functions';
-import { ServiceBusMessageContext } from '@azure/functions-extensions-servicebus';
-import { parseBody } from '../servicebus-helpers'; // Interim helper until #50 lands
+import { ServiceBusMessageContext, messageBodyAsJson } from '@azure/functions-extensions-servicebus';
 
 // This sample uses sdkBinding = true with manual message completion.
 // With v0.4.0, message.body is returned as a raw Buffer instead of auto-parsed object.
@@ -14,8 +13,8 @@ export async function serviceBusQueueTrigger(
 ): Promise<void> {
     const message = serviceBusMessageContext.messages[0];
 
-    // v0.4.0: message.body is a Buffer — use parseBody<T>() helper for one-line parsing
-    const bodyData = parseBody(message);
+    // v0.4.0: message.body is a Buffer — use messageBodyAsJson<T>() from the extension for one-line parsing
+    const bodyData = messageBodyAsJson(message);
     context.log('Parsed message body:', bodyData);
 
     // Get current retry count from custom properties, default to 0

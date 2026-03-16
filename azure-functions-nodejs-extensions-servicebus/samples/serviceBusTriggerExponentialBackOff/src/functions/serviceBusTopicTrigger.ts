@@ -1,11 +1,14 @@
 // Copyright (c) .NET Foundation. All rights reserved.
 // Licensed under the MIT License.
 
-import { ServiceBusMessageContext, ServiceBusMessageActions } from '@azure/functions-extensions-servicebus';
+import {
+    ServiceBusMessageContext,
+    ServiceBusMessageActions,
+    messageBodyAsText,
+} from '@azure/functions-extensions-servicebus';
 import { app, InvocationContext } from '@azure/functions';
 import { ServiceBusClient } from '@azure/service-bus';
 import { DefaultAzureCredential } from '@azure/identity';
-import { bodyAsText } from '../servicebus-helpers'; // Interim helper until #50 lands
 
 // This sample demonstrates exponential backoff with SDK binding.
 // With v0.4.0, message.body is returned as a raw Buffer instead of auto-parsed object.
@@ -17,7 +20,7 @@ export async function serviceBusQueueTrigger(
     const receivedMessage = serviceBusMessageContext.messages[0];
 
     // v0.4.0: message.body is a Buffer — use bodyAsText() helper
-    const bodyText = bodyAsText(receivedMessage);
+    const bodyText = messageBodyAsText(receivedMessage);
     context.log('Processing message:', receivedMessage.messageId);
     context.log('Message body (raw text):', bodyText);
 
