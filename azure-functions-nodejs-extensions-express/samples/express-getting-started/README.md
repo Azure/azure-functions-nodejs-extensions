@@ -156,7 +156,7 @@ The project includes a packaging script that resolves local symlinks/junctions a
 npm run build
 
 # Create deploy.zip
-npm run package
+node scripts/create-deploy-zip.js
 
 # Deploy
 az functionapp deployment source config-zip \
