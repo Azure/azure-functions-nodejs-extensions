@@ -1,0 +1,38 @@
+{
+    "name": "@azure/functions-extensions-express",
+    "version": "0.1.0-preview",
+    "description": "Express integration for Azure Functions - run Express apps natively in Azure Functions",
+    "main": "dist/index.js",
+    "types": "types/index.d.ts",
+    "license": "MIT",
+    "author": "Microsoft Corporation",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/Azure/azure-functions-nodejs-library.git",
+        "directory": "extensions/functions-extensions-express"
+    },
+    "keywords": [
+        "azure",
+        "functions",
+        "serverless",
+        "express",
+        "nodejs"
+    ],
+    "scripts": {
+        "build": "tsc",
+        "watch": "tsc -w",
+        "lint": "eslint src/**/*.ts",
+        "test": "mocha --require ts-node/register test/**/*.test.ts"
+    },
+    "engines": {
+        "node": ">=18.0"
+    },
+    "dependencies": {
+        "@azure/functions": "^4.11.0",
+        "@types/node": "^18.0.0",
+        "typescript": "^5.0.0"
+    },
+    "peerDependencies": {
+        "@azure/functions": "^4.11.0"
+    }
+}
