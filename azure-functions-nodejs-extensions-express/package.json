@@ -6,10 +6,11 @@
     "types": "types/index.d.ts",
     "license": "MIT",
     "author": "Microsoft Corporation",
+    "homepage": "https://github.com/Azure/azure-functions-nodejs-extensions-express#readme",
     "repository": {
         "type": "git",
-        "url": "https://github.com/Azure/azure-functions-nodejs-library.git",
-        "directory": "extensions/functions-extensions-express"
+        "url": "https://github.com/Azure/azure-functions-nodejs-extensions.git",
+        "directory": "/azure-functions-nodejs-extensions-express"
     },
     "keywords": [
         "azure",
