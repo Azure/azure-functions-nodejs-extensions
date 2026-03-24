@@ -1,6 +1,6 @@
 {
     "name": "@azure/functions-extensions-express",
-    "version": "0.1.0-preview",
+    "version": "0.1.1-preview",
     "description": "Express integration for Azure Functions - run Express apps natively in Azure Functions",
     "main": "dist/index.js",
     "types": "types/index.d.ts",
