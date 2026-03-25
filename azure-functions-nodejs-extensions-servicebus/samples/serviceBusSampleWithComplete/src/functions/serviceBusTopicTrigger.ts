@@ -2,8 +2,8 @@
 // Licensed under the MIT License.
 
 import '@azure/functions-extensions-servicebus'; // Ensure the Service Bus extension is imported
-import { app, InvocationContext } from '@azure/functions';
-import { ServiceBusMessageContext, messageBodyAsJson } from '@azure/functions-extensions-servicebus';
+import { app, type InvocationContext } from '@azure/functions';
+import { type ServiceBusMessageContext, messageBodyAsJson } from '@azure/functions-extensions-servicebus';
 
 // This sample uses sdkBinding = true with manual message completion.
 // With v0.4.0, message.body is returned as a raw Buffer instead of auto-parsed object.
