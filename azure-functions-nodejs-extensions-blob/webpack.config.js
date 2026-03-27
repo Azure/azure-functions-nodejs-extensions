@@ -3,7 +3,7 @@ const ESLintPlugin = require('eslint-webpack-plugin');
 
 module.exports = (_env, argv) => {
     const isDevMode = argv.mode === 'development';
-    return {
+    const commonConfig = {
         entry: './src/index.ts',
         target: 'node',
         node: {
@@ -27,11 +27,6 @@ module.exports = (_env, argv) => {
         resolve: {
             extensions: ['.ts', '.tsx', '.js'],
         },
-        output: {
-            path: `${__dirname}/dist/`,
-            filename: isDevMode ? 'azure-functions-extensions-blob.js' : 'azure-functions-extensions-blob.min.js',
-            libraryTarget: 'commonjs2',
-        },
         plugins: [
             new ForkTsCheckerWebpackPlugin({}),
             new ESLintPlugin({
@@ -40,4 +35,25 @@ module.exports = (_env, argv) => {
             }),
         ],
     };
+
+    const cjsConfig = {
+        ...commonConfig,
+        output: {
+            path: `${__dirname}/dist/`,
+            filename: isDevMode ? 'azure-functions-extensions-blob.js' : 'azure-functions-extensions-blob.min.js',
+            libraryTarget: 'commonjs2',
+        },
+    };
+
+    const esmConfig = {
+        ...commonConfig,
+        experiments: { outputModule: true },
+        output: {
+            path: `${__dirname}/dist/`,
+            filename: isDevMode ? 'azure-functions-extensions-blob.mjs' : 'azure-functions-extensions-blob.min.mjs',
+            library: { type: 'module' },
+        },
+    };
+
+    return [cjsConfig, esmConfig];
 };
