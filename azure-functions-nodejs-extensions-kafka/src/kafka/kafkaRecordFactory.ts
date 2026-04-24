@@ -16,9 +16,11 @@ export class KafkaRecordFactory {
      * Builds KafkaRecord(s) from ModelBindingData.
      * Returns a single KafkaRecord for single dispatch, or an array for batch.
      */
-    static buildFromModelBindingData(modelBindingData: ModelBindingData | ModelBindingData[]): KafkaRecord | KafkaRecord[] {
+    static buildFromModelBindingData(
+        modelBindingData: ModelBindingData | ModelBindingData[]
+    ): KafkaRecord | KafkaRecord[] {
         if (Array.isArray(modelBindingData)) {
-            return modelBindingData.map(KafkaRecordFactory.convertOne);
+            return modelBindingData.map((d) => KafkaRecordFactory.convertOne(d));
         }
         return KafkaRecordFactory.convertOne(modelBindingData);
     }

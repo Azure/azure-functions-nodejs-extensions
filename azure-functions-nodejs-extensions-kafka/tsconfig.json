@@ -13,5 +13,6 @@
             "@azure/functions-extensions-kafka": ["types"]
         }
     },
-    "exclude": ["samples/**/*", "node_modules", "dist"]
+    "include": ["src/**/*.ts", "test/**/*.ts", "types/**/*.ts"],
+    "exclude": ["samples/**/*", "scripts/**/*", "node_modules", "dist"]
 }

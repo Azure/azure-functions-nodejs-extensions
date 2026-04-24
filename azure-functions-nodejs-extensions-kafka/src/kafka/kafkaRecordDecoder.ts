@@ -70,7 +70,8 @@ export function decodeKafkaRecordProto(buffer: Buffer): DecodedKafkaRecord {
                 hasValue = true;
                 value = Buffer.from(reader.bytes());
                 break;
-            case 6: { // timestamp: message
+            case 6: {
+                // timestamp: message
                 const msgEnd = reader.uint32() + reader.pos;
                 let tsMs = 0;
                 let tsType = 0;
@@ -91,7 +92,8 @@ export function decodeKafkaRecordProto(buffer: Buffer): DecodedKafkaRecord {
                 timestamp = { unixTimestampMs: tsMs, type: tsType };
                 break;
             }
-            case 7: { // headers: repeated message
+            case 7: {
+                // headers: repeated message
                 const hEnd = reader.uint32() + reader.pos;
                 let hKey = '';
                 let hValue: Buffer | null = null;

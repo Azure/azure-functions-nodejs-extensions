@@ -6,4 +6,4 @@ import { registerKafkaRecordFactory } from './kafka/registerKafkaRecordFactory';
 registerKafkaRecordFactory();
 
 // Export types for customer consumption
-export type { KafkaRecord, KafkaHeader, KafkaTimestamp, KafkaTimestampType } from '../types';
+export type { KafkaHeader, KafkaRecord, KafkaTimestamp, KafkaTimestampType } from '../types';

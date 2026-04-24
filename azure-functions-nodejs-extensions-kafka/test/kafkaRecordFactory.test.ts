@@ -2,9 +2,10 @@
 // Licensed under the MIT License.
 
 import { expect } from 'chai';
-import { KafkaRecordFactory } from '../src/kafka/kafkaRecordFactory';
-import { decodeKafkaRecordProto } from '../src/kafka/kafkaRecordDecoder';
 import * as protobuf from 'protobufjs/minimal';
+import { decodeKafkaRecordProto } from '../src/kafka/kafkaRecordDecoder';
+import { KafkaRecordFactory } from '../src/kafka/kafkaRecordFactory';
+import { KafkaRecord } from '../types';
 
 /**
  * Helper: encode a KafkaRecordProto message using protobufjs Writer.
@@ -125,10 +126,7 @@ describe('KafkaRecordDecoder', () => {
             offset: 0,
             value: Buffer.from('test'),
             timestamp: { unixTimestampMs: 0, type: 0 },
-            headers: [
-                { key: 'with-value', value: Buffer.from('abc') },
-                { key: 'no-value' },
-            ],
+            headers: [{ key: 'with-value', value: Buffer.from('abc') }, { key: 'no-value' }],
         });
 
         const decoded = decodeKafkaRecordProto(buffer);
@@ -160,7 +158,7 @@ describe('KafkaRecordFactory', () => {
         });
 
         expect(result).to.not.be.an('array');
-        const record = result as any;
+        const record = result as KafkaRecord;
         expect(record.topic).to.equal('my-topic');
         expect(record.partition).to.equal(3);
         expect(record.offset).to.equal(12345);
@@ -170,7 +168,7 @@ describe('KafkaRecordFactory', () => {
         expect(record.timestamp.type).to.equal(1); // CreateTime
         expect(record.leaderEpoch).to.equal(7);
         expect(record.headers).to.have.length(1);
-        expect(record.headers[0].key).to.equal('h1');
+        expect(record.headers[0]!.key).to.equal('h1');
     });
 
     it('should build KafkaRecord[] from batch ModelBindingData', () => {
@@ -220,7 +218,7 @@ describe('KafkaRecordFactory', () => {
             contentType: 'application/x-protobuf',
             source: 'AzureKafkaRecord',
             version: '1.0',
-        }) as any;
+        }) as KafkaRecord;
 
         expect(result.timestamp.type).to.equal(0); // NotAvailable
     });

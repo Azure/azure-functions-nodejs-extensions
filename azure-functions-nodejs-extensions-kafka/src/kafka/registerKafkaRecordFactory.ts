@@ -19,9 +19,7 @@ export function registerKafkaRecordFactory(): void {
         }
     } catch (error) {
         throw new Error(
-            `Kafka Record Factory initialization failed: ${
-                error instanceof Error ? error.message : String(error)
-            }`
+            `Kafka Record Factory initialization failed: ${error instanceof Error ? error.message : String(error)}`
         );
     }
 }
