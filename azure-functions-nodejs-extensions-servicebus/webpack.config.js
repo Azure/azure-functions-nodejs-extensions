@@ -56,6 +56,20 @@ module.exports = (_env, argv) => {
     const esmConfig = {
         ...commonConfig,
         experiments: { outputModule: true },
+        externalsType: 'node-commonjs',
+        module: {
+            ...commonConfig.module,
+            rules: [
+                {
+                    test: /\.tsx?$/,
+                    loader: 'ts-loader',
+                    options: {
+                        transpileOnly: true,
+                        compilerOptions: { module: 'esnext' },
+                    },
+                },
+            ],
+        },
         output: {
             path: `${__dirname}/dist/`,
             filename: isDevMode
