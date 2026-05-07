@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { expect } from 'chai';
-import { messageBodyAsText, messageBodyAsJson } from '../../src/util/messageBodyParser';
+import { messageBodyAsJson, messageBodyAsText } from '../../src/util/messageBodyParser';
 
 describe('messageBodyParser', () => {
     describe('messageBodyAsText', () => {
@@ -66,7 +66,7 @@ describe('messageBodyParser', () => {
         });
 
         it('should throw TypeError for a Buffer with invalid UTF-8 bytes', () => {
-            const message = { body: Buffer.from([0x80, 0x81, 0xFF]) };
+            const message = { body: Buffer.from([0x80, 0x81, 0xff]) };
             expect(() => messageBodyAsText(message)).to.throw(TypeError);
         });
     });
