@@ -130,14 +130,14 @@ describe('GrpcUriBuilder', () => {
         process.argv = [
             'node',
             'script',
-            '--host=first',
-            '--host=second',
+            '--host=127.0.0.2',
+            '--host=localhost',
             '--port=5000',
             '--functions-grpc-max-message-length=123456',
         ];
 
         const result = GrpcUriBuilder.build();
-        expect(result.uri).to.equal('second:5000');
+        expect(result.uri).to.equal('localhost:5000');
     });
 
     // The following tests document edge cases that are likely bugs in the
