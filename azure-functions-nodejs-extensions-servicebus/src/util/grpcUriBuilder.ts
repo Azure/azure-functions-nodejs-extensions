@@ -92,6 +92,7 @@ export class GrpcUriBuilder {
 
         const protocol = parsedUri.protocol.toLowerCase();
         const host = this.normalizeHost(parsedUri.hostname);
+        const isSecure = this.isSecureProtocol(protocol);
         const port = parsedUri.port || this.getDefaultPort(protocol);
 
         if (!host) {
@@ -104,7 +105,6 @@ export class GrpcUriBuilder {
         }
 
         const isLoopback = this.isLoopbackHost(host);
-        const isSecure = this.isSecureProtocol(protocol);
         const credentials = this.createChannelCredentials({
             endpoint: functionsUri,
             isLoopback,

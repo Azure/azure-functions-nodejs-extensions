@@ -207,6 +207,12 @@ describe('GrpcUriBuilder', () => {
             );
         });
 
+        it('should reject unsupported functions-uri protocols before port validation', () => {
+            setArgv('--functions-uri=ftp://example.com', '--functions-grpc-max-message-length=123456');
+
+            expect(() => GrpcUriBuilder.buildConnection()).to.throw('Unsupported functions-uri protocol "ftp:"');
+        });
+
         it('should reject insecure non-loopback host and port endpoints', () => {
             setArgv('--host=10.0.0.5', '--port=5000', '--functions-grpc-max-message-length=123456');
 
