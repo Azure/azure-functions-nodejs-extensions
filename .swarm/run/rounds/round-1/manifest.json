@@ -1,0 +1,7 @@
+{
+  "roundNumber": 1,
+  "taskIds": [
+    "harden-servicebus-grpc-transport",
+    "add-servicebus-transport-regression-tests"
+  ]
+}
