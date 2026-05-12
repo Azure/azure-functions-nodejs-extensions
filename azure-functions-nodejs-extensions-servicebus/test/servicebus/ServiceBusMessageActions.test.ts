@@ -93,7 +93,7 @@ describe('ServiceBusMessageActions', () => {
             ServiceBusMessageActions.resetInstance();
         }
 
-        mockCredentials = grpc.credentials.createInsecure();
+        mockCredentials = { transport: 'loopback' } as unknown as grpc.ChannelCredentials;
 
         // Create mock gRPC client
         mockGrpcClient = {
@@ -150,6 +150,19 @@ describe('ServiceBusMessageActions', () => {
             grpcUriBuilderStub.throws(new Error('Configuration failed'));
 
             expect(() => ServiceBusMessageActions.getInstance()).to.throw('Configuration failed');
+        });
+
+        it('should surface insecure remote endpoint guardrail errors', () => {
+            grpcUriBuilderStub.throws(
+                new Error(
+                    'Unsupported insecure gRPC endpoint "http://example.com:7071". Only loopback endpoints may use insecure transport.'
+                )
+            );
+
+            expect(() => ServiceBusMessageActions.getInstance()).to.throw(
+                'Unsupported insecure gRPC endpoint "http://example.com:7071". Only loopback endpoints may use insecure transport.'
+            );
+            expect(createGrpcClientStub).to.not.have.been.called;
         });
 
         it('should handle gRPC client creation errors', () => {
@@ -701,7 +714,7 @@ describe('ServiceBusMessageActions', () => {
             );
         });
 
-        it('should use credentials resolved by GrpcUriBuilder', () => {
+        it('should forward the credentials selected by GrpcUriBuilder', () => {
             ServiceBusMessageActions.getInstance();
 
             // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
@@ -710,8 +723,8 @@ describe('ServiceBusMessageActions', () => {
             expect(callArgs.credentials).to.equal(mockCredentials);
         });
 
-        it('should handle GrpcUriBuilder configuration variations', () => {
-            const secureCredentials = grpc.credentials.createSsl();
+        it('should forward TLS credentials selected by GrpcUriBuilder', () => {
+            const secureCredentials = { transport: 'tls' } as unknown as grpc.ChannelCredentials;
             grpcUriBuilderStub.returns({
                 address: 'custom-endpoint:443',
                 credentials: secureCredentials,
