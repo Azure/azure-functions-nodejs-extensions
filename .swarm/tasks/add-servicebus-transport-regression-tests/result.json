@@ -1,0 +1,18 @@
+{
+  "taskId": "add-servicebus-transport-regression-tests",
+  "status": "Succeeded",
+  "summary": "Expanded Service Bus transport regression coverage for gRPC URI credential selection, loopback/TLS guardrails, and ServiceBusMessageActions credential forwarding; validated with package tests and targeted lint.",
+  "filesTouched": [
+    "azure-functions-nodejs-extensions-servicebus/test/servicebus/ServiceBusMessageActions.test.ts",
+    "azure-functions-nodejs-extensions-servicebus/test/util/grpcUriBuilder.test.ts"
+  ],
+  "testsRun": {
+    "executed": true,
+    "passed": 245,
+    "failed": 0,
+    "command": "cd /workspace/repo/azure-functions-nodejs-extensions-servicebus \u0026\u0026 npm test"
+  },
+  "failureExcerpt": null,
+  "designDeviations": null,
+  "followUps": []
+}
