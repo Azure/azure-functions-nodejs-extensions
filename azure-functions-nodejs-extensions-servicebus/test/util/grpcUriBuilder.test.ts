@@ -214,5 +214,21 @@ describe('GrpcUriBuilder', () => {
                 'Unsupported insecure gRPC endpoint "10.0.0.5:5000". Only loopback endpoints may use insecure transport.'
             );
         });
+
+        it('should reject host values with invalid 127.x.x.x octets', () => {
+            setArgv('--host=127.999.999.999', '--port=5000', '--functions-grpc-max-message-length=123456');
+
+            expect(() => GrpcUriBuilder.buildConnection()).to.throw(
+                'Unsupported insecure gRPC endpoint "127.999.999.999:5000". Only loopback endpoints may use insecure transport.'
+            );
+        });
+
+        it('should reject non dotted-quad 127 host values', () => {
+            setArgv('--host=127', '--port=5000', '--functions-grpc-max-message-length=123456');
+
+            expect(() => GrpcUriBuilder.buildConnection()).to.throw(
+                'Unsupported insecure gRPC endpoint "127:5000". Only loopback endpoints may use insecure transport.'
+            );
+        });
     });
 });

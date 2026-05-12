@@ -10,6 +10,9 @@ import * as grpc from '@grpc/grpc-js';
  *  pair when necessary.
  */
 export class GrpcUriBuilder {
+    private static readonly loopbackIpv4Pattern =
+        /^127\.(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)\.(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)\.(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)$/;
+
     /**
      *  Builds a raw gRPC address from command line arguments.
      * @returns A string representing the gRPC address in the format "host:port".
@@ -194,7 +197,7 @@ export class GrpcUriBuilder {
     }
 
     private static isLoopbackHost(host: string): boolean {
-        return host === 'localhost' || host === '::1' || /^127(?:\.\d{1,3}){0,3}$/.test(host);
+        return host === 'localhost' || host === '::1' || GrpcUriBuilder.loopbackIpv4Pattern.test(host);
     }
 
     private static normalizeHost(host: string): string {
