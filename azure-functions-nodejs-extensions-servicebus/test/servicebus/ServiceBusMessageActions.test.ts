@@ -22,6 +22,7 @@ describe('ServiceBusMessageActions', () => {
     let grpcUriBuilderStub: sinon.SinonStub;
     let createGrpcClientStub: sinon.SinonStub;
     let mockGrpcClient: sinon.SinonStubbedInstance<SettlementServiceClient>;
+    let mockCredentials: grpc.ChannelCredentials;
 
     // Mock configuration
     const mockUri = 'localhost:50051';
@@ -92,6 +93,8 @@ describe('ServiceBusMessageActions', () => {
             ServiceBusMessageActions.resetInstance();
         }
 
+        mockCredentials = grpc.credentials.createInsecure();
+
         // Create mock gRPC client
         mockGrpcClient = {
             complete: sinon.stub(),
@@ -105,9 +108,12 @@ describe('ServiceBusMessageActions', () => {
         } as sinon.SinonStubbedInstance<SettlementServiceClient>;
 
         // Stub GrpcUriBuilder
-        grpcUriBuilderStub = sinon.stub(GrpcUriBuilder, 'build').returns({
-            uri: mockUri,
+        grpcUriBuilderStub = sinon.stub(GrpcUriBuilder, 'buildConnection').returns({
+            address: mockUri,
+            credentials: mockCredentials,
             grpcMaxMessageLength: mockGrpcMaxMessageLength,
+            isLoopback: true,
+            isSecure: false,
         });
 
         // Stub createGrpcClient - only do this once
@@ -135,7 +141,7 @@ describe('ServiceBusMessageActions', () => {
             expect(createGrpcClientStub).to.have.been.calledOnceWith({
                 serviceName: 'Settlement',
                 address: mockUri,
-                credentials: sinon.match.instanceOf(grpc.ChannelCredentials),
+                credentials: mockCredentials,
                 grpcMaxMessageLength: mockGrpcMaxMessageLength,
             });
         });
@@ -689,25 +695,29 @@ describe('ServiceBusMessageActions', () => {
                 sinon.match({
                     serviceName: 'Settlement',
                     address: mockUri,
-                    credentials: sinon.match.instanceOf(grpc.ChannelCredentials),
+                    credentials: mockCredentials,
                     grpcMaxMessageLength: mockGrpcMaxMessageLength,
                 })
             );
         });
 
-        it('should use insecure credentials by default', () => {
+        it('should use credentials resolved by GrpcUriBuilder', () => {
             ServiceBusMessageActions.getInstance();
 
             // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
             const callArgs = createGrpcClientStub.getCall(0).args[0];
             // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-            expect(callArgs.credentials).to.be.instanceOf(grpc.ChannelCredentials);
+            expect(callArgs.credentials).to.equal(mockCredentials);
         });
 
         it('should handle GrpcUriBuilder configuration variations', () => {
+            const secureCredentials = grpc.credentials.createSsl();
             grpcUriBuilderStub.returns({
-                uri: 'https://custom-endpoint:443',
+                address: 'custom-endpoint:443',
+                credentials: secureCredentials,
                 grpcMaxMessageLength: 8388608, // 8MB
+                isLoopback: false,
+                isSecure: true,
             });
 
             ServiceBusMessageActions.resetInstance();
@@ -716,7 +726,8 @@ describe('ServiceBusMessageActions', () => {
             expect(createGrpcClientStub).to.have.been.calledWith(
                 sinon.match({
                     serviceName: 'Settlement',
-                    address: 'https://custom-endpoint:443',
+                    address: 'custom-endpoint:443',
+                    credentials: secureCredentials,
                     grpcMaxMessageLength: 8388608,
                 })
             );

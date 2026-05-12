@@ -21,7 +21,7 @@ let cachedPackageDefinition: grpc.GrpcObject | null = null;
  * @param options - The configuration options for creating the gRPC client
  * @param options.serviceName - Name of the service in the proto definition
  * @param options.address - The server address to connect to (e.g., "localhost:50051")
- * @param options.credentials - gRPC channel credentials to use for secure communication (defaults to insecure)
+ * @param options.credentials - gRPC channel credentials to use for communication
  * @param options.grpcMaxMessageLength - Maximum message length in bytes for both sending and receiving gRPC messages
  *
  * @returns A new instance of the specified gRPC client
@@ -29,12 +29,12 @@ let cachedPackageDefinition: grpc.GrpcObject | null = null;
 export function createGrpcClient<T extends grpc.Client = grpc.Client>({
     serviceName,
     address,
-    credentials = grpc.credentials.createInsecure(),
+    credentials,
     grpcMaxMessageLength,
 }: {
     serviceName: string;
     address: string;
-    credentials?: grpc.ChannelCredentials;
+    credentials: grpc.ChannelCredentials;
     grpcMaxMessageLength: number;
 }): T {
     // Load the embedded proto definition if not already cached
