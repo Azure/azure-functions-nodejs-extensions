@@ -130,6 +130,47 @@ export interface ConnectorContentBindings {
 export const connectorContent: ConnectorContentBindings;
 
 // ---------------------------------------------------------------------------
+// Generic connector trigger registration
+// ---------------------------------------------------------------------------
+
+/**
+ * Options for registering a connector trigger function with {@link connectorTrigger}.
+ */
+export interface ConnectorTriggerOptions<TItem = unknown> {
+    /** The connection setting name (maps to an app setting with the connector runtime URL). */
+    connection: string;
+
+    /** The connector API name (e.g., 'office365', 'sharepointonline'). */
+    connector: string;
+
+    /** The trigger operation identifier (e.g., 'OnNewEmail', 'OnNewFile'). */
+    triggerOperation: string;
+
+    /** Optional extra input bindings (e.g., blob storage, connector content). */
+    extraInputs?: FunctionInput[];
+
+    /** Optional extra output bindings (e.g., blob storage). */
+    extraOutputs?: FunctionOutput[];
+
+    /** Optional return output binding. */
+    return?: FunctionOutput;
+
+    /** The handler function that processes the trigger event. */
+    handler: ConnectorTriggerHandler<TItem>;
+}
+
+/**
+ * Registers a connector trigger function with the Azure Functions app.
+ *
+ * This wraps {@link app.connectorTrigger} with a strongly-typed {@link ConnectorTriggerContext}
+ * that normalises the raw host payload into a consistent `items` array.
+ *
+ * @param name - The function name used for registration and routing.
+ * @param options - The trigger configuration including connector, connection, operation, and handler.
+ */
+export function connectorTrigger<TItem = unknown>(name: string, options: ConnectorTriggerOptions<TItem>): void;
+
+// ---------------------------------------------------------------------------
 // Connector-specific trigger registrations
 // ---------------------------------------------------------------------------
 

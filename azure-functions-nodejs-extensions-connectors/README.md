@@ -10,36 +10,26 @@ npm install @azure/functions-extensions-connectors @azure/connectors @azure/func
 
 ## Usage
 
-### 1. Import the extension in your entry point
-
-```typescript
-import '@azure/functions-extensions-connectors';
-import { app } from '@azure/functions';
-
-app.setup({ enableHttpStream: true });
-```
-
-### 2. Register a connector trigger function
+### 1. Register a connector trigger function
 
 ```typescript
 import { InvocationContext } from '@azure/functions';
-import { connectorTrigger, ConnectorTriggerContext } from '@azure/functions-extensions-connectors';
-import { GraphClientReceiveMessage } from '@azure/connectors';
+import { connectorTrigger, GraphClientReceiveMessage } from '@azure/functions-extensions-connectors';
 
-connectorTrigger('OnNewEmail', {
+connectorTrigger<GraphClientReceiveMessage>('OnNewEmail', {
     connection: 'Office365Connection',
     connector: 'office365',
     triggerOperation: 'OnNewEmail',
-    handler: async (triggerContext: ConnectorTriggerContext, context: InvocationContext) => {
-        const emails = triggerContext.items as GraphClientReceiveMessage[];
-        for (const email of emails) {
+    handler: async (triggerContext, context: InvocationContext) => {
+        // triggerContext.items is GraphClientReceiveMessage[] — fully typed, no cast needed
+        for (const email of triggerContext.items) {
             context.log(`Subject: '${email.subject}'.`);
         }
     },
 });
 ```
 
-### 3. Configure app settings
+### 2. Configure app settings
 
 Add the connector connection runtime URL to your `local.settings.json`:
 
@@ -53,10 +43,9 @@ Add the connector connection runtime URL to your `local.settings.json`:
 
 ## How It Works
 
-1. **Side-effect import** registers a `ConnectorTrigger` factory with `ResourceFactoryResolver`
-2. **`connectorTrigger()`** wraps `app.generic()` with `type: "connectorTrigger"` binding
-3. When AI Gateway fires the trigger callback, the factory parses the JSON payload into a typed `ConnectorTriggerContext`
-4. Your handler receives `ConnectorTriggerContext` with `.items` (the trigger data array) and `.payload` (the full envelope)
+1. **`connectorTrigger()`** wraps `app.connectorTrigger()` with payload normalisation into a typed `ConnectorTriggerContext`
+2. When AI Gateway fires the trigger callback, the wrapper parses the JSON payload and normalises batch/single-item formats
+3. Your handler receives `ConnectorTriggerContext` with `.items` (the trigger data array), `.payload` (the normalised envelope), and `.rawPayload` (the original data)
 
 ## API
 
@@ -65,10 +54,12 @@ Add the connector connection runtime URL to your `local.settings.json`:
 | Option | Type | Description |
 |--------|------|-------------|
 | `connection` | `string` | App setting name for the connector runtime URL |
-| `connector` | `string` | Connector name (e.g., `'office365'`, `'sharepoint'`) |
+| `connector` | `string` | Connector name (e.g., `'office365'`, `'sharepointonline'`) |
 | `triggerOperation` | `string` | Trigger operation name (e.g., `'OnNewEmail'`) |
-| `sdkBinding` | `boolean` | Enable SDK binding mode (default: `true`) |
-| `handler` | `Function` | Async handler receiving `ConnectorTriggerContext` and `InvocationContext` |
+| `handler` | `ConnectorTriggerHandler<TItem>` | Async handler receiving `ConnectorTriggerContext` and `InvocationContext` |
+| `extraInputs` | `FunctionInput[]` | Optional extra input bindings |
+| `extraOutputs` | `FunctionOutput[]` | Optional extra output bindings |
+| `return` | `FunctionOutput` | Optional return output binding |
 
 ### `ConnectorTriggerContext<TItem>`
 
@@ -76,6 +67,8 @@ Add the connector connection runtime URL to your `local.settings.json`:
 |----------|------|-------------|
 | `payload` | `TriggerCallbackPayload<TItem>` | Full trigger callback envelope |
 | `items` | `TItem[]` | Convenience accessor for `payload.body.value` |
+| `rawPayload` | `unknown` | Original payload as received from the host |
+| `toJSON()` | `string` | Serialises the full trigger payload to JSON |
 
 ## License
 
