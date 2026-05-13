@@ -1,0 +1,24 @@
+{
+  "name": "connector-trigger-sample",
+  "version": "1.0.0",
+  "description": "Sample Azure Functions app using @azure/functions-extensions-connectors",
+  "type": "module",
+  "main": "dist/functions/*.js",
+  "scripts": {
+    "build": "tsc",
+    "watch": "tsc -w",
+    "start": "npm run build && func start",
+    "prestart": "npm run build"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "dependencies": {
+    "@azure/functions": "4.15.0-preview",
+    "@azure/functions-extensions-connectors": "file:../../",
+    "@azure/connectors": "0.1.1-preview"
+  },
+  "devDependencies": {
+    "typescript": "^5.0.0"
+  }
+}
