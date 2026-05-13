@@ -17,7 +17,13 @@
       }
     }
   },
-  "sideEffects": true,
+  "sideEffects": false,
+  "files": [
+    "dist/",
+    "types/",
+    "README.md",
+    "LICENSE"
+  ],
   "scripts": {
     "build": "webpack --mode development",
     "build:prod": "webpack --mode production",
