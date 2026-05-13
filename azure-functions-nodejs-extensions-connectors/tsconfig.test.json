@@ -4,12 +4,5 @@
         "module": "esnext",
         "moduleResolution": "node"
     },
-    "ts-node": {
-        "esm": true,
-        "compilerOptions": {
-            "module": "esnext",
-            "moduleResolution": "node"
-        }
-    },
     "include": ["src/**/*", "test/**/*", "types/**/*"]
 }
