@@ -1,6 +1,6 @@
 {
   "name": "@azure/functions-extensions-connectors",
-  "version": "0.1.0-preview",
+  "version": "0.0.1-preview",
   "description": "Azure Functions Connectors Extension - SDK binding for Azure Logic Apps connectors",
   "main": "./dist/azure-functions-extensions-connectors.js",
   "module": "./dist/azure-functions-extensions-connectors.mjs",
@@ -57,6 +57,7 @@
     "sinon": "^15.0.0",
     "ts-loader": "^9.0.0",
     "ts-node": "^10.0.0",
+    "tsx": "^4.21.0",
     "typescript": "~5.0.0",
     "webpack": "^5.0.0",
     "webpack-cli": "^5.0.0"

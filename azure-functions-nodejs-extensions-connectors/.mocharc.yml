@@ -1,6 +1,4 @@
-require:
-  - ts-node/register
 spec: test/**/*.test.ts
 timeout: 10000
-env:
-  - TS_NODE_PROJECT=tsconfig.test.json
+node-option:
+  - import=tsx
