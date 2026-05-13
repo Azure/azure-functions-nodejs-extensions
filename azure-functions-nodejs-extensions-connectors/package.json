@@ -22,7 +22,7 @@
     "build": "webpack --mode development",
     "build:prod": "webpack --mode production",
     "lint": "eslint src test --ext .ts",
-    "test": "mocha --require ts-node/register test/**/*.test.ts",
+    "test": "mocha",
     "watch": "webpack --mode development --watch"
   },
   "engines": {
@@ -38,14 +38,13 @@
   ],
   "license": "MIT",
   "dependencies": {
-    "@azure/connectors": "^0.1.1-preview",
-    "@azure/functions-extensions-base": "^0.2.0-preview"
+    "@azure/connectors": "^0.1.1-preview"
   },
   "peerDependencies": {
-    "@azure/functions": "^4.0.0"
+    "@azure/functions": "4.15.0-preview"
   },
   "devDependencies": {
-    "@azure/functions": "^4.12.0",
+    "@azure/functions": "4.15.0-preview",
     "@types/mocha": "^10.0.0",
     "@types/node": "^18.0.0",
     "@types/sinon": "^10.0.0",

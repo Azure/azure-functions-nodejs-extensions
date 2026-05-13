@@ -35,8 +35,7 @@ export interface ConnectorContentInputOptions {
  * @param options The connector content input options.
  */
 export function connectorContentInput(options: ConnectorContentInputOptions): FunctionInput {
-    return input.generic({
-        type: 'connectorContent',
+    return input.connectorContent({
         connector: options.connector,
         connection: options.connection,
         operation: options.operation,
@@ -76,8 +75,7 @@ export interface ConnectorContentOutputOptions {
  * @param options The connector content output options.
  */
 export function connectorContentOutput(options: ConnectorContentOutputOptions): FunctionOutput {
-    return output.generic({
-        type: 'connectorContent',
+    return output.connectorContent({
         connector: options.connector,
         connection: options.connection,
         operation: options.operation,

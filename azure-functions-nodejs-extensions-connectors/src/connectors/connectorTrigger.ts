@@ -77,20 +77,16 @@ function buildContextFromRawPayload<TItem>(raw: unknown): ConnectorTriggerContex
 
 /**
  * Registers a connector trigger function with the Azure Functions app.
- * This wraps `app.generic` with the `connectorTrigger` binding type.
+ * This wraps `app.connectorTrigger` with a strongly typed context.
  *
  * The handler is resilient to both SDK binding mode (factory-produced ConnectorTriggerContext)
  * and raw mode (plain string / object delivered by the host).
  */
 export function connectorTrigger<TItem = unknown>(name: string, options: ConnectorTriggerOptions<TItem>): void {
-    app.generic(name, {
-        trigger: {
-            type: 'connectorTrigger',
-            name: 'payload',
-            connection: options.connection,
-            connector: options.connector,
-            triggerOperation: options.triggerOperation,
-        },
+    app.connectorTrigger(name, {
+        connection: options.connection,
+        connector: options.connector,
+        triggerOperation: options.triggerOperation,
         extraInputs: options.extraInputs,
         extraOutputs: options.extraOutputs,
         return: options.return,
