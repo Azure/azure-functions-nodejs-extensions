@@ -13,9 +13,9 @@ describe('ConnectorTriggerContextFactory', () => {
                 },
             };
 
-            const modelBindingData: ModelBindingData = {
+            const modelBindingData = {
                 content: JSON.stringify(payload),
-            } as ModelBindingData;
+            } as unknown as ModelBindingData;
 
             const context = ConnectorTriggerContextFactory.buildFromModelBindingData(modelBindingData);
 
@@ -66,9 +66,9 @@ describe('ConnectorTriggerContextFactory', () => {
                 },
             };
 
-            const modelBindingData: ModelBindingData = {
+            const modelBindingData = {
                 content: payload,
-            } as ModelBindingData;
+            } as unknown as ModelBindingData;
 
             const context = ConnectorTriggerContextFactory.buildFromModelBindingData(modelBindingData);
 
@@ -107,8 +107,8 @@ describe('ConnectorTriggerContextFactory', () => {
             };
 
             const modelBindingDataArray: ModelBindingData[] = [
-                { content: JSON.stringify(payload) } as ModelBindingData,
-                { content: JSON.stringify({ body: { value: [{ id: '2' }] } }) } as ModelBindingData,
+                { content: JSON.stringify(payload) } as unknown as ModelBindingData,
+                { content: JSON.stringify({ body: { value: [{ id: '2' }] } }) } as unknown as ModelBindingData,
             ];
 
             const context = ConnectorTriggerContextFactory.buildFromModelBindingData(modelBindingDataArray);
@@ -118,9 +118,9 @@ describe('ConnectorTriggerContextFactory', () => {
         });
 
         it('should handle invalid JSON content gracefully', () => {
-            const modelBindingData: ModelBindingData = {
+            const modelBindingData = {
                 content: 'not valid json',
-            } as ModelBindingData;
+            } as unknown as ModelBindingData;
 
             const context = ConnectorTriggerContextFactory.buildFromModelBindingData(modelBindingData);
 
@@ -129,9 +129,9 @@ describe('ConnectorTriggerContextFactory', () => {
         });
 
         it('should handle payload without body.value gracefully', () => {
-            const modelBindingData: ModelBindingData = {
+            const modelBindingData = {
                 content: JSON.stringify({ someOtherField: 'data' }),
-            } as ModelBindingData;
+            } as unknown as ModelBindingData;
 
             const context = ConnectorTriggerContextFactory.buildFromModelBindingData(modelBindingData);
 
@@ -145,9 +145,9 @@ describe('ConnectorTriggerContextFactory', () => {
                 },
             };
 
-            const modelBindingData: ModelBindingData = {
+            const modelBindingData = {
                 content: JSON.stringify(payload),
-            } as ModelBindingData;
+            } as unknown as ModelBindingData;
 
             const context = ConnectorTriggerContextFactory.buildFromModelBindingData(modelBindingData);
             const serialized = context.toJSON();
