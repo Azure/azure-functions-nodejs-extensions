@@ -81,7 +81,7 @@ describe('ConnectorTriggerContextFactory', () => {
             const context = ConnectorTriggerContextFactory.buildFromModelBindingData(null as any);
 
             assert.strictEqual(context.items.length, 0);
-            assert.deepStrictEqual(context.payload, {});
+            assert.deepStrictEqual(context.payload, { body: { value: [] } });
         });
 
         it('should return empty context for undefined ModelBindingData', () => {
@@ -89,14 +89,14 @@ describe('ConnectorTriggerContextFactory', () => {
             const context = ConnectorTriggerContextFactory.buildFromModelBindingData(undefined as any);
 
             assert.strictEqual(context.items.length, 0);
-            assert.deepStrictEqual(context.payload, {});
+            assert.deepStrictEqual(context.payload, { body: { value: [] } });
         });
 
         it('should return empty context for array with no elements', () => {
             const context = ConnectorTriggerContextFactory.buildFromModelBindingData([]);
 
             assert.strictEqual(context.items.length, 0);
-            assert.deepStrictEqual(context.payload, {});
+            assert.deepStrictEqual(context.payload, { body: { value: [] } });
         });
 
         it('should use first element from array of ModelBindingData', () => {
@@ -125,7 +125,7 @@ describe('ConnectorTriggerContextFactory', () => {
             const context = ConnectorTriggerContextFactory.buildFromModelBindingData(modelBindingData);
 
             assert.strictEqual(context.items.length, 0);
-            assert.deepStrictEqual(context.payload, {});
+            assert.deepStrictEqual(context.payload, { body: { value: [] } });
         });
 
         it('should handle payload without body.value gracefully', () => {

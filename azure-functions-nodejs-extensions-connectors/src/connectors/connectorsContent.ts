@@ -1,9 +1,9 @@
 // Copyright (c) Microsoft Corporation.  All rights reserved.
 
+import { onQueryResult } from './kustoTriggers';
 import { onNewEmail, onNewCalendarEvent } from './office365Triggers';
 import { onNewFile, onUpdatedFile } from './sharepointTriggers';
 import { onNewChannelMessage } from './teamsTriggers';
-import { onQueryResult } from './kustoTriggers';
 
 /**
  * First-class connector trigger registrations grouped by connector.
@@ -23,9 +23,12 @@ import { onQueryResult } from './kustoTriggers';
  * ```
  */
 export const connectors = {
+    kusto: {
+        onQueryResult,
+    },
     office365: {
-        onNewEmail,
         onNewCalendarEvent,
+        onNewEmail,
     },
     sharepoint: {
         onNewFile,
@@ -33,8 +36,5 @@ export const connectors = {
     },
     teams: {
         onNewChannelMessage,
-    },
-    kusto: {
-        onQueryResult,
     },
 };

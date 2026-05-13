@@ -2,19 +2,19 @@
 
 import { app, FunctionInput, FunctionOutput, InvocationContext } from '@azure/functions';
 import { TriggerCallbackPayload } from '@azure/connectors';
-import { ConnectorTriggerContext } from '../../types';
+import { ConnectorTriggerContext, ConnectorTriggerHandler } from '../../types';
 
 /**
- * Options for registering a connector trigger function.
+ * Options for registering a connector trigger function with {@link connectorTrigger}.
  */
 export interface ConnectorTriggerOptions<TItem = unknown> {
     /** The connection setting name (maps to an app setting with the connector runtime URL). */
     connection: string;
 
-    /** The connector name (e.g., 'office365', 'sharepoint'). */
+    /** The connector API name (e.g., 'office365', 'sharepointonline'). */
     connector: string;
 
-    /** The trigger operation (e.g., 'OnNewEmail', 'OnNewFile'). */
+    /** The trigger operation identifier (e.g., 'OnNewEmail', 'OnNewFile'). */
     triggerOperation: string;
 
     /** Optional extra input bindings (e.g., blob storage, connector content). */
@@ -27,7 +27,7 @@ export interface ConnectorTriggerOptions<TItem = unknown> {
     return?: FunctionOutput;
 
     /** The handler function that processes the trigger event. */
-    handler: (context: ConnectorTriggerContext<TItem>, invocationContext: InvocationContext) => Promise<unknown>;
+    handler: ConnectorTriggerHandler<TItem>;
 }
 
 /**
@@ -77,10 +77,12 @@ function buildContextFromRawPayload<TItem>(raw: unknown): ConnectorTriggerContex
 
 /**
  * Registers a connector trigger function with the Azure Functions app.
- * This wraps `app.connectorTrigger` with a strongly typed context.
  *
- * The handler is resilient to both SDK binding mode (factory-produced ConnectorTriggerContext)
- * and raw mode (plain string / object delivered by the host).
+ * This wraps {@link app.connectorTrigger} with a strongly-typed {@link ConnectorTriggerContext}
+ * that normalises the raw host payload into a consistent `items` array.
+ *
+ * @param name - The function name used for registration and routing.
+ * @param options - The trigger configuration including connector, connection, operation, and handler.
  */
 export function connectorTrigger<TItem = unknown>(name: string, options: ConnectorTriggerOptions<TItem>): void {
     app.connectorTrigger(name, {

@@ -5,6 +5,13 @@ import { ConnectorTriggerContextFactory } from './connectorTriggerContextFactory
 
 const CONNECTOR_TRIGGER = 'ConnectorTrigger';
 
+/**
+ * Registers the {@link ConnectorTriggerContextFactory} with the shared
+ * {@link ResourceFactoryResolver} so the Functions host can materialise
+ * {@link ConnectorTriggerContext} instances from raw model binding data.
+ *
+ * This is called once at module load time as a side-effect import.
+ */
 export function registerConnectorTriggerFactory(): void {
     try {
         const resourceFactoryResolver = ResourceFactoryResolver.getInstance();

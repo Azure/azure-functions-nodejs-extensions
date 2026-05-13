@@ -3,10 +3,10 @@
 import * as assert from 'assert';
 import * as sinon from 'sinon';
 import * as azureFunctions from '@azure/functions';
-import { onNewEmail, onNewCalendarEvent } from '../src/connectors/office365Triggers';
+import { onQueryResult } from '../src/connectors/kustoTriggers';
+import { onNewCalendarEvent, onNewEmail } from '../src/connectors/office365Triggers';
 import { onNewFile, onUpdatedFile } from '../src/connectors/sharepointTriggers';
 import { onNewChannelMessage } from '../src/connectors/teamsTriggers';
-import { onQueryResult } from '../src/connectors/kustoTriggers';
 
 describe('connector-specific triggers', () => {
     let appStub: sinon.SinonStub;
@@ -19,7 +19,34 @@ describe('connector-specific triggers', () => {
         sinon.restore();
     });
 
+    describe('kusto', () => {
+        it('onQueryResult should register with connector "kusto" and operation "OnQueryResult"', () => {
+            onQueryResult('testQuery', {
+                connection: 'KustoConnection',
+                handler: async () => undefined,
+            });
+
+            assert.strictEqual(appStub.calledOnce, true);
+            const registeredOptions = appStub.firstCall.args[1];
+            assert.strictEqual(registeredOptions.connector, 'kusto');
+            assert.strictEqual(registeredOptions.triggerOperation, 'OnQueryResult');
+            assert.strictEqual(registeredOptions.connection, 'KustoConnection');
+        });
+    });
+
     describe('office365', () => {
+        it('onNewCalendarEvent should register with connector "office365" and operation "CalendarGetOnNewItems"', () => {
+            onNewCalendarEvent('testCalendar', {
+                connection: 'Office365Connection',
+                handler: async () => undefined,
+            });
+
+            assert.strictEqual(appStub.calledOnce, true);
+            const registeredOptions = appStub.firstCall.args[1];
+            assert.strictEqual(registeredOptions.connector, 'office365');
+            assert.strictEqual(registeredOptions.triggerOperation, 'CalendarGetOnNewItems');
+        });
+
         it('onNewEmail should register with connector "office365" and operation "OnNewEmail"', () => {
             onNewEmail('testEmail', {
                 connection: 'Office365Connection',
@@ -31,18 +58,6 @@ describe('connector-specific triggers', () => {
             assert.strictEqual(registeredOptions.connector, 'office365');
             assert.strictEqual(registeredOptions.triggerOperation, 'OnNewEmail');
             assert.strictEqual(registeredOptions.connection, 'Office365Connection');
-        });
-
-        it('onNewCalendarEvent should register with connector "office365" and operation "CalendarGetOnNewItems"', () => {
-            onNewCalendarEvent('testCalendar', {
-                connection: 'Office365Connection',
-                handler: async () => undefined,
-            });
-
-            assert.strictEqual(appStub.calledOnce, true);
-            const registeredOptions = appStub.firstCall.args[1];
-            assert.strictEqual(registeredOptions.connector, 'office365');
-            assert.strictEqual(registeredOptions.triggerOperation, 'CalendarGetOnNewItems');
         });
     });
 
@@ -85,21 +100,6 @@ describe('connector-specific triggers', () => {
             assert.strictEqual(registeredOptions.connector, 'teams');
             assert.strictEqual(registeredOptions.triggerOperation, 'OnNewChannelMessage');
             assert.strictEqual(registeredOptions.connection, 'TeamsConnection');
-        });
-    });
-
-    describe('kusto', () => {
-        it('onQueryResult should register with connector "kusto" and operation "OnQueryResult"', () => {
-            onQueryResult('testQuery', {
-                connection: 'KustoConnection',
-                handler: async () => undefined,
-            });
-
-            assert.strictEqual(appStub.calledOnce, true);
-            const registeredOptions = appStub.firstCall.args[1];
-            assert.strictEqual(registeredOptions.connector, 'kusto');
-            assert.strictEqual(registeredOptions.triggerOperation, 'OnQueryResult');
-            assert.strictEqual(registeredOptions.connection, 'KustoConnection');
         });
     });
 

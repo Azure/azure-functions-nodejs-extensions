@@ -4,22 +4,27 @@ import { ModelBindingData } from '@azure/functions-extensions-base';
 import { TriggerCallbackPayload } from '@azure/connectors';
 import { ConnectorTriggerContext } from '../../types';
 
+/**
+ * Factory that transforms raw {@link ModelBindingData} from the Functions host
+ * into a strongly-typed {@link ConnectorTriggerContext}.
+ */
 export class ConnectorTriggerContextFactory {
     /**
-     * Builds a ConnectorTriggerContext from the model binding data delivered by the Functions host.
+     * Builds a {@link ConnectorTriggerContext} from the model binding data delivered by the Functions host.
+     * @param modelBindingData - The raw binding data (single or array) provided by the host.
      */
-    public static buildFromModelBindingData(
+    public static buildFromModelBindingData<TItem = unknown>(
         modelBindingData: ModelBindingData | ModelBindingData[]
-    ): ConnectorTriggerContext {
+    ): ConnectorTriggerContext<TItem> {
         const data = Array.isArray(modelBindingData)
             ? modelBindingData[0]
             : modelBindingData;
 
         if (!data) {
-            return ConnectorTriggerContextFactory.createEmptyContext();
+            return ConnectorTriggerContextFactory.createEmptyContext<TItem>();
         }
 
-        const payload = ConnectorTriggerContextFactory.parsePayload(data);
+        const payload = ConnectorTriggerContextFactory.parsePayload<TItem>(data);
 
         return {
             payload,
@@ -31,32 +36,40 @@ export class ConnectorTriggerContextFactory {
         };
     }
 
-    private static parsePayload(data: ModelBindingData): TriggerCallbackPayload<unknown> {
+    /**
+     * Parses the content of a {@link ModelBindingData} into a {@link TriggerCallbackPayload}.
+     * Handles string, Buffer, Uint8Array, and pre-parsed object content.
+     * @param data - The model binding data whose content should be parsed.
+     */
+    private static parsePayload<TItem = unknown>(data: ModelBindingData): TriggerCallbackPayload<TItem> {
         try {
             const content = data.content;
 
             if (typeof content === 'string') {
-                return JSON.parse(content) as TriggerCallbackPayload<unknown>;
+                return JSON.parse(content) as TriggerCallbackPayload<TItem>;
             }
 
             if (content instanceof Uint8Array || Buffer.isBuffer(content)) {
                 const text = Buffer.from(content).toString('utf-8');
-                return JSON.parse(text) as TriggerCallbackPayload<unknown>;
+                return JSON.parse(text) as TriggerCallbackPayload<TItem>;
             }
 
             // NOTE(swapnilnagar): If content is already an object, treat it as the payload directly.
             if (typeof content === 'object' && content !== null) {
-                return content as TriggerCallbackPayload<unknown>;
+                return content as TriggerCallbackPayload<TItem>;
             }
 
-            return {};
+            return { body: { value: [] } } as TriggerCallbackPayload<TItem>;
         } catch {
-            return {};
+            return { body: { value: [] } } as TriggerCallbackPayload<TItem>;
         }
     }
 
-    private static createEmptyContext(): ConnectorTriggerContext {
-        const emptyPayload = {};
+    /**
+     * Creates an empty {@link ConnectorTriggerContext} with no items.
+     */
+    private static createEmptyContext<TItem = unknown>(): ConnectorTriggerContext<TItem> {
+        const emptyPayload: TriggerCallbackPayload<TItem> = { body: { value: [] } };
         return {
             payload: emptyPayload,
             items: [],

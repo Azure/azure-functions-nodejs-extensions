@@ -4,10 +4,15 @@ import * as assert from 'assert';
 import { connectors } from '../src/connectors/connectorsContent';
 
 describe('connectors namespace', () => {
-    it('should expose office365 with onNewEmail and onNewCalendarEvent', () => {
+    it('should expose kusto with onQueryResult', () => {
+        assert.strictEqual(typeof connectors.kusto, 'object');
+        assert.strictEqual(typeof connectors.kusto.onQueryResult, 'function');
+    });
+
+    it('should expose office365 with onNewCalendarEvent and onNewEmail', () => {
         assert.strictEqual(typeof connectors.office365, 'object');
-        assert.strictEqual(typeof connectors.office365.onNewEmail, 'function');
         assert.strictEqual(typeof connectors.office365.onNewCalendarEvent, 'function');
+        assert.strictEqual(typeof connectors.office365.onNewEmail, 'function');
     });
 
     it('should expose sharepoint with onNewFile and onUpdatedFile', () => {
@@ -21,13 +26,8 @@ describe('connectors namespace', () => {
         assert.strictEqual(typeof connectors.teams.onNewChannelMessage, 'function');
     });
 
-    it('should expose kusto with onQueryResult', () => {
-        assert.strictEqual(typeof connectors.kusto, 'object');
-        assert.strictEqual(typeof connectors.kusto.onQueryResult, 'function');
-    });
-
-    it('should have exactly four connector groups', () => {
+    it('should have exactly four connector groups in alphabetical order', () => {
         const connectorKeys = Object.keys(connectors);
-        assert.deepStrictEqual(connectorKeys.sort(), ['kusto', 'office365', 'sharepoint', 'teams']);
+        assert.deepStrictEqual(connectorKeys, ['kusto', 'office365', 'sharepoint', 'teams']);
     });
 });

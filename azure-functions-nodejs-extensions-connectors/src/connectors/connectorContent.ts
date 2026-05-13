@@ -89,6 +89,9 @@ export function connectorContentOutput(options: ConnectorContentOutputOptions): 
 /**
  * Connector content bindings for input and output.
  *
+ * Use `connectorContent.input()` with `extraInputs` to read data from a connector,
+ * and `connectorContent.output()` with `extraOutputs` or `return` to write data.
+ *
  * @example
  * ```typescript
  * import { connectorContent } from '@azure/functions-extensions-connectors';
@@ -98,7 +101,7 @@ export function connectorContentOutput(options: ConnectorContentOutputOptions): 
  *     connection: 'Office365Connection',
  * });
  *
- * const blobOutput = connectorContent.output({
+ * const emailOutput = connectorContent.output({
  *     connector: 'office365',
  *     connection: 'Office365Connection',
  *     operation: 'SendEmail',

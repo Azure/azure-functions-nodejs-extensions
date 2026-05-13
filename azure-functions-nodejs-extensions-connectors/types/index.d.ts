@@ -8,11 +8,11 @@ import { FunctionInput, FunctionOutput, InvocationContext } from '@azure/functio
 // Customers can import these directly from this package.
 // ---------------------------------------------------------------------------
 
-export { GraphClientReceiveMessage, GraphCalendarEventClientReceive } from '@azure/connectors/generated/Office365Extensions';
+export { TriggerCallbackBody, TriggerCallbackPayload } from '@azure/connectors';
+export { Row as KustoRow } from '@azure/connectors/generated/KustoExtensions';
+export { GraphCalendarEventClientReceive, GraphClientReceiveMessage } from '@azure/connectors/generated/Office365Extensions';
 export { BlobMetadata } from '@azure/connectors/generated/SharepointonlineExtensions';
 export { ChatMessage } from '@azure/connectors/generated/TeamsExtensions';
-export { Row as KustoRow } from '@azure/connectors/generated/KustoExtensions';
-export { TriggerCallbackPayload, TriggerCallbackBody } from '@azure/connectors';
 
 // ---------------------------------------------------------------------------
 // Core trigger context
@@ -133,20 +133,28 @@ export const connectorContent: ConnectorContentBindings;
 // Connector-specific trigger registrations
 // ---------------------------------------------------------------------------
 
-import { GraphClientReceiveMessage, GraphCalendarEventClientReceive } from '@azure/connectors/generated/Office365Extensions';
+import { Row } from '@azure/connectors/generated/KustoExtensions';
+import { GraphCalendarEventClientReceive, GraphClientReceiveMessage } from '@azure/connectors/generated/Office365Extensions';
 import { BlobMetadata } from '@azure/connectors/generated/SharepointonlineExtensions';
 import { ChatMessage } from '@azure/connectors/generated/TeamsExtensions';
-import { Row } from '@azure/connectors/generated/KustoExtensions';
+
+/**
+ * Kusto connector trigger registrations.
+ */
+export interface KustoTriggers {
+    /** Registers a trigger that fires when a Kusto query returns new results. Handler items are typed as `Row[]`. */
+    onQueryResult(name: string, options: TypedTriggerOptions<Row>): void;
+}
 
 /**
  * Office 365 connector trigger registrations.
  */
 export interface Office365Triggers {
-    /** Registers a trigger that fires when a new email arrives. Handler items are typed as `GraphClientReceiveMessage[]`. */
-    onNewEmail(name: string, options: TypedTriggerOptions<GraphClientReceiveMessage>): void;
-
     /** Registers a trigger that fires when a new calendar event is created. Handler items are typed as `GraphCalendarEventClientReceive[]`. */
     onNewCalendarEvent(name: string, options: TypedTriggerOptions<GraphCalendarEventClientReceive>): void;
+
+    /** Registers a trigger that fires when a new email arrives. Handler items are typed as `GraphClientReceiveMessage[]`. */
+    onNewEmail(name: string, options: TypedTriggerOptions<GraphClientReceiveMessage>): void;
 }
 
 /**
@@ -169,17 +177,12 @@ export interface TeamsTriggers {
 }
 
 /**
- * Kusto connector trigger registrations.
- */
-export interface KustoTriggers {
-    /** Registers a trigger that fires when a Kusto query returns new results. Handler items are typed as `Row[]`. */
-    onQueryResult(name: string, options: TypedTriggerOptions<Row>): void;
-}
-
-/**
  * First-class connector trigger registrations grouped by connector.
  */
 export interface ConnectorsContent {
+    /** Kusto connector triggers (queries). */
+    kusto: KustoTriggers;
+
     /** Office 365 connector triggers (email, calendar). */
     office365: Office365Triggers;
 
@@ -188,9 +191,6 @@ export interface ConnectorsContent {
 
     /** Teams connector triggers (messages). */
     teams: TeamsTriggers;
-
-    /** Kusto connector triggers (queries). */
-    kusto: KustoTriggers;
 }
 
 /**
