@@ -41,38 +41,52 @@ export interface ConnectorTriggerOptions<TItem = unknown> {
  * so the customer always receives a strongly typed `payload` and `items` array.
  */
 function buildContextFromRawPayload<TItem>(raw: unknown): ConnectorTriggerContext<TItem> {
-    const parsed = typeof raw === 'string'
-        ? JSON.parse(raw) as Record<string, unknown>
-        : (raw ?? {}) as Record<string, unknown>;
+    try {
+        const parsed = typeof raw === 'string'
+            ? JSON.parse(raw) as Record<string, unknown>
+            : (raw ?? {}) as Record<string, unknown>;
 
-    const body = parsed.body as Record<string, unknown> | undefined;
+        const body = parsed.body as Record<string, unknown> | undefined;
 
-    let items: TItem[];
+        let items: TItem[];
 
-    if (body !== undefined && body !== null && Array.isArray(body.value)) {
-        // NOTE(swapnilnagar): Batch format — body.value is already the items array.
-        items = body.value as TItem[];
-    } else if (body !== undefined && body !== null && typeof body === 'object' && Object.keys(body).length > 0) {
-        // NOTE(swapnilnagar): Single-item format — body IS the item directly.
-        items = [body as unknown as TItem];
-    } else {
-        items = [];
+        if (body !== undefined && body !== null && Array.isArray(body.value)) {
+            // NOTE(swapnilnagar): Batch format — body.value is already the items array.
+            items = body.value as TItem[];
+        } else if (body !== undefined && body !== null && typeof body === 'object' && Object.keys(body).length > 0) {
+            // NOTE(swapnilnagar): Single-item format — body IS the item directly.
+            items = [body as unknown as TItem];
+        } else {
+            items = [];
+        }
+
+        // NOTE(swapnilnagar): Normalise into TriggerCallbackPayload<TItem> so
+        // context.payload always has the { body: { value: TItem[] } } shape.
+        const payload: TriggerCallbackPayload<TItem> = {
+            body: { value: items },
+        };
+
+        return {
+            payload,
+            items,
+            rawPayload: parsed,
+            toJSON(): string {
+                return JSON.stringify(parsed);
+            },
+        };
+    } catch {
+        // NOTE(swapnilnagar): If the payload is malformed JSON or otherwise unparseable,
+        // return an empty context so the handler still runs gracefully.
+        const emptyPayload: TriggerCallbackPayload<TItem> = { body: { value: [] } };
+        return {
+            payload: emptyPayload,
+            items: [],
+            rawPayload: raw,
+            toJSON(): string {
+                return JSON.stringify(raw);
+            },
+        };
     }
-
-    // NOTE(swapnilnagar): Normalise into TriggerCallbackPayload<TItem> so
-    // context.payload always has the { body: { value: TItem[] } } shape.
-    const payload: TriggerCallbackPayload<TItem> = {
-        body: { value: items },
-    };
-
-    return {
-        payload,
-        items,
-        rawPayload: parsed,
-        toJSON(): string {
-            return JSON.stringify(parsed);
-        },
-    };
 }
 
 /**

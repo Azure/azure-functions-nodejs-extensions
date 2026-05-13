@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.  All rights reserved.
 
-import { GraphClientReceiveMessage } from '@azure/connectors/generated/Office365Extensions';
-import { GraphCalendarEventClientReceive } from '@azure/connectors/generated/Office365Extensions';
+import { GraphCalendarEventClientReceive, GraphClientReceiveMessage } from '@azure/connectors/generated/Office365Extensions';
 import { TypedTriggerOptions } from '../../types';
 import { connectorTrigger } from './connectorTrigger';
 
