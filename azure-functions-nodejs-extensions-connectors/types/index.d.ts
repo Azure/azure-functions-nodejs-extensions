@@ -51,23 +51,6 @@ export type ConnectorTriggerHandler<TItem = unknown> = (
     invocationContext: InvocationContext,
 ) => Promise<unknown>;
 
-/**
- * Options for registering a typed connector trigger.
- */
-export interface TypedTriggerOptions<TItem> {
-    /** Optional extra input bindings (e.g., blob storage, connector content). */
-    extraInputs?: FunctionInput[];
-
-    /** Optional extra output bindings (e.g., blob storage). */
-    extraOutputs?: FunctionOutput[];
-
-    /** Optional return output binding. */
-    return?: FunctionOutput;
-
-    /** The handler function that processes the trigger event. */
-    handler: ConnectorTriggerHandler<TItem>;
-}
-
 // ---------------------------------------------------------------------------
 // Generic connector trigger registration
 // ---------------------------------------------------------------------------
@@ -114,7 +97,7 @@ import { ChatMessage } from '@azure/connectors/generated/TeamsExtensions';
  */
 export interface KustoTriggers {
     /** Registers a trigger that fires when a Kusto query returns new results. Handler items are typed as `Row[]`. */
-    onQueryResult(name: string, options: TypedTriggerOptions<Row>): void;
+    onQueryResult(name: string, options: ConnectorTriggerOptions<Row>): void;
 }
 
 /**
@@ -122,10 +105,10 @@ export interface KustoTriggers {
  */
 export interface Office365Triggers {
     /** Registers a trigger that fires when a new calendar event is created. Handler items are typed as `GraphCalendarEventClientReceive[]`. */
-    onNewCalendarEvent(name: string, options: TypedTriggerOptions<GraphCalendarEventClientReceive>): void;
+    onNewCalendarEvent(name: string, options: ConnectorTriggerOptions<GraphCalendarEventClientReceive>): void;
 
     /** Registers a trigger that fires when a new email arrives. Handler items are typed as `GraphClientReceiveMessage[]`. */
-    onNewEmail(name: string, options: TypedTriggerOptions<GraphClientReceiveMessage>): void;
+    onNewEmail(name: string, options: ConnectorTriggerOptions<GraphClientReceiveMessage>): void;
 }
 
 /**
@@ -133,10 +116,10 @@ export interface Office365Triggers {
  */
 export interface SharepointTriggers {
     /** Registers a trigger that fires when a new file is created. Handler items are typed as `BlobMetadata[]`. */
-    onNewFile(name: string, options: TypedTriggerOptions<BlobMetadata>): void;
+    onNewFile(name: string, options: ConnectorTriggerOptions<BlobMetadata>): void;
 
     /** Registers a trigger that fires when an existing file is modified. Handler items are typed as `BlobMetadata[]`. */
-    onUpdatedFile(name: string, options: TypedTriggerOptions<BlobMetadata>): void;
+    onUpdatedFile(name: string, options: ConnectorTriggerOptions<BlobMetadata>): void;
 }
 
 /**
@@ -144,13 +127,13 @@ export interface SharepointTriggers {
  */
 export interface TeamsTriggers {
     /** Registers a trigger that fires when a new channel message is posted. Handler items are typed as `ChatMessage[]`. */
-    onNewChannelMessage(name: string, options: TypedTriggerOptions<ChatMessage>): void;
+    onNewChannelMessage(name: string, options: ConnectorTriggerOptions<ChatMessage>): void;
 }
 
 /**
  * First-class connector trigger registrations grouped by connector.
  */
-export interface ConnectorsContent {
+export interface ConnectorTriggers {
     /** Kusto connector triggers (queries). */
     kusto: KustoTriggers;
 
@@ -181,4 +164,4 @@ export interface ConnectorsContent {
  * });
  * ```
  */
-export const connectors: ConnectorsContent;
+export const connectors: ConnectorTriggers;

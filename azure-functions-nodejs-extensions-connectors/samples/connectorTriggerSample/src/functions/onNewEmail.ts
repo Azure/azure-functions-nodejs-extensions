@@ -1,6 +1,6 @@
 // Copyright (c) Microsoft Corporation.  All rights reserved.
 
-import { InvocationContext, output } from '@azure/functions';
+import { InvocationContext } from '@azure/functions';
 import { connectors } from '@azure/functions-extensions-connectors';
 
 connectors.office365.onNewEmail('OnNewEmail', {

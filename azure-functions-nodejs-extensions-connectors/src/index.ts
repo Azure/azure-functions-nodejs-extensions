@@ -2,14 +2,14 @@
 
 // Export types for customer consumption
 export type {
-    ConnectorsContent,
     ConnectorTriggerContext,
     ConnectorTriggerHandler,
+    ConnectorTriggerOptions,
+    ConnectorTriggers,
     KustoTriggers,
     Office365Triggers,
     SharepointTriggers,
     TeamsTriggers,
-    TypedTriggerOptions,
 } from '../types';
 
 // Re-export connector SDK item types so customers can import from this package
@@ -24,7 +24,6 @@ export type { ChatMessage } from '@azure/connectors/generated/TeamsExtensions';
 
 // Export the generic connector trigger registration helper
 export { connectorTrigger } from './connectors/connectorTrigger';
-export type { ConnectorTriggerOptions } from './connectors/connectorTrigger';
 
 // Export first-class connector trigger registrations
-export { connectors } from './connectors/connectorsContent';
+export { connectors } from './connectors/connectorTriggers';

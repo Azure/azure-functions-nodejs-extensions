@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.  All rights reserved.
 
 import * as assert from 'assert';
-import { connectors } from '../src/connectors/connectorsContent';
+import { connectors } from '../src/connectors/connectorTriggers';
 
 describe('connectors namespace', () => {
     it('should expose kusto with onQueryResult', () => {

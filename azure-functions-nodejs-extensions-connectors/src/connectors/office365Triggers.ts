@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.  All rights reserved.
 
 import { GraphCalendarEventClientReceive, GraphClientReceiveMessage } from '@azure/connectors/generated/Office365Extensions';
-import { TypedTriggerOptions } from '../../types';
+import { ConnectorTriggerOptions } from '../../types';
 import { connectorTrigger } from './connectorTrigger';
 
 /**
@@ -11,7 +11,7 @@ import { connectorTrigger } from './connectorTrigger';
  * @param name - The function name used for registration and routing.
  * @param options - The trigger options including handler.
  */
-export function onNewEmail(name: string, options: TypedTriggerOptions<GraphClientReceiveMessage>): void {
+export function onNewEmail(name: string, options: ConnectorTriggerOptions<GraphClientReceiveMessage>): void {
     connectorTrigger<GraphClientReceiveMessage>(name, {
         extraInputs: options.extraInputs,
         extraOutputs: options.extraOutputs,
@@ -27,7 +27,7 @@ export function onNewEmail(name: string, options: TypedTriggerOptions<GraphClien
  * @param name - The function name used for registration and routing.
  * @param options - The trigger options including handler.
  */
-export function onNewCalendarEvent(name: string, options: TypedTriggerOptions<GraphCalendarEventClientReceive>): void {
+export function onNewCalendarEvent(name: string, options: ConnectorTriggerOptions<GraphCalendarEventClientReceive>): void {
     connectorTrigger<GraphCalendarEventClientReceive>(name, {
         extraInputs: options.extraInputs,
         extraOutputs: options.extraOutputs,

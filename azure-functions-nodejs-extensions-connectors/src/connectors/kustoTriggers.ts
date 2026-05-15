@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.  All rights reserved.
 
 import { Row } from '@azure/connectors/generated/KustoExtensions';
-import { TypedTriggerOptions } from '../../types';
+import { ConnectorTriggerOptions } from '../../types';
 import { connectorTrigger } from './connectorTrigger';
 
 /**
@@ -11,7 +11,7 @@ import { connectorTrigger } from './connectorTrigger';
  * @param name - The function name used for registration and routing.
  * @param options - The trigger options including handler.
  */
-export function onQueryResult(name: string, options: TypedTriggerOptions<Row>): void {
+export function onQueryResult(name: string, options: ConnectorTriggerOptions<Row>): void {
     connectorTrigger<Row>(name, {
         extraInputs: options.extraInputs,
         extraOutputs: options.extraOutputs,

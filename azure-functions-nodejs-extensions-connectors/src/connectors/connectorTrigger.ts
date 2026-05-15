@@ -1,25 +1,10 @@
 // Copyright (c) Microsoft Corporation.  All rights reserved.
 
-import { app, FunctionInput, FunctionOutput, InvocationContext } from '@azure/functions';
+import { app, InvocationContext } from '@azure/functions';
 import { TriggerCallbackPayload } from '@azure/connectors';
-import { ConnectorTriggerContext, ConnectorTriggerHandler } from '../../types';
+import { ConnectorTriggerContext, ConnectorTriggerOptions } from '../../types';
 
-/**
- * Options for registering a connector trigger function with {@link connectorTrigger}.
- */
-export interface ConnectorTriggerOptions<TItem = unknown> {
-    /** Optional extra input bindings (e.g., blob storage, connector content). */
-    extraInputs?: FunctionInput[];
-
-    /** Optional extra output bindings (e.g., blob storage). */
-    extraOutputs?: FunctionOutput[];
-
-    /** Optional return output binding. */
-    return?: FunctionOutput;
-
-    /** The handler function that processes the trigger event. */
-    handler: ConnectorTriggerHandler<TItem>;
-}
+export type { ConnectorTriggerOptions };
 
 /**
  * Normalises a raw trigger payload (string or object) into a ConnectorTriggerContext.
