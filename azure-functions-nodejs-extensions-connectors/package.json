@@ -45,7 +45,7 @@
     "watch": "webpack --mode development --watch"
   },
   "engines": {
-    "node": ">=20.0.0"
+    "node": ">=24.0.0"
   },
   "keywords": [
     "azure",
