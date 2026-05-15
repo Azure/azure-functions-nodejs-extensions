@@ -4,7 +4,6 @@ import { InvocationContext, output } from '@azure/functions';
 import { connectors } from '@azure/functions-extensions-connectors';
 
 connectors.office365.onNewEmail('OnNewEmail', {
-    connection: 'Office365Connection',
     handler: async (triggerContext, invocationContext: InvocationContext) => {
         invocationContext.log('OnNewEmail trigger received.');
 

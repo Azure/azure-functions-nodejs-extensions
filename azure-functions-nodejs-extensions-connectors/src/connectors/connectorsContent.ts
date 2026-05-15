@@ -13,7 +13,6 @@ import { onNewChannelMessage } from './teamsTriggers';
  * import { connectors } from '@azure/functions-extensions-connectors';
  *
  * connectors.office365.onNewEmail('OnNewEmail', {
- *     connection: 'Office365Connection',
  *     handler: async (context, invocationContext) => {
  *         for (const email of context.items) {
  *             invocationContext.log(`Subject: '${email.subject}'.`);

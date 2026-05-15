@@ -55,9 +55,6 @@ export type ConnectorTriggerHandler<TItem = unknown> = (
  * Options for registering a typed connector trigger.
  */
 export interface TypedTriggerOptions<TItem> {
-    /** The connection setting name (maps to an app setting with the connector runtime URL). */
-    connection: string;
-
     /** Optional extra input bindings (e.g., blob storage, connector content). */
     extraInputs?: FunctionInput[];
 
@@ -137,15 +134,6 @@ export const connectorContent: ConnectorContentBindings;
  * Options for registering a connector trigger function with {@link connectorTrigger}.
  */
 export interface ConnectorTriggerOptions<TItem = unknown> {
-    /** The connection setting name (maps to an app setting with the connector runtime URL). */
-    connection: string;
-
-    /** The connector API name (e.g., 'office365', 'sharepointonline'). */
-    connector: string;
-
-    /** The trigger operation identifier (e.g., 'OnNewEmail', 'OnNewFile'). */
-    triggerOperation: string;
-
     /** Optional extra input bindings (e.g., blob storage, connector content). */
     extraInputs?: FunctionInput[];
 
@@ -166,7 +154,7 @@ export interface ConnectorTriggerOptions<TItem = unknown> {
  * that normalises the raw host payload into a consistent `items` array.
  *
  * @param name - The function name used for registration and routing.
- * @param options - The trigger configuration including connector, connection, operation, and handler.
+ * @param options - The trigger configuration including handler and optional bindings.
  */
 export function connectorTrigger<TItem = unknown>(name: string, options: ConnectorTriggerOptions<TItem>): void;
 
@@ -242,7 +230,6 @@ export interface ConnectorsContent {
  * import { connectors, GraphClientReceiveMessage } from '@azure/functions-extensions-connectors';
  *
  * connectors.office365.onNewEmail('OnNewEmail', {
- *     connection: 'Office365Connection',
  *     handler: async (context, invocationContext) => {
  *         // context.items is GraphClientReceiveMessage[] — fully typed, no cast needed
  *         for (const email of context.items) {

@@ -18,9 +18,6 @@ describe('connectorTrigger', () => {
 
     it('should call app.connectorTrigger with the correct name', () => {
         connectorTrigger('testFunction', {
-            connection: 'TestConnection',
-            connector: 'office365',
-            triggerOperation: 'OnNewEmail',
             handler: async () => undefined,
         });
 
@@ -28,28 +25,11 @@ describe('connectorTrigger', () => {
         assert.strictEqual(appStub.firstCall.args[0], 'testFunction');
     });
 
-    it('should pass connection, connector, and triggerOperation to app.connectorTrigger', () => {
-        connectorTrigger('testFunction', {
-            connection: 'Office365Connection',
-            connector: 'office365',
-            triggerOperation: 'OnNewEmail',
-            handler: async () => undefined,
-        });
-
-        const registeredOptions = appStub.firstCall.args[1];
-        assert.strictEqual(registeredOptions.connection, 'Office365Connection');
-        assert.strictEqual(registeredOptions.connector, 'office365');
-        assert.strictEqual(registeredOptions.triggerOperation, 'OnNewEmail');
-    });
-
     it('should pass extraInputs and extraOutputs through', () => {
         const mockInput = { name: 'testInput', type: 'connectorContent' } as unknown as azureFunctions.FunctionInput;
         const mockOutput = { name: 'testOutput', type: 'connectorContent' } as unknown as azureFunctions.FunctionOutput;
 
         connectorTrigger('testFunction', {
-            connection: 'TestConnection',
-            connector: 'office365',
-            triggerOperation: 'OnNewEmail',
             extraInputs: [mockInput],
             extraOutputs: [mockOutput],
             handler: async () => undefined,
@@ -64,9 +44,6 @@ describe('connectorTrigger', () => {
         const mockReturn = { name: 'returnOutput', type: 'http' } as unknown as azureFunctions.FunctionOutput;
 
         connectorTrigger('testFunction', {
-            connection: 'TestConnection',
-            connector: 'office365',
-            triggerOperation: 'OnNewEmail',
             return: mockReturn,
             handler: async () => undefined,
         });

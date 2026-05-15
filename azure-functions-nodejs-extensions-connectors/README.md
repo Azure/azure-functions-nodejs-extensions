@@ -17,9 +17,6 @@ import { InvocationContext } from '@azure/functions';
 import { connectorTrigger, GraphClientReceiveMessage } from '@azure/functions-extensions-connectors';
 
 connectorTrigger<GraphClientReceiveMessage>('OnNewEmail', {
-    connection: 'Office365Connection',
-    connector: 'office365',
-    triggerOperation: 'OnNewEmail',
     handler: async (triggerContext, context: InvocationContext) => {
         // triggerContext.items is GraphClientReceiveMessage[] — fully typed, no cast needed
         for (const email of triggerContext.items) {
@@ -53,9 +50,6 @@ Add the connector connection runtime URL to your `local.settings.json`:
 
 | Option | Type | Description |
 |--------|------|-------------|
-| `connection` | `string` | App setting name for the connector runtime URL |
-| `connector` | `string` | Connector name (e.g., `'office365'`, `'sharepointonline'`) |
-| `triggerOperation` | `string` | Trigger operation name (e.g., `'OnNewEmail'`) |
 | `handler` | `ConnectorTriggerHandler<TItem>` | Async handler receiving `ConnectorTriggerContext` and `InvocationContext` |
 | `extraInputs` | `FunctionInput[]` | Optional extra input bindings |
 | `extraOutputs` | `FunctionOutput[]` | Optional extra output bindings |

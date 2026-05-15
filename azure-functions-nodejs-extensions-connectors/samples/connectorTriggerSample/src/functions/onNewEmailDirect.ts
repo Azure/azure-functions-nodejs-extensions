@@ -10,9 +10,6 @@ import { app, InvocationContext } from '@azure/functions';
  * passed directly to the handler as-is (string or object).
  */
 app.connectorTrigger('OnNewEmailDirect', {
-    connection: 'Office365Connection',
-    connector: 'office365',
-    triggerOperation: 'OnNewEmail',
     handler: async (triggerInput: unknown, invocationContext: InvocationContext) => {
         invocationContext.log('OnNewEmailDirect trigger received via app.connectorTrigger().');
 

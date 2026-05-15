@@ -8,15 +8,6 @@ import { ConnectorTriggerContext, ConnectorTriggerHandler } from '../../types';
  * Options for registering a connector trigger function with {@link connectorTrigger}.
  */
 export interface ConnectorTriggerOptions<TItem = unknown> {
-    /** The connection setting name (maps to an app setting with the connector runtime URL). */
-    connection: string;
-
-    /** The connector API name (e.g., 'office365', 'sharepointonline'). */
-    connector: string;
-
-    /** The trigger operation identifier (e.g., 'OnNewEmail', 'OnNewFile'). */
-    triggerOperation: string;
-
     /** Optional extra input bindings (e.g., blob storage, connector content). */
     extraInputs?: FunctionInput[];
 
@@ -96,13 +87,10 @@ function buildContextFromRawPayload<TItem>(raw: unknown): ConnectorTriggerContex
  * that normalises the raw host payload into a consistent `items` array.
  *
  * @param name - The function name used for registration and routing.
- * @param options - The trigger configuration including connector, connection, operation, and handler.
+ * @param options - The trigger configuration including handler and optional bindings.
  */
 export function connectorTrigger<TItem = unknown>(name: string, options: ConnectorTriggerOptions<TItem>): void {
     app.connectorTrigger(name, {
-        connection: options.connection,
-        connector: options.connector,
-        triggerOperation: options.triggerOperation,
         extraInputs: options.extraInputs,
         extraOutputs: options.extraOutputs,
         return: options.return,

@@ -20,86 +20,64 @@ describe('connector-specific triggers', () => {
     });
 
     describe('kusto', () => {
-        it('onQueryResult should register with connector "kusto" and operation "OnQueryResult"', () => {
+        it('onQueryResult should register with the correct function name', () => {
             onQueryResult('testQuery', {
-                connection: 'KustoConnection',
                 handler: async () => undefined,
             });
 
             assert.strictEqual(appStub.calledOnce, true);
-            const registeredOptions = appStub.firstCall.args[1];
-            assert.strictEqual(registeredOptions.connector, 'kusto');
-            assert.strictEqual(registeredOptions.triggerOperation, 'OnQueryResult');
-            assert.strictEqual(registeredOptions.connection, 'KustoConnection');
+            assert.strictEqual(appStub.firstCall.args[0], 'testQuery');
         });
     });
 
     describe('office365', () => {
-        it('onNewCalendarEvent should register with connector "office365" and operation "CalendarGetOnNewItems"', () => {
+        it('onNewCalendarEvent should register with the correct function name', () => {
             onNewCalendarEvent('testCalendar', {
-                connection: 'Office365Connection',
                 handler: async () => undefined,
             });
 
             assert.strictEqual(appStub.calledOnce, true);
-            const registeredOptions = appStub.firstCall.args[1];
-            assert.strictEqual(registeredOptions.connector, 'office365');
-            assert.strictEqual(registeredOptions.triggerOperation, 'CalendarGetOnNewItems');
+            assert.strictEqual(appStub.firstCall.args[0], 'testCalendar');
         });
 
-        it('onNewEmail should register with connector "office365" and operation "OnNewEmail"', () => {
+        it('onNewEmail should register with the correct function name', () => {
             onNewEmail('testEmail', {
-                connection: 'Office365Connection',
                 handler: async () => undefined,
             });
 
             assert.strictEqual(appStub.calledOnce, true);
-            const registeredOptions = appStub.firstCall.args[1];
-            assert.strictEqual(registeredOptions.connector, 'office365');
-            assert.strictEqual(registeredOptions.triggerOperation, 'OnNewEmail');
-            assert.strictEqual(registeredOptions.connection, 'Office365Connection');
+            assert.strictEqual(appStub.firstCall.args[0], 'testEmail');
         });
     });
 
     describe('sharepoint', () => {
-        it('onNewFile should register with connector "sharepointonline" and operation "OnNewFile"', () => {
+        it('onNewFile should register with the correct function name', () => {
             onNewFile('testNewFile', {
-                connection: 'SharePointConnection',
                 handler: async () => undefined,
             });
 
             assert.strictEqual(appStub.calledOnce, true);
-            const registeredOptions = appStub.firstCall.args[1];
-            assert.strictEqual(registeredOptions.connector, 'sharepointonline');
-            assert.strictEqual(registeredOptions.triggerOperation, 'OnNewFile');
-            assert.strictEqual(registeredOptions.connection, 'SharePointConnection');
+            assert.strictEqual(appStub.firstCall.args[0], 'testNewFile');
         });
 
-        it('onUpdatedFile should register with connector "sharepointonline" and operation "OnUpdatedFile"', () => {
+        it('onUpdatedFile should register with the correct function name', () => {
             onUpdatedFile('testUpdatedFile', {
-                connection: 'SharePointConnection',
                 handler: async () => undefined,
             });
 
             assert.strictEqual(appStub.calledOnce, true);
-            const registeredOptions = appStub.firstCall.args[1];
-            assert.strictEqual(registeredOptions.connector, 'sharepointonline');
-            assert.strictEqual(registeredOptions.triggerOperation, 'OnUpdatedFile');
+            assert.strictEqual(appStub.firstCall.args[0], 'testUpdatedFile');
         });
     });
 
     describe('teams', () => {
-        it('onNewChannelMessage should register with connector "teams" and operation "OnNewChannelMessage"', () => {
+        it('onNewChannelMessage should register with the correct function name', () => {
             onNewChannelMessage('testMessage', {
-                connection: 'TeamsConnection',
                 handler: async () => undefined,
             });
 
             assert.strictEqual(appStub.calledOnce, true);
-            const registeredOptions = appStub.firstCall.args[1];
-            assert.strictEqual(registeredOptions.connector, 'teams');
-            assert.strictEqual(registeredOptions.triggerOperation, 'OnNewChannelMessage');
-            assert.strictEqual(registeredOptions.connection, 'TeamsConnection');
+            assert.strictEqual(appStub.firstCall.args[0], 'testMessage');
         });
     });
 
@@ -109,7 +87,6 @@ describe('connector-specific triggers', () => {
             const mockOutput = { name: 'output1', type: 'connectorContent' } as unknown as azureFunctions.FunctionOutput;
 
             onNewEmail('testWithBindings', {
-                connection: 'Office365Connection',
                 extraInputs: [mockInput],
                 extraOutputs: [mockOutput],
                 handler: async () => undefined,
@@ -124,7 +101,6 @@ describe('connector-specific triggers', () => {
             const mockReturn = { name: 'returnOutput', type: 'http' } as unknown as azureFunctions.FunctionOutput;
 
             onNewFile('testWithReturn', {
-                connection: 'SharePointConnection',
                 return: mockReturn,
                 handler: async () => undefined,
             });
