@@ -2,12 +2,17 @@
 
 // Export types for customer consumption
 export type {
+    CalendarEventTriggerContext,
+    ChannelMessageTriggerContext,
     ConnectorTriggerContext,
     ConnectorTriggerHandler,
     ConnectorTriggerOptions,
     ConnectorTriggers,
+    EmailTriggerContext,
+    FileTriggerContext,
     KustoTriggers,
     Office365Triggers,
+    QueryResultTriggerContext,
     SharepointTriggers,
     TeamsTriggers,
 } from '../types';

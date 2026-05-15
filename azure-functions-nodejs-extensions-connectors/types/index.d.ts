@@ -46,8 +46,11 @@ export interface ConnectorTriggerContext<TItem = unknown> {
  * Handler function for a connector trigger.
  * Return a value to send it to the `return` output binding.
  */
-export type ConnectorTriggerHandler<TItem = unknown> = (
-    context: ConnectorTriggerContext<TItem>,
+export type ConnectorTriggerHandler<
+    TItem = unknown,
+    TContext extends ConnectorTriggerContext<TItem> = ConnectorTriggerContext<TItem>,
+> = (
+    context: TContext,
     invocationContext: InvocationContext,
 ) => Promise<unknown>;
 
@@ -58,7 +61,10 @@ export type ConnectorTriggerHandler<TItem = unknown> = (
 /**
  * Options for registering a connector trigger function with {@link connectorTrigger}.
  */
-export interface ConnectorTriggerOptions<TItem = unknown> {
+export interface ConnectorTriggerOptions<
+    TItem = unknown,
+    TContext extends ConnectorTriggerContext<TItem> = ConnectorTriggerContext<TItem>,
+> {
     /** Optional extra input bindings (e.g., blob storage, connector content). */
     extraInputs?: FunctionInput[];
 
@@ -69,7 +75,7 @@ export interface ConnectorTriggerOptions<TItem = unknown> {
     return?: FunctionOutput;
 
     /** The handler function that processes the trigger event. */
-    handler: ConnectorTriggerHandler<TItem>;
+    handler: ConnectorTriggerHandler<TItem, TContext>;
 }
 
 /**
@@ -92,12 +98,50 @@ import { GraphCalendarEventClientReceive, GraphClientReceiveMessage } from '@azu
 import { BlobMetadata } from '@azure/connectors/generated/SharepointonlineExtensions';
 import { ChatMessage } from '@azure/connectors/generated/TeamsExtensions';
 
+// ---------------------------------------------------------------------------
+// Connector-specific trigger contexts
+// ---------------------------------------------------------------------------
+
+/** Trigger context for Office 365 email triggers. Provides `emails` as a named alias for `items`. */
+export interface EmailTriggerContext extends ConnectorTriggerContext<GraphClientReceiveMessage> {
+    /** The emails delivered by the trigger. Alias for `items`. */
+    emails: GraphClientReceiveMessage[];
+}
+
+/** Trigger context for Office 365 calendar triggers. Provides `calendarEvents` as a named alias for `items`. */
+export interface CalendarEventTriggerContext extends ConnectorTriggerContext<GraphCalendarEventClientReceive> {
+    /** The calendar events delivered by the trigger. Alias for `items`. */
+    calendarEvents: GraphCalendarEventClientReceive[];
+}
+
+/** Trigger context for SharePoint file triggers. Provides `files` as a named alias for `items`. */
+export interface FileTriggerContext extends ConnectorTriggerContext<BlobMetadata> {
+    /** The file metadata delivered by the trigger. Alias for `items`. */
+    files: BlobMetadata[];
+}
+
+/** Trigger context for Teams channel message triggers. Provides `messages` as a named alias for `items`. */
+export interface ChannelMessageTriggerContext extends ConnectorTriggerContext<ChatMessage> {
+    /** The channel messages delivered by the trigger. Alias for `items`. */
+    messages: ChatMessage[];
+}
+
+/** Trigger context for Kusto query result triggers. Provides `rows` as a named alias for `items`. */
+export interface QueryResultTriggerContext extends ConnectorTriggerContext<Row> {
+    /** The query result rows delivered by the trigger. Alias for `items`. */
+    rows: Row[];
+}
+
+// ---------------------------------------------------------------------------
+// Connector-specific trigger registrations
+// ---------------------------------------------------------------------------
+
 /**
  * Kusto connector trigger registrations.
  */
 export interface KustoTriggers {
     /** Registers a trigger that fires when a Kusto query returns new results. Handler items are typed as `Row[]`. */
-    onQueryResult(name: string, options: ConnectorTriggerOptions<Row>): void;
+    onQueryResult(name: string, options: ConnectorTriggerOptions<Row, QueryResultTriggerContext>): void;
 }
 
 /**
@@ -105,10 +149,10 @@ export interface KustoTriggers {
  */
 export interface Office365Triggers {
     /** Registers a trigger that fires when a new calendar event is created. Handler items are typed as `GraphCalendarEventClientReceive[]`. */
-    onNewCalendarEvent(name: string, options: ConnectorTriggerOptions<GraphCalendarEventClientReceive>): void;
+    onNewCalendarEvent(name: string, options: ConnectorTriggerOptions<GraphCalendarEventClientReceive, CalendarEventTriggerContext>): void;
 
     /** Registers a trigger that fires when a new email arrives. Handler items are typed as `GraphClientReceiveMessage[]`. */
-    onNewEmail(name: string, options: ConnectorTriggerOptions<GraphClientReceiveMessage>): void;
+    onNewEmail(name: string, options: ConnectorTriggerOptions<GraphClientReceiveMessage, EmailTriggerContext>): void;
 }
 
 /**
@@ -116,10 +160,10 @@ export interface Office365Triggers {
  */
 export interface SharepointTriggers {
     /** Registers a trigger that fires when a new file is created. Handler items are typed as `BlobMetadata[]`. */
-    onNewFile(name: string, options: ConnectorTriggerOptions<BlobMetadata>): void;
+    onNewFile(name: string, options: ConnectorTriggerOptions<BlobMetadata, FileTriggerContext>): void;
 
     /** Registers a trigger that fires when an existing file is modified. Handler items are typed as `BlobMetadata[]`. */
-    onUpdatedFile(name: string, options: ConnectorTriggerOptions<BlobMetadata>): void;
+    onUpdatedFile(name: string, options: ConnectorTriggerOptions<BlobMetadata, FileTriggerContext>): void;
 }
 
 /**
@@ -127,7 +171,7 @@ export interface SharepointTriggers {
  */
 export interface TeamsTriggers {
     /** Registers a trigger that fires when a new channel message is posted. Handler items are typed as `ChatMessage[]`. */
-    onNewChannelMessage(name: string, options: ConnectorTriggerOptions<ChatMessage>): void;
+    onNewChannelMessage(name: string, options: ConnectorTriggerOptions<ChatMessage, ChannelMessageTriggerContext>): void;
 }
 
 /**
@@ -156,8 +200,8 @@ export interface ConnectorTriggers {
  *
  * connectors.office365.onNewEmail('OnNewEmail', {
  *     handler: async (context, invocationContext) => {
- *         // context.items is GraphClientReceiveMessage[] — fully typed, no cast needed
- *         for (const email of context.items) {
+ *         // context.emails is GraphClientReceiveMessage[] — fully typed, no cast needed
+ *         for (const email of context.emails) {
  *             invocationContext.log(`Subject: '${email.subject}'.`);
  *         }
  *     },

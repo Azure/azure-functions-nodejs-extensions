@@ -109,4 +109,113 @@ describe('connector-specific triggers', () => {
             assert.strictEqual(registeredOptions.return, mockReturn);
         });
     });
+
+    describe('named context properties', () => {
+        const batchPayload = JSON.stringify({
+            body: { value: [{ id: '1' }, { id: '2' }] },
+        });
+        const mockInvocationContext = {} as azureFunctions.InvocationContext;
+
+        it('onNewEmail handler should receive context with emails alias', async () => {
+            let receivedEmails: unknown[] | undefined;
+
+            onNewEmail('emailAlias', {
+                handler: async (context) => {
+                    receivedEmails = context.emails;
+                    assert.deepStrictEqual(context.emails, context.items);
+                },
+            });
+
+            const registeredHandler = appStub.firstCall.args[1].handler;
+            await registeredHandler(batchPayload, mockInvocationContext);
+
+            assert.ok(receivedEmails);
+            assert.strictEqual(receivedEmails.length, 2);
+        });
+
+        it('onNewCalendarEvent handler should receive context with calendarEvents alias', async () => {
+            let receivedEvents: unknown[] | undefined;
+
+            onNewCalendarEvent('calendarAlias', {
+                handler: async (context) => {
+                    receivedEvents = context.calendarEvents;
+                    assert.deepStrictEqual(context.calendarEvents, context.items);
+                },
+            });
+
+            const registeredHandler = appStub.firstCall.args[1].handler;
+            await registeredHandler(batchPayload, mockInvocationContext);
+
+            assert.ok(receivedEvents);
+            assert.strictEqual(receivedEvents.length, 2);
+        });
+
+        it('onNewFile handler should receive context with files alias', async () => {
+            let receivedFiles: unknown[] | undefined;
+
+            onNewFile('fileAlias', {
+                handler: async (context) => {
+                    receivedFiles = context.files;
+                    assert.deepStrictEqual(context.files, context.items);
+                },
+            });
+
+            const registeredHandler = appStub.firstCall.args[1].handler;
+            await registeredHandler(batchPayload, mockInvocationContext);
+
+            assert.ok(receivedFiles);
+            assert.strictEqual(receivedFiles.length, 2);
+        });
+
+        it('onUpdatedFile handler should receive context with files alias', async () => {
+            let receivedFiles: unknown[] | undefined;
+
+            onUpdatedFile('updatedFileAlias', {
+                handler: async (context) => {
+                    receivedFiles = context.files;
+                    assert.deepStrictEqual(context.files, context.items);
+                },
+            });
+
+            const registeredHandler = appStub.firstCall.args[1].handler;
+            await registeredHandler(batchPayload, mockInvocationContext);
+
+            assert.ok(receivedFiles);
+            assert.strictEqual(receivedFiles.length, 2);
+        });
+
+        it('onNewChannelMessage handler should receive context with messages alias', async () => {
+            let receivedMessages: unknown[] | undefined;
+
+            onNewChannelMessage('messageAlias', {
+                handler: async (context) => {
+                    receivedMessages = context.messages;
+                    assert.deepStrictEqual(context.messages, context.items);
+                },
+            });
+
+            const registeredHandler = appStub.firstCall.args[1].handler;
+            await registeredHandler(batchPayload, mockInvocationContext);
+
+            assert.ok(receivedMessages);
+            assert.strictEqual(receivedMessages.length, 2);
+        });
+
+        it('onQueryResult handler should receive context with rows alias', async () => {
+            let receivedRows: unknown[] | undefined;
+
+            onQueryResult('rowsAlias', {
+                handler: async (context) => {
+                    receivedRows = context.rows;
+                    assert.deepStrictEqual(context.rows, context.items);
+                },
+            });
+
+            const registeredHandler = appStub.firstCall.args[1].handler;
+            await registeredHandler(batchPayload, mockInvocationContext);
+
+            assert.ok(receivedRows);
+            assert.strictEqual(receivedRows.length, 2);
+        });
+    });
 });
