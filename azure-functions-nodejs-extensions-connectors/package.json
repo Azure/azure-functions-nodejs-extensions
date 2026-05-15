@@ -1,0 +1,84 @@
+{
+  "name": "@azure/functions-extensions-connectors",
+  "version": "0.0.1-preview",
+  "description": "Azure Functions Connectors Extension - SDK binding for Azure Logic Apps connectors",
+  "author": "Microsoft",
+  "license": "MIT",
+  "homepage": "https://github.com/Azure/azure-functions-nodejs-extensions/blob/main/azure-functions-nodejs-extensions-connectors/README.md",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Azure/azure-functions-nodejs-extensions.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Azure/azure-functions-nodejs-extensions/issues"
+  },
+  "main": "./dist/azure-functions-extensions-connectors.js",
+  "module": "./dist/azure-functions-extensions-connectors.mjs",
+  "types": "types/index.d.ts",
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./types/index.d.ts",
+        "default": "./dist/azure-functions-extensions-connectors.mjs"
+      },
+      "require": {
+        "types": "./types/index.d.ts",
+        "default": "./dist/azure-functions-extensions-connectors.js"
+      }
+    }
+  },
+  "sideEffects": true,
+  "files": [
+    "dist/",
+    "src/",
+    "types/",
+    "LICENSE",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "webpack --mode development",
+    "minify": "webpack --mode production",
+    "clean": "rimraf dist && rimraf node_modules/",
+    "format": "prettier . --write",
+    "lint": "eslint src test --ext .ts",
+    "test": "mocha",
+    "watch": "webpack --mode development --watch"
+  },
+  "engines": {
+    "node": ">=24.0.0"
+  },
+  "keywords": [
+    "azure",
+    "azure-functions",
+    "connectors",
+    "office365",
+    "serverless",
+    "sharepoint",
+    "teams"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "@azure/connectors": "^0.1.1-preview"
+  },
+  "peerDependencies": {
+    "@azure/functions": "4.15.1-preview"
+  },
+  "devDependencies": {
+    "@azure/functions": "4.15.1-preview",
+    "@types/mocha": "^10.0.0",
+    "@types/node": "^20.0.0",
+    "@types/sinon": "^10.0.0",
+    "@typescript-eslint/eslint-plugin": "^5.0.0",
+    "@typescript-eslint/parser": "^5.0.0",
+    "eslint": "^8.0.0",
+    "eslint-webpack-plugin": "^4.0.0",
+    "fork-ts-checker-webpack-plugin": "^8.0.0",
+    "mocha": "^10.0.0",
+    "sinon": "^15.0.0",
+    "ts-loader": "^9.0.0",
+    "tsx": "^4.21.0",
+    "typescript": "~5.0.0",
+    "webpack": "^5.0.0",
+    "webpack-cli": "^5.0.0"
+  }
+}
