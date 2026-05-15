@@ -1,4 +1,5 @@
-// Copyright (c) Microsoft Corporation.  All rights reserved.
+// Copyright (c) .NET Foundation. All rights reserved.
+// Licensed under the MIT License.
 
 import { BlobMetadata } from '@azure/connectors/generated/SharepointonlineExtensions';
 import { ConnectorTriggerOptions, FileTriggerContext } from '../../types';
@@ -13,9 +14,7 @@ import { connectorTrigger } from './connectorTrigger';
  */
 export function onNewFile(name: string, options: ConnectorTriggerOptions<BlobMetadata, FileTriggerContext>): void {
     connectorTrigger<BlobMetadata>(name, {
-        extraInputs: options.extraInputs,
-        extraOutputs: options.extraOutputs,
-        return: options.return,
+        ...options,
         handler: async (context, invocationContext) => {
             const fileContext: FileTriggerContext = {
                 ...context,
@@ -36,9 +35,7 @@ export function onNewFile(name: string, options: ConnectorTriggerOptions<BlobMet
  */
 export function onUpdatedFile(name: string, options: ConnectorTriggerOptions<BlobMetadata, FileTriggerContext>): void {
     connectorTrigger<BlobMetadata>(name, {
-        extraInputs: options.extraInputs,
-        extraOutputs: options.extraOutputs,
-        return: options.return,
+        ...options,
         handler: async (context, invocationContext) => {
             const fileContext: FileTriggerContext = {
                 ...context,

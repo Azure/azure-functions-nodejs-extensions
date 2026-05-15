@@ -2,6 +2,16 @@
   "name": "@azure/functions-extensions-connectors",
   "version": "0.0.1-preview",
   "description": "Azure Functions Connectors Extension - SDK binding for Azure Logic Apps connectors",
+  "author": "Microsoft",
+  "license": "MIT",
+  "homepage": "https://github.com/Azure/azure-functions-nodejs-extensions/blob/main/azure-functions-nodejs-extensions-connectors/README.md",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Azure/azure-functions-nodejs-extensions.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Azure/azure-functions-nodejs-extensions/issues"
+  },
   "main": "./dist/azure-functions-extensions-connectors.js",
   "module": "./dist/azure-functions-extensions-connectors.mjs",
   "types": "types/index.d.ts",
@@ -17,16 +27,19 @@
       }
     }
   },
-  "sideEffects": false,
+  "sideEffects": true,
   "files": [
     "dist/",
+    "src/",
     "types/",
-    "README.md",
-    "LICENSE"
+    "LICENSE",
+    "README.md"
   ],
   "scripts": {
     "build": "webpack --mode development",
-    "build:prod": "webpack --mode production",
+    "minify": "webpack --mode production",
+    "clean": "rimraf dist && rimraf node_modules/",
+    "format": "prettier . --write",
     "lint": "eslint src test --ext .ts",
     "test": "mocha",
     "watch": "webpack --mode development --watch"
@@ -36,9 +49,10 @@
   },
   "keywords": [
     "azure",
-    "functions",
+    "azure-functions",
     "connectors",
     "office365",
+    "serverless",
     "sharepoint",
     "teams"
   ],

@@ -1,4 +1,5 @@
-// Copyright (c) Microsoft Corporation.  All rights reserved.
+// Copyright (c) .NET Foundation. All rights reserved.
+// Licensed under the MIT License.
 
 import { TriggerCallbackPayload } from '@azure/connectors';
 import { FunctionInput, FunctionOutput, InvocationContext } from '@azure/functions';

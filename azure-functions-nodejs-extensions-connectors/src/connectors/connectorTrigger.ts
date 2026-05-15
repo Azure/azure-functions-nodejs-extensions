@@ -1,4 +1,5 @@
-// Copyright (c) Microsoft Corporation.  All rights reserved.
+// Copyright (c) .NET Foundation. All rights reserved.
+// Licensed under the MIT License.
 
 import { app, InvocationContext } from '@azure/functions';
 import { TriggerCallbackPayload } from '@azure/connectors';
@@ -16,7 +17,7 @@ export type { ConnectorTriggerOptions };
  * Both are normalised into a `TriggerCallbackPayload<TItem>` with `body.value` as `TItem[]`,
  * so the customer always receives a strongly typed `payload` and `items` array.
  */
-function buildContextFromRawPayload<TItem>(raw: unknown): ConnectorTriggerContext<TItem> {
+function buildContextFromRawPayload<TItem>(raw: unknown, invocationContext: InvocationContext): ConnectorTriggerContext<TItem> {
     try {
         const parsed = typeof raw === 'string'
             ? JSON.parse(raw) as Record<string, unknown>
@@ -50,9 +51,10 @@ function buildContextFromRawPayload<TItem>(raw: unknown): ConnectorTriggerContex
                 return JSON.stringify(parsed);
             },
         };
-    } catch {
+    } catch (error) {
         // NOTE(swapnilnagar): If the payload is malformed JSON or otherwise unparseable,
-        // return an empty context so the handler still runs gracefully.
+        // log a warning and return an empty context so the handler still runs gracefully.
+        invocationContext.warn(`Failed to parse connector trigger payload: '${error instanceof Error ? error.message : String(error)}'.`);
         const emptyPayload: TriggerCallbackPayload<TItem> = { body: { value: [] } };
         return {
             payload: emptyPayload,
@@ -76,11 +78,9 @@ function buildContextFromRawPayload<TItem>(raw: unknown): ConnectorTriggerContex
  */
 export function connectorTrigger<TItem = unknown>(name: string, options: ConnectorTriggerOptions<TItem>): void {
     app.connectorTrigger(name, {
-        extraInputs: options.extraInputs,
-        extraOutputs: options.extraOutputs,
-        return: options.return,
+        ...options,
         handler: async (triggerInput: unknown, invocationContext: InvocationContext): Promise<unknown> => {
-            const context = buildContextFromRawPayload<TItem>(triggerInput);
+            const context = buildContextFromRawPayload<TItem>(triggerInput, invocationContext);
 
             return options.handler(context, invocationContext);
         },

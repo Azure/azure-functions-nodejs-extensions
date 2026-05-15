@@ -1,4 +1,5 @@
-// Copyright (c) Microsoft Corporation.  All rights reserved.
+// Copyright (c) .NET Foundation. All rights reserved.
+// Licensed under the MIT License.
 
 import * as assert from 'assert';
 import * as sinon from 'sinon';
@@ -248,6 +249,29 @@ describe('connectorTrigger', () => {
             const result = await wrappedHandler(payload, mockInvocationContext);
 
             assert.deepStrictEqual(result, payload);
+        });
+
+        it('should log a warning and return empty items for malformed JSON string', async () => {
+            let capturedContext: unknown;
+            connectorTrigger('testFunction', {
+                handler: async (context) => {
+                    capturedContext = context;
+                },
+            });
+
+            const wrappedHandler = appStub.firstCall.args[1].handler;
+            const warnings: string[] = [];
+            const mockInvocationContext = {
+                warn: (message: string) => { warnings.push(message); },
+            } as unknown as azureFunctions.InvocationContext;
+
+            await wrappedHandler('not valid json {{{', mockInvocationContext);
+
+            const context = capturedContext as { items: unknown[]; rawPayload: unknown };
+            assert.strictEqual(context.items.length, 0);
+            assert.strictEqual(context.rawPayload, 'not valid json {{{');
+            assert.strictEqual(warnings.length, 1);
+            assert.ok(warnings[0]?.includes('Failed to parse connector trigger payload'));
         });
     });
 });

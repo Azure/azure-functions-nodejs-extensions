@@ -1,4 +1,5 @@
-// Copyright (c) Microsoft Corporation.  All rights reserved.
+// Copyright (c) .NET Foundation. All rights reserved.
+// Licensed under the MIT License.
 
 import { GraphCalendarEventClientReceive, GraphClientReceiveMessage } from '@azure/connectors/generated/Office365Extensions';
 import { CalendarEventTriggerContext, ConnectorTriggerOptions, EmailTriggerContext } from '../../types';
@@ -13,9 +14,7 @@ import { connectorTrigger } from './connectorTrigger';
  */
 export function onNewEmail(name: string, options: ConnectorTriggerOptions<GraphClientReceiveMessage, EmailTriggerContext>): void {
     connectorTrigger<GraphClientReceiveMessage>(name, {
-        extraInputs: options.extraInputs,
-        extraOutputs: options.extraOutputs,
-        return: options.return,
+        ...options,
         handler: async (context, invocationContext) => {
             const emailContext: EmailTriggerContext = {
                 ...context,
@@ -36,9 +35,7 @@ export function onNewEmail(name: string, options: ConnectorTriggerOptions<GraphC
  */
 export function onNewCalendarEvent(name: string, options: ConnectorTriggerOptions<GraphCalendarEventClientReceive, CalendarEventTriggerContext>): void {
     connectorTrigger<GraphCalendarEventClientReceive>(name, {
-        extraInputs: options.extraInputs,
-        extraOutputs: options.extraOutputs,
-        return: options.return,
+        ...options,
         handler: async (context, invocationContext) => {
             const calendarContext: CalendarEventTriggerContext = {
                 ...context,

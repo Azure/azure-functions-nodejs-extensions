@@ -1,4 +1,5 @@
-// Copyright (c) Microsoft Corporation.  All rights reserved.
+// Copyright (c) .NET Foundation. All rights reserved.
+// Licensed under the MIT License.
 
 import { ChatMessage } from '@azure/connectors/generated/TeamsExtensions';
 import { ChannelMessageTriggerContext, ConnectorTriggerOptions } from '../../types';
@@ -13,9 +14,7 @@ import { connectorTrigger } from './connectorTrigger';
  */
 export function onNewChannelMessage(name: string, options: ConnectorTriggerOptions<ChatMessage, ChannelMessageTriggerContext>): void {
     connectorTrigger<ChatMessage>(name, {
-        extraInputs: options.extraInputs,
-        extraOutputs: options.extraOutputs,
-        return: options.return,
+        ...options,
         handler: async (context, invocationContext) => {
             const messageContext: ChannelMessageTriggerContext = {
                 ...context,

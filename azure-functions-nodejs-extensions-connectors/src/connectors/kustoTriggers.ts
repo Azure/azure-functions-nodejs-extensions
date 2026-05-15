@@ -1,4 +1,5 @@
-// Copyright (c) Microsoft Corporation.  All rights reserved.
+// Copyright (c) .NET Foundation. All rights reserved.
+// Licensed under the MIT License.
 
 import { Row } from '@azure/connectors/generated/KustoExtensions';
 import { ConnectorTriggerOptions, QueryResultTriggerContext } from '../../types';
@@ -13,9 +14,7 @@ import { connectorTrigger } from './connectorTrigger';
  */
 export function onQueryResult(name: string, options: ConnectorTriggerOptions<Row, QueryResultTriggerContext>): void {
     connectorTrigger<Row>(name, {
-        extraInputs: options.extraInputs,
-        extraOutputs: options.extraOutputs,
-        return: options.return,
+        ...options,
         handler: async (context, invocationContext) => {
             const queryContext: QueryResultTriggerContext = {
                 ...context,

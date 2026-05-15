@@ -61,7 +61,9 @@ module.exports = (_env, argv) => {
         },
         output: {
             path: `${__dirname}/dist/`,
-            filename: 'azure-functions-extensions-connectors.mjs',
+            filename: isDevMode
+                ? 'azure-functions-extensions-connectors.mjs'
+                : 'azure-functions-extensions-connectors.min.mjs',
             library: {
                 type: 'module',
             },
