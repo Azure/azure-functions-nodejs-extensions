@@ -56,9 +56,6 @@ describe('connectorTrigger', () => {
         it('should normalize batch payload with body.value array', async () => {
             let capturedContext: unknown;
             connectorTrigger('testFunction', {
-                connection: 'TestConnection',
-                connector: 'office365',
-                triggerOperation: 'OnNewEmail',
                 handler: async (context) => {
                     capturedContext = context;
                 },
@@ -86,9 +83,6 @@ describe('connectorTrigger', () => {
         it('should normalize single-item payload where body is the item', async () => {
             let capturedContext: unknown;
             connectorTrigger('testFunction', {
-                connection: 'TestConnection',
-                connector: 'office365',
-                triggerOperation: 'OnNewEmail',
                 handler: async (context) => {
                     capturedContext = context;
                 },
@@ -110,9 +104,6 @@ describe('connectorTrigger', () => {
         it('should normalize string payload by parsing JSON', async () => {
             let capturedContext: unknown;
             connectorTrigger('testFunction', {
-                connection: 'TestConnection',
-                connector: 'office365',
-                triggerOperation: 'OnNewEmail',
                 handler: async (context) => {
                     capturedContext = context;
                 },
@@ -136,9 +127,6 @@ describe('connectorTrigger', () => {
         it('should return empty items for null payload', async () => {
             let capturedContext: unknown;
             connectorTrigger('testFunction', {
-                connection: 'TestConnection',
-                connector: 'office365',
-                triggerOperation: 'OnNewEmail',
                 handler: async (context) => {
                     capturedContext = context;
                 },
@@ -155,9 +143,6 @@ describe('connectorTrigger', () => {
         it('should return empty items for undefined payload', async () => {
             let capturedContext: unknown;
             connectorTrigger('testFunction', {
-                connection: 'TestConnection',
-                connector: 'office365',
-                triggerOperation: 'OnNewEmail',
                 handler: async (context) => {
                     capturedContext = context;
                 },
@@ -174,9 +159,6 @@ describe('connectorTrigger', () => {
         it('should return empty items for payload with empty body', async () => {
             let capturedContext: unknown;
             connectorTrigger('testFunction', {
-                connection: 'TestConnection',
-                connector: 'office365',
-                triggerOperation: 'OnNewEmail',
                 handler: async (context) => {
                     capturedContext = context;
                 },
@@ -193,9 +175,6 @@ describe('connectorTrigger', () => {
         it('should set rawPayload to the original parsed payload', async () => {
             let capturedContext: unknown;
             connectorTrigger('testFunction', {
-                connection: 'TestConnection',
-                connector: 'office365',
-                triggerOperation: 'OnNewEmail',
                 handler: async (context) => {
                     capturedContext = context;
                 },
@@ -217,9 +196,6 @@ describe('connectorTrigger', () => {
         it('should provide a toJSON method that serializes rawPayload', async () => {
             let capturedContext: unknown;
             connectorTrigger('testFunction', {
-                connection: 'TestConnection',
-                connector: 'office365',
-                triggerOperation: 'OnNewEmail',
                 handler: async (context) => {
                     capturedContext = context;
                 },
@@ -238,9 +214,6 @@ describe('connectorTrigger', () => {
         it('should normalize payload.body.value into a TriggerCallbackPayload shape', async () => {
             let capturedContext: unknown;
             connectorTrigger('testFunction', {
-                connection: 'TestConnection',
-                connector: 'office365',
-                triggerOperation: 'OnNewEmail',
                 handler: async (context) => {
                     capturedContext = context;
                 },
@@ -264,9 +237,6 @@ describe('connectorTrigger', () => {
 
         it('should return the handler result back to the host', async () => {
             connectorTrigger('testFunction', {
-                connection: 'TestConnection',
-                connector: 'office365',
-                triggerOperation: 'OnNewEmail',
                 handler: async (context) => {
                     return context.rawPayload;
                 },

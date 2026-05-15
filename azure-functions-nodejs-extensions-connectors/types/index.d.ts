@@ -69,64 +69,6 @@ export interface TypedTriggerOptions<TItem> {
 }
 
 // ---------------------------------------------------------------------------
-// Connector content bindings
-// ---------------------------------------------------------------------------
-
-/**
- * Options for creating a connector content input binding.
- */
-export interface ConnectorContentInputOptions {
-    /** The connector name (e.g., 'office365', 'sharepointonline', 'teams', 'kusto'). */
-    connector: string;
-
-    /** The connection setting name. */
-    connection: string;
-
-    /** The operation to invoke on the connector (e.g., 'GetEmail', 'GetFile'). */
-    operation?: string;
-}
-
-/**
- * Options for creating a connector content output binding.
- */
-export interface ConnectorContentOutputOptions {
-    /** The connector name (e.g., 'office365', 'sharepointonline', 'teams', 'kusto'). */
-    connector: string;
-
-    /** The connection setting name. */
-    connection: string;
-
-    /** The operation to invoke on the connector (e.g., 'SendEmail', 'CreateFile'). */
-    operation?: string;
-}
-
-/**
- * Connector content bindings for input and output.
- */
-export interface ConnectorContentBindings {
-    /** Creates a connector content input binding for use with `extraInputs`. */
-    input(options: ConnectorContentInputOptions): FunctionInput;
-
-    /** Creates a connector content output binding for use with `extraOutputs` or `return`. */
-    output(options: ConnectorContentOutputOptions): FunctionOutput;
-}
-
-/**
- * Connector content bindings for input and output.
- *
- * @example
- * ```typescript
- * import { connectorContent } from '@azure/functions-extensions-connectors';
- *
- * const emailInput = connectorContent.input({
- *     connector: 'office365',
- *     connection: 'Office365Connection',
- * });
- * ```
- */
-export const connectorContent: ConnectorContentBindings;
-
-// ---------------------------------------------------------------------------
 // Generic connector trigger registration
 // ---------------------------------------------------------------------------
 

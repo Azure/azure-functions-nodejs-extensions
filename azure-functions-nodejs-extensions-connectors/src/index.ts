@@ -2,9 +2,6 @@
 
 // Export types for customer consumption
 export type {
-    ConnectorContentBindings,
-    ConnectorContentInputOptions,
-    ConnectorContentOutputOptions,
     ConnectorsContent,
     ConnectorTriggerContext,
     ConnectorTriggerHandler,
@@ -31,6 +28,3 @@ export type { ConnectorTriggerOptions } from './connectors/connectorTrigger';
 
 // Export first-class connector trigger registrations
 export { connectors } from './connectors/connectorsContent';
-
-// Export connector content input/output bindings
-export { connectorContent } from './connectors/connectorContent';
