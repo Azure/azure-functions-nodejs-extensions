@@ -14,9 +14,9 @@
     "node": ">=24.0.0"
   },
   "dependencies": {
+    "@azure/connectors": "0.1.1-preview",
     "@azure/functions": "4.15.1-preview",
-    "@azure/functions-extensions-connectors": "0.0.1-preview",
-    "@azure/connectors": "0.1.1-preview"
+    "@azure/functions-extensions-connectors": "file:../../azure-functions-extensions-connectors-0.0.2-preview.tgz"
   },
   "devDependencies": {
     "typescript": "^5.0.0"
