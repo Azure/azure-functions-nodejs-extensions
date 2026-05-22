@@ -40,14 +40,25 @@ connectors.office365.onNewEmail('OnNewEmail', {
 
 ## Supported Connectors
 
+Fifteen first-class trigger registrations across six connectors:
+
 | Registration | Context Type | Named Property | Item Type |
 |---|---|---|---|
+| `connectors.azureblob.onUpdatedFile()` | `AzureBlobFileTriggerContext` | `files` | `AzureBlobMetadata[]` |
+| `connectors.kusto.onQueryResult()` | `QueryResultTriggerContext` | `rows` | `KustoRow[]` |
 | `connectors.office365.onNewEmail()` | `EmailTriggerContext` | `emails` | `GraphClientReceiveMessage[]` |
+| `connectors.office365.onFlaggedEmail()` | `EmailTriggerContext` | `emails` | `GraphClientReceiveMessage[]` |
+| `connectors.office365.onNewMentionMeEmail()` | `EmailTriggerContext` | `emails` | `GraphClientReceiveMessage[]` |
 | `connectors.office365.onNewCalendarEvent()` | `CalendarEventTriggerContext` | `calendarEvents` | `GraphCalendarEventClientReceive[]` |
+| `connectors.office365.onUpcomingEvent()` | `CalendarEventTriggerContext` | `calendarEvents` | `GraphCalendarEventClientReceive[]` |
+| `connectors.onedrive.onNewFile()` | `OneDriveFileTriggerContext` | `files` | `OneDriveBlobMetadata[]` |
+| `connectors.onedrive.onUpdatedFile()` | `OneDriveFileTriggerContext` | `files` | `OneDriveBlobMetadata[]` |
 | `connectors.sharepoint.onNewFile()` | `FileTriggerContext` | `files` | `BlobMetadata[]` |
 | `connectors.sharepoint.onUpdatedFile()` | `FileTriggerContext` | `files` | `BlobMetadata[]` |
 | `connectors.teams.onNewChannelMessage()` | `ChannelMessageTriggerContext` | `messages` | `ChatMessage[]` |
-| `connectors.kusto.onQueryResult()` | `QueryResultTriggerContext` | `rows` | `Row[]` |
+| `connectors.teams.onNewChannelMessageMentioningMe()` | `ChannelMessageTriggerContext` | `messages` | `ChatMessage[]` |
+| `connectors.teams.onGroupMembershipAdd()` | `GroupMembershipTriggerContext` | `members` | `GroupMembershipChange[]` |
+| `connectors.teams.onGroupMembershipRemoval()` | `GroupMembershipTriggerContext` | `members` | `GroupMembershipChange[]` |
 
 Each named property is an alias for `context.items` — the generic accessor still works.
 
@@ -108,19 +119,25 @@ Add the connector connection runtime URL to your `local.settings.json`:
 
 All connector SDK item types are re-exported for convenience:
 
+- `AzureBlobMetadata` (Azure Blob)
+- `OneDriveBlobMetadata` (OneDrive for Business)
+- `BlobMetadata` (SharePoint Online)
 - `GraphClientReceiveMessage`, `GraphCalendarEventClientReceive` (Office 365)
-- `BlobMetadata` (SharePoint)
 - `ChatMessage` (Teams)
-- `KustoRow` (Kusto)
+- `GroupMembershipChange` (Teams group membership change items)
+- `KustoRow` (Kusto / Azure Data Explorer)
 - `TriggerCallbackPayload`, `TriggerCallbackBody`
 
 ### Context Types
 
+- `AzureBlobFileTriggerContext` — adds `files: AzureBlobMetadata[]`
+- `OneDriveFileTriggerContext` — adds `files: OneDriveBlobMetadata[]`
+- `FileTriggerContext` — adds `files: BlobMetadata[]` (SharePoint)
 - `EmailTriggerContext` — adds `emails: GraphClientReceiveMessage[]`
 - `CalendarEventTriggerContext` — adds `calendarEvents: GraphCalendarEventClientReceive[]`
-- `FileTriggerContext` — adds `files: BlobMetadata[]`
 - `ChannelMessageTriggerContext` — adds `messages: ChatMessage[]`
-- `QueryResultTriggerContext` — adds `rows: Row[]`
+- `GroupMembershipTriggerContext` — adds `members: GroupMembershipChange[]`
+- `QueryResultTriggerContext` — adds `rows: KustoRow[]`
 
 ## License
 
