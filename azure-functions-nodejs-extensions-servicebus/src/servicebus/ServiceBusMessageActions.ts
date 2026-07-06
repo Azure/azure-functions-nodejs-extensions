@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { ServiceBusReceivedMessage } from '@azure/service-bus';
-import * as grpc from '@grpc/grpc-js';
+import type { ServiceError } from '@grpc/grpc-js';
 import {
     AbandonRequest,
     CompleteRequest,
@@ -28,11 +28,11 @@ export class ServiceBusMessageActions implements IServiceBusMessageActions {
     private client: SettlementServiceClient;
 
     private constructor() {
-        const { uri, grpcMaxMessageLength } = GrpcUriBuilder.build();
+        const { address, credentials, grpcMaxMessageLength } = GrpcUriBuilder.buildConnection();
         this.client = createGrpcClient<SettlementServiceClient>({
             serviceName: 'Settlement',
-            address: uri,
-            credentials: grpc.credentials.createInsecure(),
+            address,
+            credentials,
             grpcMaxMessageLength,
         });
     }
@@ -64,7 +64,7 @@ export class ServiceBusMessageActions implements IServiceBusMessageActions {
         const locktoken = this.validateLockToken(message);
         return new Promise((resolve, reject) => {
             const request: CompleteRequest = { locktoken };
-            this.client.complete(request, (error: grpc.ServiceError | null) => {
+            this.client.complete(request, (error: ServiceError | null) => {
                 if (error) {
                     console.error('Complete request failed:', {
                         code: error.code,
@@ -97,7 +97,7 @@ export class ServiceBusMessageActions implements IServiceBusMessageActions {
                 propertiesToModify: encodedProperties,
             };
 
-            this.client.abandon(request, (error: grpc.ServiceError | null) => {
+            this.client.abandon(request, (error: ServiceError | null) => {
                 if (error) {
                     console.error('Abandon request failed:', {
                         code: error.code,
@@ -141,7 +141,7 @@ export class ServiceBusMessageActions implements IServiceBusMessageActions {
                     : undefined,
             };
 
-            this.client.deadletter(request, (error: grpc.ServiceError | null) => {
+            this.client.deadletter(request, (error: ServiceError | null) => {
                 if (error) {
                     console.error('Deadletter request failed:', {
                         code: error.code,
@@ -174,7 +174,7 @@ export class ServiceBusMessageActions implements IServiceBusMessageActions {
                 propertiesToModify: encodedProperties,
             };
 
-            this.client.defer(request, (error: grpc.ServiceError | null) => {
+            this.client.defer(request, (error: ServiceError | null) => {
                 if (error) {
                     console.error('Defer request failed:', {
                         code: error.code,
@@ -201,7 +201,7 @@ export class ServiceBusMessageActions implements IServiceBusMessageActions {
         return new Promise((resolve, reject) => {
             const request: RenewMessageLockRequest = { locktoken };
 
-            this.client.renewMessageLock(request, (error: grpc.ServiceError | null) => {
+            this.client.renewMessageLock(request, (error: ServiceError | null) => {
                 if (error) {
                     console.error('Renew message lock request failed:', {
                         code: error.code,
@@ -228,7 +228,7 @@ export class ServiceBusMessageActions implements IServiceBusMessageActions {
         return new Promise((resolve, reject) => {
             const request: SetSessionStateRequest = { sessionId, sessionState };
 
-            this.client.setSessionState(request, (error: grpc.ServiceError | null) => {
+            this.client.setSessionState(request, (error: ServiceError | null) => {
                 if (error) {
                     console.error('Set session state request failed:', {
                         code: error.code,
@@ -254,7 +254,7 @@ export class ServiceBusMessageActions implements IServiceBusMessageActions {
         return new Promise((resolve, reject) => {
             const request: ReleaseSessionRequest = { sessionId };
 
-            this.client.releaseSession(request, (error: grpc.ServiceError | null) => {
+            this.client.releaseSession(request, (error: ServiceError | null) => {
                 if (error) {
                     console.error('Release session request failed:', {
                         code: error.code,
@@ -280,24 +280,21 @@ export class ServiceBusMessageActions implements IServiceBusMessageActions {
         return new Promise((resolve, reject) => {
             const request: RenewSessionLockRequest = { sessionId };
 
-            this.client.renewSessionLock(
-                request,
-                (error: grpc.ServiceError | null, response?: RenewSessionLockResponse) => {
-                    if (error) {
-                        console.error('Renew session lock request failed:', {
-                            code: error.code,
-                            message: error.message,
-                            details: error.details,
-                        });
-                        reject(error);
-                    } else if (response && response.lockedUntil) {
-                        resolve(response.lockedUntil);
-                    } else {
-                        const err = new Error('No response or lockedUntil returned from renewSessionLock');
-                        reject(err);
-                    }
+            this.client.renewSessionLock(request, (error: ServiceError | null, response?: RenewSessionLockResponse) => {
+                if (error) {
+                    console.error('Renew session lock request failed:', {
+                        code: error.code,
+                        message: error.message,
+                        details: error.details,
+                    });
+                    reject(error);
+                } else if (response && response.lockedUntil) {
+                    resolve(response.lockedUntil);
+                } else {
+                    const err = new Error('No response or lockedUntil returned from renewSessionLock');
+                    reject(err);
                 }
-            );
+            });
         });
     }
 
