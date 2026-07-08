@@ -13,6 +13,9 @@ jobs:
         service_bus_extension:
           EXTENSION_DIRECTORY: 'azure-functions-nodejs-extensions-servicebus'
           EXTENSION_NAME: 'ServiceBus'
+        kafka_extension:
+          EXTENSION_DIRECTORY: 'azure-functions-nodejs-extensions-kafka'
+          EXTENSION_NAME: 'Kafka'
 
     steps:
         - task: NodeTool@0

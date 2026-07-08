@@ -1,0 +1,23 @@
+{
+    "name": "kafka-sample",
+    "version": "1.0.0",
+    "description": "Sample Azure Function using @azure/functions-extensions-kafka with KafkaRecord binding",
+    "scripts": {
+        "build": "tsc",
+        "watch": "tsc -w",
+        "clean": "rimraf dist",
+        "prestart": "npm run clean && npm run build",
+        "start": "func start",
+        "test": "echo \"No tests yet...\""
+    },
+    "dependencies": {
+        "@azure/functions": "^4.11.0",
+        "@azure/functions-extensions-kafka": "0.1.0"
+    },
+    "devDependencies": {
+        "@types/node": "^20.x",
+        "typescript": "^5.4.0",
+        "rimraf": "^5.0.0"
+    },
+    "main": "dist/src/{index.js,functions/*.js}"
+}

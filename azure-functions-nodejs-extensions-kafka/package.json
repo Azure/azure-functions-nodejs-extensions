@@ -1,0 +1,91 @@
+{
+    "name": "@azure/functions-extensions-kafka",
+    "version": "0.1.0",
+    "sideEffects": true,
+    "description": "Node.js Azure Kafka extension for Azure Functions — raw KafkaRecord binding",
+    "keywords": [
+        "azure",
+        "azure-functions",
+        "serverless",
+        "kafka"
+    ],
+    "author": "Microsoft",
+    "license": "MIT",
+    "homepage": "https://github.com/Azure/azure-functions-nodejs-extensions/blob/main/azure-functions-nodejs-extensions-kafka/README.md",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/Azure/azure-functions-nodejs-extensions.git"
+    },
+    "bugs": {
+        "url": "https://github.com/Azure/azure-functions-nodejs-extensions/issues"
+    },
+    "main": "./dist/azure-functions-extensions-kafka.js",
+    "module": "./dist/azure-functions-extensions-kafka.mjs",
+    "types": "types/index.d.ts",
+    "exports": {
+        ".": {
+            "import": {
+                "types": "./types/index.d.ts",
+                "default": "./dist/azure-functions-extensions-kafka.mjs"
+            },
+            "require": {
+                "types": "./types/index.d.ts",
+                "default": "./dist/azure-functions-extensions-kafka.js"
+            }
+        }
+    },
+    "files": [
+        "dist/",
+        "src/",
+        "types/",
+        "LICENSE",
+        "README.md"
+    ],
+    "engines": {
+        "node": ">=20.0"
+    },
+    "scripts": {
+        "build": "webpack --mode development",
+        "minify": "webpack --mode production",
+        "test": "mocha --require ts-node/register test/**/*.test.ts",
+        "clean": "rimraf dist && rimraf node_modules/",
+        "format": "prettier . --write",
+        "lint": "eslint . --fix",
+        "watch": "webpack --watch --mode development",
+        "updateVersion": "ts-node ./scripts/updateVersion.ts",
+        "validateRelease": "ts-node ./scripts/validateRelease.ts"
+    },
+    "devDependencies": {
+        "@types/chai": "^4.2.22",
+        "@types/minimist": "^1.2.5",
+        "@types/mocha": "^9.1.1",
+        "@types/node": "18.0.0",
+        "@types/semver": "^7.7.1",
+        "@typescript-eslint/eslint-plugin": "^5.12.1",
+        "@typescript-eslint/parser": "^5.12.1",
+        "chai": "^4.5.0",
+        "copy-webpack-plugin": "^13.0.0",
+        "eslint": "^7.32.0",
+        "eslint-config-prettier": "^8.3.0",
+        "eslint-plugin-deprecation": "^1.3.2",
+        "eslint-plugin-header": "^3.1.1",
+        "eslint-plugin-import": "^2.29.0",
+        "eslint-plugin-prettier": "^4.0.0",
+        "eslint-plugin-simple-import-sort": "^10.0.0",
+        "eslint-webpack-plugin": "^3.2.0",
+        "fork-ts-checker-webpack-plugin": "^7.2.13",
+        "minimist": "^1.2.8",
+        "mocha": "^11.1.0",
+        "prettier": "^2.4.1",
+        "semver": "^7.6.0",
+        "ts-loader": "^9.3.1",
+        "ts-node": "^3.3.0",
+        "typescript": "^4.5.5",
+        "webpack": "^5.74.0",
+        "webpack-cli": "^4.10.0"
+    },
+    "dependencies": {
+        "@azure/functions-extensions-base": "0.3.0",
+        "protobufjs": "^7.4.0"
+    }
+}
