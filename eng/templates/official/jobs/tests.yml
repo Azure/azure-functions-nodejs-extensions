@@ -56,29 +56,30 @@ jobs:
       - task: NodeTool@0
         inputs:
           versionSpec: $(NODE_VERSION)
+      - task: npmAuthenticate@0
+        displayName: 'Authenticate npm'
+        inputs:
+          workingFile: '$(Build.SourcesDirectory)/$(EXTENSION_DIRECTORY)/.npmrc'
       - bash: |
-          cd $(EXTENSION_DIRECTORY)
-        displayName: 'Install Node.js'
-      - bash: |
-          cd $(EXTENSION_DIRECTORY)
           npm ci
         displayName: 'npm ci'
+        workingDirectory: '$(Build.SourcesDirectory)/$(EXTENSION_DIRECTORY)'
       - bash: |
-          cd $(EXTENSION_DIRECTORY)
           npm run build
         displayName: 'npm run build'
+        workingDirectory: '$(Build.SourcesDirectory)/$(EXTENSION_DIRECTORY)'
       - bash: |
-          cd $(EXTENSION_DIRECTORY)
           npm run lint
         displayName: 'npm run lint'
+        workingDirectory: '$(Build.SourcesDirectory)/$(EXTENSION_DIRECTORY)'
       - bash: |
-          cd $(EXTENSION_DIRECTORY)
           npm run updateVersion -- --validate
         displayName: 'validate version'
+        workingDirectory: '$(Build.SourcesDirectory)/$(EXTENSION_DIRECTORY)'
       - bash: |
-          cd $(EXTENSION_DIRECTORY)
           npm test
         displayName: 'Run unit tests'
+        workingDirectory: '$(Build.SourcesDirectory)/$(EXTENSION_DIRECTORY)'
       - task: PublishTestResults@2
         displayName: 'Publish Unit Test Results'
         inputs:

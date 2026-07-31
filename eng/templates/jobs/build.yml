@@ -25,16 +25,28 @@ jobs:
           inputs:
               versionSpec: 22.x
           displayName: 'Install Node.js'
+        - task: CopyFiles@2
+          displayName: 'Stage clean npm configuration'
+          inputs:
+            sourceFolder: '$(Build.SourcesDirectory)/$(EXTENSION_DIRECTORY)'
+            contents: .npmrc
+            targetFolder: '$(Build.ArtifactStagingDirectory)/dropInput/$(EXTENSION_DIRECTORY)'
+            cleanTargetFolder: true
+        - task: npmAuthenticate@0
+          displayName: 'Authenticate source npm'
+          inputs:
+            workingFile: '$(Build.SourcesDirectory)/$(EXTENSION_DIRECTORY)/.npmrc'
         - bash: |
-            cd $(EXTENSION_DIRECTORY)
-            npm ci 
+            npm ci
+          displayName: 'npm ci'
+          workingDirectory: '$(Build.SourcesDirectory)/$(EXTENSION_DIRECTORY)'
         - bash: | 
-            cd $(EXTENSION_DIRECTORY)
             npm run build
             npm run minify
             npm prune --production
             npm pack
           displayName: 'npm run build'
+          workingDirectory: '$(Build.SourcesDirectory)/$(EXTENSION_DIRECTORY)'
         - task: CopyFiles@2
           displayName: 'Copy files to staging'
           inputs:
@@ -47,13 +59,22 @@ jobs:
               package.json
               README.md
             targetFolder: '$(Build.ArtifactStagingDirectory)/dropInput/$(EXTENSION_DIRECTORY)'
-            cleanTargetFolder: true
-        - bash: | 
-            npm prune --production
+            cleanTargetFolder: false
+        - task: npmAuthenticate@0
+          displayName: 'Authenticate staged npm'
+          inputs:
+            workingFile: '$(Build.ArtifactStagingDirectory)/dropInput/$(EXTENSION_DIRECTORY)/.npmrc'
+        - bash: |
+            npm prune --production --legacy-peer-deps
           displayName: 'npm prune --production' # so that only production dependencies are included in SBOM
-        - bash: | 
+          workingDirectory: '$(Build.ArtifactStagingDirectory)/dropInput/$(EXTENSION_DIRECTORY)'
+        - bash: |
             npm pack
           displayName: 'npm pack'
+          workingDirectory: '$(Build.ArtifactStagingDirectory)/dropInput/$(EXTENSION_DIRECTORY)'
+        - bash: rm -f .npmrc
+          displayName: 'Remove staged npm configuration'
+          condition: always()
           workingDirectory: '$(Build.ArtifactStagingDirectory)/dropInput/$(EXTENSION_DIRECTORY)'
         - script: mkdir $(EXTENSION_DIRECTORY) && mv dropInput/$(EXTENSION_DIRECTORY)/*.tgz $(EXTENSION_DIRECTORY)
           displayName: 'Move package to dropOutput'
