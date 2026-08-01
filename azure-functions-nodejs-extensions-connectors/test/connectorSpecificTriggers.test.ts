@@ -4,10 +4,26 @@
 import * as assert from 'assert';
 import * as sinon from 'sinon';
 import * as azureFunctions from '@azure/functions';
+import { onUpdatedFile as onAzureBlobUpdatedFile } from '../src/connectors/azureblobTriggers';
 import { onQueryResult } from '../src/connectors/kustoTriggers';
-import { onNewCalendarEvent, onNewEmail } from '../src/connectors/office365Triggers';
+import {
+    onFlaggedEmail,
+    onNewCalendarEvent,
+    onNewEmail,
+    onNewMentionMeEmail,
+    onUpcomingEvent,
+} from '../src/connectors/office365Triggers';
+import {
+    onNewFile as onOneDriveNewFile,
+    onUpdatedFile as onOneDriveUpdatedFile,
+} from '../src/connectors/onedriveTriggers';
 import { onNewFile, onUpdatedFile } from '../src/connectors/sharepointTriggers';
-import { onNewChannelMessage } from '../src/connectors/teamsTriggers';
+import {
+    onGroupMembershipAdd,
+    onGroupMembershipRemoval,
+    onNewChannelMessage,
+    onNewChannelMessageMentioningMe,
+} from '../src/connectors/teamsTriggers';
 
 describe('connector-specific triggers', () => {
     let appStub: sinon.SinonStub;
@@ -31,7 +47,27 @@ describe('connector-specific triggers', () => {
         });
     });
 
+    describe('azureblob', () => {
+        it('onUpdatedFile should register with the correct function name', () => {
+            onAzureBlobUpdatedFile('testAzureBlobUpdated', {
+                handler: async () => undefined,
+            });
+
+            assert.strictEqual(appStub.calledOnce, true);
+            assert.strictEqual(appStub.firstCall.args[0], 'testAzureBlobUpdated');
+        });
+    });
+
     describe('office365', () => {
+        it('onFlaggedEmail should register with the correct function name', () => {
+            onFlaggedEmail('testFlagged', {
+                handler: async () => undefined,
+            });
+
+            assert.strictEqual(appStub.calledOnce, true);
+            assert.strictEqual(appStub.firstCall.args[0], 'testFlagged');
+        });
+
         it('onNewCalendarEvent should register with the correct function name', () => {
             onNewCalendarEvent('testCalendar', {
                 handler: async () => undefined,
@@ -48,6 +84,44 @@ describe('connector-specific triggers', () => {
 
             assert.strictEqual(appStub.calledOnce, true);
             assert.strictEqual(appStub.firstCall.args[0], 'testEmail');
+        });
+
+        it('onNewMentionMeEmail should register with the correct function name', () => {
+            onNewMentionMeEmail('testMentionMe', {
+                handler: async () => undefined,
+            });
+
+            assert.strictEqual(appStub.calledOnce, true);
+            assert.strictEqual(appStub.firstCall.args[0], 'testMentionMe');
+        });
+
+        it('onUpcomingEvent should register with the correct function name', () => {
+            onUpcomingEvent('testUpcoming', {
+                handler: async () => undefined,
+            });
+
+            assert.strictEqual(appStub.calledOnce, true);
+            assert.strictEqual(appStub.firstCall.args[0], 'testUpcoming');
+        });
+    });
+
+    describe('onedrive', () => {
+        it('onNewFile should register with the correct function name', () => {
+            onOneDriveNewFile('testOneDriveNew', {
+                handler: async () => undefined,
+            });
+
+            assert.strictEqual(appStub.calledOnce, true);
+            assert.strictEqual(appStub.firstCall.args[0], 'testOneDriveNew');
+        });
+
+        it('onUpdatedFile should register with the correct function name', () => {
+            onOneDriveUpdatedFile('testOneDriveUpdated', {
+                handler: async () => undefined,
+            });
+
+            assert.strictEqual(appStub.calledOnce, true);
+            assert.strictEqual(appStub.firstCall.args[0], 'testOneDriveUpdated');
         });
     });
 
@@ -79,6 +153,33 @@ describe('connector-specific triggers', () => {
 
             assert.strictEqual(appStub.calledOnce, true);
             assert.strictEqual(appStub.firstCall.args[0], 'testMessage');
+        });
+
+        it('onNewChannelMessageMentioningMe should register with the correct function name', () => {
+            onNewChannelMessageMentioningMe('testMentionMessage', {
+                handler: async () => undefined,
+            });
+
+            assert.strictEqual(appStub.calledOnce, true);
+            assert.strictEqual(appStub.firstCall.args[0], 'testMentionMessage');
+        });
+
+        it('onGroupMembershipAdd should register with the correct function name', () => {
+            onGroupMembershipAdd('testMemberAdd', {
+                handler: async () => undefined,
+            });
+
+            assert.strictEqual(appStub.calledOnce, true);
+            assert.strictEqual(appStub.firstCall.args[0], 'testMemberAdd');
+        });
+
+        it('onGroupMembershipRemoval should register with the correct function name', () => {
+            onGroupMembershipRemoval('testMemberRemove', {
+                handler: async () => undefined,
+            });
+
+            assert.strictEqual(appStub.calledOnce, true);
+            assert.strictEqual(appStub.firstCall.args[0], 'testMemberRemove');
         });
     });
 
