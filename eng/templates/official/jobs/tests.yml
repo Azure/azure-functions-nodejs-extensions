@@ -15,6 +15,10 @@ jobs:
         service_bus_extension_Node18:
           EXTENSION_DIRECTORY: 'azure-functions-nodejs-extensions-servicebus'
           EXTENSION_NAME: 'ServiceBus'
+          NODE_VERSION: '18.x'
+        kafka_extension_Node18:
+          EXTENSION_DIRECTORY: 'azure-functions-nodejs-extensions-kafka'
+          EXTENSION_NAME: 'Kafka'
           NODE_VERSION: '18.x'        
         base_extension_Node20:
           EXTENSION_DIRECTORY: 'azure-functions-nodejs-extensions-base'
@@ -27,6 +31,10 @@ jobs:
         service_bus_extension_Node20:
           EXTENSION_DIRECTORY: 'azure-functions-nodejs-extensions-servicebus'
           EXTENSION_NAME: 'ServiceBus'
+          NODE_VERSION: '20.x'
+        kafka_extension_Node20:
+          EXTENSION_DIRECTORY: 'azure-functions-nodejs-extensions-kafka'
+          EXTENSION_NAME: 'Kafka'
           NODE_VERSION: '20.x'  
         base_extension_Node22:
           EXTENSION_DIRECTORY: 'azure-functions-nodejs-extensions-base'
@@ -39,6 +47,10 @@ jobs:
         service_bus_extension_Node22:
           EXTENSION_DIRECTORY: 'azure-functions-nodejs-extensions-servicebus'
           EXTENSION_NAME: 'ServiceBus'
+          NODE_VERSION: '22.x'
+        kafka_extension_Node22:
+          EXTENSION_DIRECTORY: 'azure-functions-nodejs-extensions-kafka'
+          EXTENSION_NAME: 'Kafka'
           NODE_VERSION: '22.x'  
         base_extension_Node24:
           EXTENSION_DIRECTORY: 'azure-functions-nodejs-extensions-base'
@@ -51,6 +63,10 @@ jobs:
         service_bus_extension_Node24:
           EXTENSION_DIRECTORY: 'azure-functions-nodejs-extensions-servicebus'
           EXTENSION_NAME: 'ServiceBus'
+          NODE_VERSION: '24.x'
+        kafka_extension_Node24:
+          EXTENSION_DIRECTORY: 'azure-functions-nodejs-extensions-kafka'
+          EXTENSION_NAME: 'Kafka'
           NODE_VERSION: '24.x'
     steps:
       - task: NodeTool@0
