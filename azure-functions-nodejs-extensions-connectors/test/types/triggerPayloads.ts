@@ -22,6 +22,12 @@ type Context<Registration> = Registration extends (
     options: { handler: (context: infer TriggerContext, invocationContext: InvocationContext) => Promise<unknown> },
 ) => void ? TriggerContext : never;
 type Payload<Registration> = Context<Registration> extends { payload: infer TriggerPayload } ? TriggerPayload : never;
+type NamedAliases<Registration> = Omit<Context<Registration>, keyof publicTypes.ConnectorTriggerContext>;
+type RegistrationContexts<Groups> = {
+    -readonly [Group in keyof Groups]: {
+        -readonly [Operation in keyof Groups[Group]]: Context<Groups[Group][Operation]>;
+    };
+};
 type AllPayloads = {
     office365: {
         onCalendarChangedItems: sdkOffice365.Office365OnCalendarChangedItemsTriggerPayload;
@@ -93,6 +99,27 @@ export type TriggerPayloadAssertions = [
     Assert<Equal<sourceTypes.OneDriveBlobMetadata, sdkOneDrive.BlobMetadata>>,
     Assert<Equal<publicTypes.SharepointItem, sdkSharepoint.Item>>,
     Assert<Equal<publicTypes.SalesforceItem, sdkSalesforce.Item>>,
+    Assert<Equal<RegistrationContexts<typeof connectors>, RegistrationContexts<publicTypes.ConnectorTriggers>>>,
+];
+
+export type NamedAliasAssertions = [
+    Assert<Equal<NamedAliases<typeof connectors.office365.onNewEmail>, { emails: sdkOffice365.GraphClientReceiveMessage[] }>>,
+    Assert<Equal<NamedAliases<typeof connectors.office365.onNewCalendarEvent>, { calendarEvents: sdkOffice365.GraphCalendarEventClientReceive[] }>>,
+    Assert<Equal<NamedAliases<typeof connectors.office365.onCalendarChangedItems>, { calendarEvents: sdkOffice365.GraphCalendarEventClientWithActionType[] }>>,
+    Assert<Equal<NamedAliases<typeof connectors.sharepoint.onNewItems>, { records: sdkSharepoint.Item[] }>>,
+    Assert<Equal<NamedAliases<typeof connectors.sharepoint.onDeletedItems>, { deletedItems: sdkSharepoint.DeletedItem[] }>>,
+    Assert<Equal<NamedAliases<typeof connectors.sharepoint.onNewFile>, { files: sdkSharepoint.BlobMetadata[] }>>,
+    Assert<Equal<NamedAliases<typeof connectors.onedriveforbusiness.onNewFiles>, { files: sdkOneDrive.BlobMetadata[] }>>,
+    Assert<Equal<NamedAliases<typeof connectors.teams.onNewChannelMessage>, { messages: sdkTeams.ChatMessage[] }>>,
+    Assert<Equal<NamedAliases<typeof connectors.teams.onTeamMemberAdded>, { members: Record<string, unknown>[] }>>,
+    Assert<Equal<NamedAliases<typeof connectors.planner.onNewTask>, { tasks: sdkPlanner.GetTaskResponseV2[] }>>,
+    Assert<Equal<NamedAliases<typeof connectors.salesforce.onNewItems>, { records: sdkSalesforce.Item[] }>>,
+    Assert<Equal<NamedAliases<typeof connectors.vsts.onBuildCompleted>, { builds: sdkVsts.BuildResult[] }>>,
+    Assert<Equal<NamedAliases<typeof connectors.vsts.onGitPullCreated>, { pullRequests: sdkVsts.GitPullRequest[] }>>,
+    Assert<Equal<NamedAliases<typeof connectors.vsts.onGitPush>, { pushes: sdkVsts.GitPush[] }>>,
+    Assert<Equal<NamedAliases<typeof connectors.vsts.onTfvcCheckIn>, { changesets: sdkVsts.TfvcChangeset[] }>>,
+    Assert<Equal<NamedAliases<typeof connectors.vsts.onWorkItemCreated>, { workItems: sdkVsts.TriggerWorkItemResponse[] }>>,
+    Assert<Equal<NamedAliases<typeof connectors.dataflows.onRefreshComplete>, { refreshes: RefreshModel[] }>>,
 ];
 
 export type PayloadExportAssertions = [
@@ -142,6 +169,43 @@ export type PayloadExportAssertions = [
  * Verifies contextual inference and rejects fields not present in the SDK.
  */
 export function verifyHandlerInference(): void {
+    connectors.office365.onNewEmail('emailTypes', {
+        handler: async (context) => {
+            const emails: sdkOffice365.GraphClientReceiveMessage[] = context.emails;
+            const subjects: (string | undefined)[] = emails.map((email) => email.subject);
+            // @ts-expect-error Office 365 email subjects are not task titles.
+            context.emails.map((email) => email.title);
+            return subjects;
+        },
+    });
+    connectors.office365.onCalendarChangedItems('calendarChangeTypes', {
+        handler: async (context) => {
+            const events: sdkOffice365.GraphCalendarEventClientWithActionType[] = context.calendarEvents;
+            const actions: (string | undefined)[] = events.map((event) => event.ActionType);
+            // @ts-expect-error The SDK action field is PascalCase.
+            context.calendarEvents.map((event) => event.actionType);
+            return actions;
+        },
+    });
+    connectors.sharepoint.onNewFileItems('sharepointPropertyTypes', {
+        handler: async (context) => {
+            const records: sdkSharepoint.Item[] = context.records;
+            // @ts-expect-error File-property records are not BlobMetadata.
+            context.records.map((record) => record.Name);
+            // @ts-expect-error Dynamic SharePoint fields must be narrowed before treating them as strings.
+            const titles: string[] = records.map((record) => record.dynamicProperties?.CustomFields?.Title);
+            return { records, titles };
+        },
+    });
+    connectors.sharepoint.onDeletedItems('sharepointDeletionTypes', {
+        handler: async (context) => {
+            const deletedItems: sdkSharepoint.DeletedItem[] = context.deletedItems;
+            const identifiers: (number | undefined)[] = deletedItems.map((item) => item.ID);
+            // @ts-expect-error The SDK deleted item identifier is uppercase.
+            context.deletedItems.map((item) => item.id);
+            return identifiers;
+        },
+    });
     connectors.planner.onNewTask('plannerTypes', {
         handler: async (context) => {
             const tasks: sdkPlanner.GetTaskResponseV2[] = context.tasks;
@@ -159,11 +223,102 @@ export function verifyHandlerInference(): void {
             return files;
         },
     });
+    connectors.teams.onNewChannelMessage('teamsMessageTypes', {
+        handler: async (context) => {
+            const messages: sdkTeams.ChatMessage[] = context.messages;
+            const identifiers: (string | undefined)[] = messages.map((message) => message.id);
+            // @ts-expect-error Teams message bodies are dynamic objects, not strings.
+            const bodies: string[] = messages.map((message) => message.body);
+            return { identifiers, bodies };
+        },
+    });
+    connectors.teams.onTeamMemberAdded('teamsMemberTypes', {
+        handler: async (context) => {
+            const members: Record<string, unknown>[] = context.members;
+            // @ts-expect-error The SDK does not guarantee the types of member fields.
+            const identifiers: string[] = members.map((member) => member.userId);
+            return identifiers;
+        },
+    });
+    connectors.salesforce.onNewItems('salesforceTypes', {
+        handler: async (context) => {
+            const records: sdkSalesforce.Item[] = context.records;
+            // @ts-expect-error The SDK does not invent fixed Salesforce object properties.
+            context.records.map((record) => record.Id);
+            // @ts-expect-error Dynamic Salesforce values must be narrowed before treating them as strings.
+            const names: string[] = records.map((record) => record.dynamicProperties?.Account?.Name);
+            return { records, names };
+        },
+    });
+    connectors.vsts.onBuildCompleted('buildTypes', {
+        handler: async (context) => {
+            const builds: sdkVsts.BuildResult[] = context.builds;
+            const identifiers: (number | undefined)[] = builds.map((build) => build.id);
+            // @ts-expect-error Build identifiers are numeric, not strings.
+            const stringIdentifiers: string[] = builds.map((build) => build.id);
+            return { identifiers, stringIdentifiers };
+        },
+    });
+    connectors.vsts.onGitPullCreated('pullRequestTypes', {
+        handler: async (context) => {
+            const requests: sdkVsts.GitPullRequest[] = context.pullRequests;
+            // @ts-expect-error Pull requests do not have push identifiers.
+            requests.map((request) => request.pushId);
+            return requests.map((request) => request.pullRequestId);
+        },
+    });
+    connectors.vsts.onGitPush('pushTypes', {
+        handler: async (context) => {
+            const pushes: sdkVsts.GitPush[] = context.pushes;
+            // @ts-expect-error Git pushes do not have TFVC changeset identifiers.
+            pushes.map((push) => push.changesetId);
+            return pushes.map((push) => push.pushId);
+        },
+    });
+    connectors.vsts.onTfvcCheckIn('changesetTypes', {
+        handler: async (context) => {
+            const changesets: sdkVsts.TfvcChangeset[] = context.changesets;
+            // @ts-expect-error TFVC changesets do not have pull request identifiers.
+            changesets.map((changeset) => changeset.pullRequestId);
+            return changesets.map((changeset) => changeset.changesetId);
+        },
+    });
+    connectors.vsts.onWorkItemCreated('workItemTypes', {
+        handler: async (context) => {
+            const workItems: sdkVsts.TriggerWorkItemResponse[] = context.workItems;
+            // @ts-expect-error Work item field values are unknown until narrowed.
+            const titles: string[] = workItems.map((workItem) => workItem.fields?.['System.Title']);
+            return { workItems, titles };
+        },
+    });
     connectors.dataflows.onRefreshComplete('dataflowTypes', {
         handler: async (context) => {
             const payload: publicTypes.DataflowsOnRefreshCompleteTriggerPayload = context.payload;
             const refreshes: RefreshModel[] = context.refreshes;
+            // @ts-expect-error The SDK Dataflows model uses status, not refreshStatus.
+            refreshes.map((refresh) => refresh.refreshStatus);
             return { payload, refreshes };
         },
+    });
+}
+
+/**
+ * Verifies that the published declarations reject handlers for the wrong connector.
+ * @param registrations - The public connector namespace.
+ */
+export function verifyHandlerCompatibility(registrations: publicTypes.ConnectorTriggers): void {
+    const emailHandler: publicTypes.ConnectorTriggerHandler<sdkOffice365.GraphClientReceiveMessage, publicTypes.EmailTriggerContext> = async () => undefined;
+    const plannerHandler: publicTypes.ConnectorTriggerHandler<sdkPlanner.GetTaskResponseV2, publicTypes.PlannerTaskTriggerContext> = async () => undefined;
+    const sharepointFileHandler: publicTypes.ConnectorTriggerHandler<sdkSharepoint.BlobMetadata, publicTypes.FileTriggerContext> = async () => undefined;
+
+    // @ts-expect-error Planner registrations must not accept email contexts.
+    registrations.planner.onNewTask('wrongPlannerHandler', { handler: emailHandler });
+    // @ts-expect-error Email registrations must not accept Planner task contexts.
+    registrations.office365.onNewEmail('wrongEmailHandler', { handler: plannerHandler });
+    // @ts-expect-error SharePoint file properties must not accept legacy file metadata contexts.
+    registrations.sharepoint.onNewFileItems('wrongSharepointHandler', { handler: sharepointFileHandler });
+    registrations.onedriveforbusiness.onNewFiles('wrongOneDriveHandler', {
+        // @ts-expect-error OneDrive metadata registrations must not accept record contexts.
+        handler: async (context: publicTypes.SalesforceRecordTriggerContext) => context.records,
     });
 }

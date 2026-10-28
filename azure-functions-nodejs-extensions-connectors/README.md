@@ -221,8 +221,13 @@ npm run build
 The type check includes compile-only tests that compare every typed
 registration payload with its SDK alias, verify the public payload exports,
 and reject invalid item properties. Runtime tests cover all registrations
-with batched, single-item, JSON-string and empty payloads, binding passthrough,
-return values and handler errors.
+with batched, single-item, JSON-string, missing and malformed payloads, binding
+passthrough, falsy return values, registration and handler errors, frozen options,
+and isolated registrations and overlapping invocations. Connector-specific
+fixtures verify nested SDK fields, dynamic properties, field casing, optional
+fields, item ordering and preservation of falsy values. Compile-only tests also
+check named alias types across the source and published declarations and reject
+handlers for the wrong connector.
 
 ## License
 

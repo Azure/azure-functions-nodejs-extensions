@@ -5,6 +5,7 @@ import * as assert from 'assert';
 import * as sinon from 'sinon';
 import * as azureFunctions from '@azure/functions';
 import { connectorTrigger } from '../src/connectors/connectorTrigger';
+import { ConnectorTriggerContext } from '../types';
 
 describe('connectorTrigger', () => {
     let appStub: sinon.SinonStub;
@@ -252,7 +253,7 @@ describe('connectorTrigger', () => {
         });
 
         it('should log a warning and return empty items for malformed JSON string', async () => {
-            let capturedContext: unknown;
+            let capturedContext: ConnectorTriggerContext | undefined;
             connectorTrigger('testFunction', {
                 handler: async (context) => {
                     capturedContext = context;
@@ -267,8 +268,10 @@ describe('connectorTrigger', () => {
 
             await wrappedHandler('not valid json {{{', mockInvocationContext);
 
-            const context = capturedContext as { items: unknown[]; rawPayload: unknown };
+            assert.ok(capturedContext);
+            const context = capturedContext;
             assert.strictEqual(context.items.length, 0);
+            assert.strictEqual(context.payload.body?.value, context.items);
             assert.strictEqual(context.rawPayload, 'not valid json {{{');
             assert.strictEqual(warnings.length, 1);
             assert.ok(warnings[0]?.includes('Failed to parse connector trigger payload'));

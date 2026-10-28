@@ -18,6 +18,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   properties for each new trigger family.
 - Runtime coverage for all typed registrations and compile-time SDK payload
   compatibility and handler inference checks.
+- Connector-specific payload fidelity tests, malformed and missing payload
+  coverage, registration and invocation isolation checks, and negative type
+  tests for all eight connector families.
+
+### Fixed
+
+- Preserve the shared `items` array in the malformed-payload fallback so
+  `payload.body.value` and connector-specific aliases remain reference-equal.
 
 ### Changed
 
