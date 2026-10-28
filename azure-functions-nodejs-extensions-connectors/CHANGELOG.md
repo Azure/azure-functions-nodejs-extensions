@@ -30,6 +30,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - Update the connector SDK dependency from `^0.1.1-preview` to `^0.3.1-preview`.
+- Update the Functions peer, development and sample dependencies to `^4.17.0`,
+  allowing compatible updates instead of pinning a preview release.
+- Install the latest connector SDK in the README without an exact version pin.
 - SharePoint file-property registrations use SDK dynamic `Item` records;
   existing file metadata helpers retain their original signatures and behavior.
 

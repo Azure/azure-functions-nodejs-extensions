@@ -5,7 +5,7 @@ Azure Functions extension for Azure Logic Apps connectors. Provides strongly-typ
 ## Installation
 
 ```bash
-npm install @azure/functions-extensions-connectors @azure/connectors@0.3.1-preview @azure/functions
+npm install @azure/functions-extensions-connectors @azure/connectors @azure/functions
 ```
 
 ## Quick Start

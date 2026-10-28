@@ -62,10 +62,10 @@
     "@azure/connectors": "^0.3.1-preview"
   },
   "peerDependencies": {
-    "@azure/functions": "4.15.1-preview"
+    "@azure/functions": "^4.17.0"
   },
   "devDependencies": {
-    "@azure/functions": "4.15.1-preview",
+    "@azure/functions": "^4.17.0",
     "@types/mocha": "^10.0.0",
     "@types/node": "^20.0.0",
     "@types/sinon": "^10.0.0",
