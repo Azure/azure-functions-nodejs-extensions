@@ -1,9 +1,17 @@
 // Copyright (c) .NET Foundation. All rights reserved.
 // Licensed under the MIT License.
 
-import { BlobMetadata } from '@azure/connectors/generated/SharepointonlineExtensions';
-import { ConnectorTriggerOptions, FileTriggerContext } from '../../types';
+import { BlobMetadata, DeletedItem, Item } from '@azure/connectors/generated/SharepointonlineExtensions';
+import { ConnectorTriggerOptions, DeletedItemTriggerContext, FileTriggerContext, SharepointItemTriggerContext } from '../../types';
 import { connectorTrigger } from './connectorTrigger';
+import { createConnectorTrigger } from './createConnectorTrigger';
+
+const registerItemTrigger = createConnectorTrigger<Item, SharepointItemTriggerContext>(
+    (context) => ({ ...context, records: context.items }),
+);
+const registerDeletedItemTrigger = createConnectorTrigger<DeletedItem, DeletedItemTriggerContext>(
+    (context) => ({ ...context, deletedItems: context.items }),
+);
 
 /**
  * Registers a trigger that fires when a new file is created in SharePoint.
@@ -46,3 +54,73 @@ export function onUpdatedFile(name: string, options: ConnectorTriggerOptions<Blo
         },
     });
 }
+
+/**
+ * Registers changed SharePoint list items.
+ * @param name - The function name used for registration and routing.
+ * @param options - The handler and optional input/output bindings.
+ */
+export const onChangedItems = registerItemTrigger;
+
+/**
+ * Registers deleted SharePoint files.
+ * @param name - The function name used for registration and routing.
+ * @param options - The handler and optional input/output bindings.
+ */
+export const onDeletedFileItems = registerDeletedItemTrigger;
+
+/**
+ * Registers deleted SharePoint list items.
+ * @param name - The function name used for registration and routing.
+ * @param options - The handler and optional input/output bindings.
+ */
+export const onDeletedItems = registerDeletedItemTrigger;
+
+/**
+ * Registers new SharePoint file properties, not file content.
+ * @param name - The function name used for registration and routing.
+ * @param options - The handler and optional input/output bindings.
+ */
+export const onNewFileItems = registerItemTrigger;
+
+/**
+ * Registers newly created SharePoint list items.
+ * @param name - The function name used for registration and routing.
+ * @param options - The handler and optional input/output bindings.
+ */
+export const onNewItems = registerItemTrigger;
+
+/**
+ * Registers SharePoint list items submitted through a form.
+ * @param name - The function name used for registration and routing.
+ * @param options - The handler and optional input/output bindings.
+ */
+export const onNewItemsFromForm = registerItemTrigger;
+
+/**
+ * Registers recurring SharePoint list item digests.
+ * @param name - The function name used for registration and routing.
+ * @param options - The handler and optional input/output bindings.
+ */
+export const onRecurrenceDigest = registerItemTrigger;
+
+/**
+ * Registers SharePoint file classification changes.
+ * @param name - The function name used for registration and routing.
+ * @param options - The handler and optional input/output bindings.
+ */
+export const onUpdatedFileClassifiedTimes = registerItemTrigger;
+
+/**
+ * Registers updated SharePoint file properties, not file content.
+ * @param name - The function name used for registration and routing.
+ * @param options - The handler and optional input/output bindings.
+ */
+export const onUpdatedFileItems = registerItemTrigger;
+
+/**
+ * Registers updated SharePoint list items.
+ * @param name - The function name used for registration and routing.
+ * @param options - The handler and optional input/output bindings.
+ */
+export const onUpdatedItems = registerItemTrigger;

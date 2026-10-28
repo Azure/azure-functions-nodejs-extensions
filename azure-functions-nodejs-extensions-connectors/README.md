@@ -5,7 +5,7 @@ Azure Functions extension for Azure Logic Apps connectors. Provides strongly-typ
 ## Installation
 
 ```bash
-npm install @azure/functions-extensions-connectors @azure/connectors @azure/functions
+npm install @azure/functions-extensions-connectors @azure/connectors@0.3.1-preview @azure/functions
 ```
 
 ## Quick Start
@@ -50,6 +50,76 @@ connectors.office365.onNewEmail('OnNewEmail', {
 | `connectors.kusto.onQueryResult()` | `QueryResultTriggerContext` | `rows` | `Row[]` |
 
 Each named property is an alias for `context.items` — the generic accessor still works.
+
+### Additional Typed Trigger Registrations
+
+These registrations cover every trigger callback payload alias exported by
+`@azure/connectors` **0.3.1-preview** for the eight connectors below. Registration
+names follow the SDK trigger operation names, with a lowercase initial letter.
+The existing helpers in the table above remain compatible.
+
+| Connector namespace | Registrations | Context type | Named property / SDK item type |
+|---|---|---|---|
+| `office365` | `onCalendarNewItems`, `onCalendarUpdatedItems`, `onUpcomingEvents` | `CalendarEventTriggerContext` | `calendarEvents: GraphCalendarEventClientReceive[]` |
+| `office365` | `onCalendarChangedItems` | `CalendarChangedEventTriggerContext` | `calendarEvents: GraphCalendarEventClientWithActionType[]` |
+| `office365` | `onFlaggedEmail`, `onNewEmailMentioningMe`, `onSharedMailboxNewEmail` | `EmailTriggerContext` | `emails: GraphClientReceiveMessage[]` |
+| `sharepoint` | `onChangedItems`, `onNewItems`, `onNewItemsFromForm`, `onRecurrenceDigest`, `onUpdatedItems` | `SharepointItemTriggerContext` | `records: SharepointItem[]` |
+| `sharepoint` | `onNewFileItems`, `onUpdatedFileItems`, `onUpdatedFileClassifiedTimes` | `SharepointItemTriggerContext` | `records: SharepointItem[]` |
+| `sharepoint` | `onDeletedFileItems`, `onDeletedItems` | `DeletedItemTriggerContext` | `deletedItems: DeletedItem[]` |
+| `onedriveforbusiness` | `onNewFiles`, `onUpdatedFiles` | `OneDriveFileTriggerContext` | `files: OneDriveBlobMetadata[]` |
+| `teams` | `onNewChannelMessageMentioningMe` | `ChannelMessageTriggerContext` | `messages: ChatMessage[]` |
+| `teams` | `onTeamMemberAdded`, `onTeamMemberRemoved` | `TeamMemberTriggerContext` | `members: Record<string, unknown>[]` |
+| `planner` | `onCompleteTask`, `onNewTask`, `onTaskAssignedToMe` | `PlannerTaskTriggerContext` | `tasks: PlannerTask[]` |
+| `salesforce` | `onNewItems`, `onUpdatedItems` | `SalesforceRecordTriggerContext` | `records: SalesforceItem[]` |
+| `vsts` (Azure DevOps) | `onBuildCompleted` | `BuildCompletedTriggerContext` | `builds: BuildResult[]` |
+| `vsts` (Azure DevOps) | `onGitPullClosed`, `onGitPullCreated` | `GitPullRequestTriggerContext` | `pullRequests: GitPullRequest[]` |
+| `vsts` (Azure DevOps) | `onGitPush` | `GitPushTriggerContext` | `pushes: GitPush[]` |
+| `vsts` (Azure DevOps) | `onTfvcCheckIn` | `TfvcChangesetTriggerContext` | `changesets: TfvcChangeset[]` |
+| `vsts` (Azure DevOps) | `onWorkItemAssigned`, `onWorkItemClosed`, `onWorkItemCreated`, `onWorkItemUpdated` | `WorkItemTriggerContext` | `workItems: TriggerWorkItemResponse[]` |
+| `dataflows` | `onRefreshComplete` | `DataflowRefreshTriggerContext` | `refreshes: RefreshModel[]` |
+
+`onCalendarNewItems` is an alias for `onNewCalendarEvent`. SharePoint
+file-property triggers (`onNewFileItems` / `onUpdatedFileItems`) use the SDK's
+dynamic `Item` model, **not** `BlobMetadata`. The existing `onNewFile` and
+`onUpdatedFile` helpers retain their original metadata context.
+
+The SDK does not describe every connector payload with a concrete model:
+
+- Teams membership events retain `Record<string, unknown>`; custom fields must
+  be narrowed before use.
+- SharePoint and Salesforce records retain the SDK's `dynamicProperties`
+  representation. No fixed list or Salesforce object schema is invented.
+- Dataflows does not export a callback envelope alias. This extension exports
+  `DataflowsOnRefreshCompleteTriggerPayload = TriggerCallbackPayload<RefreshModel>`
+  for the **normalized** context, using the SDK's refresh result model.
+- OneDrive `OnNewFile` / `OnUpdatedFile` return file content, not the metadata
+  batches represented by `OnNewFiles` / `OnUpdatedFiles`. No new metadata
+  helpers are provided for those content operations.
+- Teams recording, transcript, and webhook operations have no callback payload
+  aliases in this SDK version. They are not represented as strongly typed
+  registrations here; use the generic helper with a verified application type
+  for object payloads.
+
+These helpers register Functions handlers; they do not create or select a
+remote connector subscription. Configure the matching SDK trigger operation
+and route it to the registered function name separately.
+
+```typescript
+import {
+    connectors,
+    PlannerOnNewTaskTriggerPayload,
+} from '@azure/functions-extensions-connectors';
+
+connectors.planner.onNewTask('OnPlannerTask', {
+    handler: async (context, invocationContext) => {
+        const payload: PlannerOnNewTaskTriggerPayload = context.payload;
+        for (const task of context.tasks) {
+            invocationContext.log(task.title, task.percentComplete);
+        }
+        return payload;
+    },
+});
+```
 
 ## Generic Registration
 
@@ -114,6 +184,21 @@ All connector SDK item types are re-exported for convenience:
 - `KustoRow` (Kusto)
 - `TriggerCallbackPayload`, `TriggerCallbackBody`
 
+All 38 SDK `*TriggerPayload` aliases for Office 365, SharePoint Online,
+OneDrive for Business, Teams, Planner, Salesforce and VSTS are re-exported
+under their original SDK names (for example,
+`Office365OnNewEmailTriggerPayload`, `SharepointonlineOnNewFileItemsTriggerPayload`,
+`OnedriveforbusinessOnNewFilesTriggerPayload`, `TeamsOnTeamMemberAddedTriggerPayload`,
+`PlannerOnNewTaskTriggerPayload`, `SalesforceOnNewItemsTriggerPayload`, and
+`VisualstudioteamservicesOnWorkItemCreatedTriggerPayload`).
+
+Additional item type exports are `GraphCalendarEventClientWithActionType`,
+`DeletedItem`, `SharepointItem`, `OneDriveBlobMetadata`, `PlannerTask`,
+`SalesforceItem`, `BuildResult`, `GitPullRequest`, `GitPush`, `TfvcChangeset`,
+`TriggerWorkItemResponse` and `RefreshModel`. Aliases avoid collisions between
+the different SDK `Item` and `BlobMetadata` definitions. All new context and
+connector registration interfaces in the table above are also exported.
+
 ### Context Types
 
 - `EmailTriggerContext` — adds `emails: GraphClientReceiveMessage[]`
@@ -121,6 +206,23 @@ All connector SDK item types are re-exported for convenience:
 - `FileTriggerContext` — adds `files: BlobMetadata[]`
 - `ChannelMessageTriggerContext` — adds `messages: ChatMessage[]`
 - `QueryResultTriggerContext` — adds `rows: Row[]`
+
+## Development Checks
+
+Run from the connectors extension directory:
+
+```bash
+npm run typecheck
+npm run lint
+npm test
+npm run build
+```
+
+The type check includes compile-only tests that compare every typed
+registration payload with its SDK alias, verify the public payload exports,
+and reject invalid item properties. Runtime tests cover all registrations
+with batched, single-item, JSON-string and empty payloads, binding passthrough,
+return values and handler errors.
 
 ## License
 

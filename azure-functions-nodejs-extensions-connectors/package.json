@@ -42,6 +42,7 @@
     "format": "prettier . --write",
     "lint": "eslint src test --ext .ts",
     "test": "mocha",
+    "typecheck": "tsc --noEmit && tsc --project tsconfig.test.json --noEmit",
     "watch": "webpack --mode development --watch"
   },
   "engines": {
@@ -58,7 +59,7 @@
   ],
   "license": "MIT",
   "dependencies": {
-    "@azure/connectors": "^0.1.1-preview"
+    "@azure/connectors": "^0.3.1-preview"
   },
   "peerDependencies": {
     "@azure/functions": "4.15.1-preview"
