@@ -16,6 +16,8 @@
 -   Back in this repository, press <kbd>F5</kbd> and select the process for your running function app
 -   Before you submit a PR, run `npm test` and fix any issues. If you want to debug the tests, switch your [launch profile](https://code.visualstudio.com/docs/editor/debugging) in VS Code to "Launch Unit Tests" and press <kbd>F5</kbd>.
 
+Keep ESLint on the 8.x release line while using `@typescript-eslint` 5.x and `eslint-webpack-plugin` 3.x. Newer ESLint majors require coordinated plugin and configuration upgrades; do not bypass peer dependency checks with `--force` or `--legacy-peer-deps`.
+
 ## Code of Conduct
 
 This project has adopted the [Microsoft Open Source Code of Conduct](https://opensource.microsoft.com/codeofconduct/). For more information see the [Code of Conduct FAQ](https://opensource.microsoft.com/codeofconduct/faq/) or contact [opencode@microsoft.com](mailto:opencode@microsoft.com) with any additional questions or comments.
