@@ -1,10 +1,16 @@
 // Copyright (c) .NET Foundation. All rights reserved.
 // Licensed under the MIT License.
 
+import { ConnectorTriggers } from '../../types';
+import * as dataflows from './dataflowsTriggers';
 import { onQueryResult } from './kustoTriggers';
-import { onNewEmail, onNewCalendarEvent } from './office365Triggers';
-import { onNewFile, onUpdatedFile } from './sharepointTriggers';
-import { onNewChannelMessage } from './teamsTriggers';
+import * as office365 from './office365Triggers';
+import * as onedriveforbusiness from './onedriveforbusinessTriggers';
+import * as planner from './plannerTriggers';
+import * as salesforce from './salesforceTriggers';
+import * as sharepoint from './sharepointTriggers';
+import * as teams from './teamsTriggers';
+import * as vsts from './vstsTriggers';
 
 /**
  * First-class connector trigger registrations grouped by connector.
@@ -23,18 +29,15 @@ import { onNewChannelMessage } from './teamsTriggers';
  * ```
  */
 export const connectors = {
+    dataflows,
     kusto: {
         onQueryResult,
     },
-    office365: {
-        onNewCalendarEvent,
-        onNewEmail,
-    },
-    sharepoint: {
-        onNewFile,
-        onUpdatedFile,
-    },
-    teams: {
-        onNewChannelMessage,
-    },
-};
+    office365,
+    onedriveforbusiness,
+    planner,
+    salesforce,
+    sharepoint,
+    teams,
+    vsts,
+} satisfies ConnectorTriggers;

@@ -55,10 +55,11 @@ function buildContextFromRawPayload<TItem>(raw: unknown, invocationContext: Invo
         // NOTE(swapnilnagar): If the payload is malformed JSON or otherwise unparseable,
         // log a warning and return an empty context so the handler still runs gracefully.
         invocationContext.warn(`Failed to parse connector trigger payload: '${error instanceof Error ? error.message : String(error)}'.`);
-        const emptyPayload: TriggerCallbackPayload<TItem> = { body: { value: [] } };
+        const items: TItem[] = [];
+        const emptyPayload: TriggerCallbackPayload<TItem> = { body: { value: items } };
         return {
             payload: emptyPayload,
-            items: [],
+            items,
             rawPayload: raw,
             toJSON(): string {
                 return JSON.stringify(raw);

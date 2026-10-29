@@ -27,8 +27,11 @@ describe('connectors namespace', () => {
         assert.strictEqual(typeof connectors.teams.onNewChannelMessage, 'function');
     });
 
-    it('should have exactly four connector groups in alphabetical order', () => {
+    it('should expose all connector groups in alphabetical order', () => {
         const connectorKeys = Object.keys(connectors);
-        assert.deepStrictEqual(connectorKeys, ['kusto', 'office365', 'sharepoint', 'teams']);
+        assert.deepStrictEqual(connectorKeys, [
+            'dataflows', 'kusto', 'office365', 'onedriveforbusiness', 'planner',
+            'salesforce', 'sharepoint', 'teams', 'vsts',
+        ]);
     });
 });
