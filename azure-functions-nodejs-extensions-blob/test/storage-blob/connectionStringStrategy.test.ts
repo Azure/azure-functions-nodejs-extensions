@@ -3,8 +3,8 @@
 
 import * as storageBlob from '@azure/storage-blob';
 import { expect } from 'chai';
+import * as sinon from 'sinon';
 import { ConnectionStringStrategy } from '../../src/storage-blob/connectionStringStrategy';
-import sinon = require('sinon');
 
 describe('ConnectionStringStrategy', () => {
     let sandbox: sinon.SinonSandbox;

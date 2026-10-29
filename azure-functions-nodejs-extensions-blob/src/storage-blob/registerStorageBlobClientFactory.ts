@@ -21,6 +21,11 @@ export function registerStorageBlobClientFactory(): void {
             );
         }
     } catch (error) {
-        throw new Error(`Blob client initialization failed: ${error instanceof Error ? error.message : String(error)}`);
+        throw new Error(
+            `Blob client initialization failed: ${error instanceof Error ? error.message : String(error)}`,
+            {
+                cause: error,
+            }
+        );
     }
 }

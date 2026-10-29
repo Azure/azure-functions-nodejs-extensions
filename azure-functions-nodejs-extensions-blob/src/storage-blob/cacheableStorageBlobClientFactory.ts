@@ -99,7 +99,7 @@ export class CacheableAzureStorageBlobClientFactory {
             return storageBlobClient;
         } catch (error) {
             const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-            throw new Error(`Failed to create client from parameters: ${errorMessage}`);
+            throw new Error(`Failed to create client from parameters: ${errorMessage}`, { cause: error });
         }
     }
 

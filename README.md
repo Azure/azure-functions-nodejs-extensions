@@ -10,7 +10,7 @@ To get started with a specific binding library, check the `README.md` file locat
 
 ### Prerequisites
 
-These libraries are supported on Function Apps using Node.js 16 or later with TypeScript.  
+Runtime requirements vary by extension. The [Blob extension](azure-functions-nodejs-extensions-blob/README.md#prerequisites) requires Node.js 20 (20.19+), 22 (22.13+), or 24+; Node.js 18 is no longer supported for that extension.
 For full compatibility details, refer to our [Azure Functions version support policy](https://learn.microsoft.com/en-us/azure/azure-functions/functions-versions?pivots=programming-language-javascript#languages).
 
 ## SDK Support

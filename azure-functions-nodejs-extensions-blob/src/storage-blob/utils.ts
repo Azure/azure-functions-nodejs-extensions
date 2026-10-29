@@ -21,7 +21,7 @@ export function getConnectionString(connectionString: string | undefined): strin
     }
 
     if (process.env[connectionString]) {
-        return process.env[connectionString] as string;
+        return process.env[connectionString];
     } else if (process.env[`${connectionString}__serviceUri`]) {
         return process.env[`${connectionString}__serviceUri`] as string;
     } else if (process.env[`${connectionString}__blobServiceUri`]) {

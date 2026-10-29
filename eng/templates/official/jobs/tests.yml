@@ -8,10 +8,6 @@ jobs:
           EXTENSION_DIRECTORY: 'azure-functions-nodejs-extensions-base'
           EXTENSION_NAME: 'Base'
           NODE_VERSION: '18.x'
-        blob_extension_Node18:
-          EXTENSION_DIRECTORY: 'azure-functions-nodejs-extensions-blob'
-          EXTENSION_NAME: 'Blob'
-          NODE_VERSION: '18.x'
         service_bus_extension_Node18:
           EXTENSION_DIRECTORY: 'azure-functions-nodejs-extensions-servicebus'
           EXTENSION_NAME: 'ServiceBus'

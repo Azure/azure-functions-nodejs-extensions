@@ -51,7 +51,7 @@ describe('registerStorageBlobClientFactory', () => {
         registerResourceFactoryStub = resolverStub.registerResourceFactory as sinon.SinonStub;
 
         // Stub the static method
-        sinon.stub(ResourceFactoryResolver, 'getInstance').returns(resolverStub as unknown as ResourceFactoryResolver);
+        sinon.stub(ResourceFactoryResolver, 'getInstance').returns(resolverStub);
 
         // Stub CacheableAzureStorageBlobClientFactory.buildClientFromModelBindingData
         buildClientStub = sinon
@@ -98,7 +98,8 @@ describe('registerStorageBlobClientFactory', () => {
 
     it('should propagate and enhance errors from ResourceFactoryResolver', () => {
         // Arrange
-        hasResourceFactoryStub.throws(new Error('Resource resolver error'));
+        const expectedError = new Error('Resource resolver error');
+        hasResourceFactoryStub.throws(expectedError);
 
         // Act & Assert
         try {
@@ -108,6 +109,7 @@ describe('registerStorageBlobClientFactory', () => {
             const err = error as Error;
             expect(err.message).to.include('Blob client initialization failed');
             expect(err.message).to.include('Resource resolver error');
+            expect(err).to.have.property('cause', expectedError);
         }
     });
 

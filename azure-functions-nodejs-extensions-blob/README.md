@@ -12,7 +12,7 @@ This project provides extensions for working with Azure Blob Storage in Azure Fu
 
 ### Prerequisites
 
--   [Node.js](https://nodejs.org/) (LTS version recommended)
+-   [Node.js](https://nodejs.org/) 20 (20.19+), 22 (22.13+), or 24+. Node.js 18 is no longer supported.
 -   [Azure Functions Core Tools](https://learn.microsoft.com/azure/azure-functions/functions-run-local)
 -   An active [Azure subscription](https://azure.microsoft.com/free/)
 
