@@ -13,7 +13,10 @@ export class ManagedIdentityUserStrategy implements StorageBlobServiceClientStra
      * @param accountUrl - URL to the storage account
      * @param clientId - The user clientId to use for authentication
      */
-    constructor(private accountUrl: string, private clientId: string) {}
+    constructor(
+        private accountUrl: string,
+        private clientId: string
+    ) {}
 
     createStorageBlobServiceClient(options?: StoragePipelineOptions): BlobServiceClient {
         const credential = new ManagedIdentityCredential(this.clientId);

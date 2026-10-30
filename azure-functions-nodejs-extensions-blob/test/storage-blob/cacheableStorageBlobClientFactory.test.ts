@@ -77,7 +77,7 @@ describe('CacheableAzureStorageBlobClientFactory', () => {
             expect(client).to.equal(mockStorageBlobClient);
 
             // Verify cache contains the new client
-            // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
+
             const keyString = `${testOptions.Connection}|${testOptions.ContainerName}|${testOptions.BlobName}`;
             const cacheKey = createHash('sha256').update(keyString).digest('hex').substring(0, 16);
             const cache = Reflect.get(CacheableAzureStorageBlobClientFactory, 'clientCache') as Map<
@@ -237,12 +237,16 @@ describe('CacheableAzureStorageBlobClientFactory', () => {
             const client0 = mockClients[0] as StorageBlobClient;
             // Assert
             // Client 1 (the least recently used) should have been disposed
-            expect((client1.dispose as sinon.SinonStub).called).to.be.true,
-                'The least recently used client (client 1) should be disposed';
+            expect(
+                (client1.dispose as sinon.SinonStub).called,
+                'The least recently used client (client 1) should be disposed'
+            ).to.be.true;
 
             // Client 0 (recently accessed) should not be disposed
-            expect((client0.dispose as sinon.SinonStub).called).to.be.false,
-                'The recently accessed client (client 0) should not be disposed';
+            expect(
+                (client0.dispose as sinon.SinonStub).called,
+                'The recently accessed client (client 0) should not be disposed'
+            ).to.be.false;
 
             // Verify client 1 is gone by requesting it again
             fromConnectionDetailsStub.resetHistory();
@@ -259,8 +263,10 @@ describe('CacheableAzureStorageBlobClientFactory', () => {
                 content: Buffer.from(JSON.stringify(testOptions3), 'utf-8'),
             });
 
-            expect(fromConnectionDetailsStub.calledOnce).to.be.true,
-                'A new client should be created when requesting previously evicted client';
+            expect(
+                fromConnectionDetailsStub.calledOnce,
+                'A new client should be created when requesting previously evicted client'
+            ).to.be.true;
         });
 
         it('should correctly handle consecutive evictions when adding multiple clients', () => {
@@ -323,8 +329,10 @@ describe('CacheableAzureStorageBlobClientFactory', () => {
             // Later clients should still be in cache
             for (let i = 3; i <= maxCacheSize + 2; i++) {
                 const client = mockClients[i] as StorageBlobClient;
-                expect((client.dispose as sinon.SinonStub).called).to.be.false,
-                    `Client ${i} should not be disposed as it is still in cache`;
+                expect(
+                    (client.dispose as sinon.SinonStub).called,
+                    `Client ${i} should not be disposed as it is still in cache`
+                ).to.be.false;
             }
         });
     });
@@ -370,6 +378,22 @@ describe('CacheableAzureStorageBlobClientFactory', () => {
     });
 
     describe('error handling', () => {
+        it('should preserve the original error when wrapping client creation failures', () => {
+            fromConnectionDetailsStub.restore();
+            const expectedError = new Error('Connection failed');
+            const strategy: StorageBlobServiceClientStrategy = {
+                createStorageBlobServiceClient: () => {
+                    throw expectedError;
+                },
+            };
+
+            expect(() =>
+                CacheableAzureStorageBlobClientFactory.fromConnectionDetailsToBlobStorageClient(strategy, testOptions)
+            )
+                .to.throw('Failed to create client from parameters: Connection failed')
+                .with.property('cause', expectedError);
+        });
+
         it('should throw meaningful error when client creation fails', () => {
             // Arrange
             const expectedError = new Error('Connection failed');

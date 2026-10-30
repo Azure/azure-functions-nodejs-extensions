@@ -82,7 +82,7 @@ describe('AzureStorageBlobClient', () => {
         };
 
         // Act
-        new StorageBlobClient(strategySpy as any, containerName, blobName, options);
+        new StorageBlobClient(strategySpy, containerName, blobName, options);
 
         // Assert
         expect(strategySpy.lastOptions).to.equal(options);

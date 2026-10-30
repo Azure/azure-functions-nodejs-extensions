@@ -1,6 +1,7 @@
 # Contributing
 
 -   Clone the repository locally and open in VS Code
+-   Use Node.js 20.19+, 22.13+, or 24+. Node.js 18 is no longer supported.
 -   Run "Extensions: Show Recommended Extensions" from the [command palette](https://code.visualstudio.com/docs/getstarted/userinterface#_command-palette) and install all extensions listed under "Workspace Recommendations"
 -   Run `npm install`
 -   Run `npm run build`
@@ -15,6 +16,8 @@
     -   Start the app (i.e. run `func start` or press <kbd>F5</kbd>)
 -   Back in this repository, press <kbd>F5</kbd> and select the process for your running function app
 -   Before you submit a PR, run `npm test` and fix any issues. If you want to debug the tests, switch your [launch profile](https://code.visualstudio.com/docs/editor/debugging) in VS Code to "Launch Unit Tests" and press <kbd>F5</kbd>.
+
+Linting uses ESLint 10 with [flat configuration](eslint.config.cjs). Keep TypeScript ESLint, webpack lint integration, and the header/import/formatting plugins compatible when upgrading ESLint; do not bypass peer dependency checks with `--force` or `--legacy-peer-deps`. Prettier's `trailingComma` option explicitly preserves the existing formatting style.
 
 ## Code of Conduct
 
