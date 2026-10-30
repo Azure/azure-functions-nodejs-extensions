@@ -36,6 +36,10 @@ jobs:
           EXTENSION_DIRECTORY: 'azure-functions-nodejs-extensions-servicebus'
           EXTENSION_NAME: 'ServiceBus'
           NODE_VERSION: '22.x'  
+        connectors_extension_Node22:
+          EXTENSION_DIRECTORY: 'azure-functions-nodejs-extensions-connectors'
+          EXTENSION_NAME: 'Connectors'
+          NODE_VERSION: '22.x'
         base_extension_Node24:
           EXTENSION_DIRECTORY: 'azure-functions-nodejs-extensions-base'
           EXTENSION_NAME: 'Base'
@@ -43,6 +47,10 @@ jobs:
         blob_extension_Node24:
           EXTENSION_DIRECTORY: 'azure-functions-nodejs-extensions-blob'
           EXTENSION_NAME: 'Blob'
+          NODE_VERSION: '24.x'
+        connectors_extension_Node24:
+          EXTENSION_DIRECTORY: 'azure-functions-nodejs-extensions-connectors'
+          EXTENSION_NAME: 'Connectors'
           NODE_VERSION: '24.x'
         service_bus_extension_Node24:
           EXTENSION_DIRECTORY: 'azure-functions-nodejs-extensions-servicebus'
@@ -69,11 +77,21 @@ jobs:
         displayName: 'npm run lint'
         workingDirectory: '$(Build.SourcesDirectory)/$(EXTENSION_DIRECTORY)'
       - bash: |
+          npm run typecheck
+        displayName: 'npm run typecheck'
+        workingDirectory: '$(Build.SourcesDirectory)/$(EXTENSION_DIRECTORY)'
+        condition: and(succeeded(), eq(variables.EXTENSION_NAME, 'Connectors'))
+      - bash: |
           npm run updateVersion -- --validate
         displayName: 'validate version'
         workingDirectory: '$(Build.SourcesDirectory)/$(EXTENSION_DIRECTORY)'
+        condition: and(succeeded(), ne(variables.EXTENSION_NAME, 'Connectors'))
       - bash: |
-          npm test
+          if [ "$(EXTENSION_NAME)" = "Connectors" ]; then
+            npm run test:ci
+          else
+            npm test
+          fi
         displayName: 'Run unit tests'
         workingDirectory: '$(Build.SourcesDirectory)/$(EXTENSION_DIRECTORY)'
       - task: PublishTestResults@2

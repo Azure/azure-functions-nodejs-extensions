@@ -4,6 +4,8 @@ Azure Functions extension for Azure Logic Apps connectors. Provides strongly-typ
 
 ## Installation
 
+Requires Node.js 22 or later.
+
 ```bash
 npm install @azure/functions-extensions-connectors @azure/connectors @azure/functions
 ```
@@ -209,13 +211,15 @@ connector registration interfaces in the table above are also exported.
 
 ## Development Checks
 
-Run from the connectors extension directory:
+Use Node.js 22 or later and run from the connectors extension directory:
 
 ```bash
+npm ci
 npm run typecheck
 npm run lint
 npm test
 npm run build
+npm run minify
 ```
 
 The type check includes compile-only tests that compare every typed
@@ -228,6 +232,18 @@ fixtures verify nested SDK fields, dynamic properties, field casing, optional
 fields, item ordering and preservation of falsy values. Compile-only tests also
 check named alias types across the source and published declarations and reject
 handlers for the wrong connector.
+
+### Continuous Integration
+
+The [official build](../eng/ci/official-build.yml) and
+[public build](../eng/ci/public-build.yml) build and package this extension
+using Node.js 24. The official build publishes an
+`azure-functions-nodejs-extensions-connectors` package artifact.
+
+The shared test job runs lint, type checks, and `npm run test:ci` for Connectors
+on Node.js 22 and 24. Official builds run these checks on Windows and Linux;
+public builds run them on Windows. `npm run test:ci` runs the same tests as `npm test` and writes the JUnit
+report to `test/unit-test-results.xml` for pipeline test-result publishing.
 
 ## License
 
