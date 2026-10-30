@@ -7,17 +7,24 @@ jobs:
         base_extension:
           EXTENSION_DIRECTORY: 'azure-functions-nodejs-extensions-base'
           EXTENSION_NAME: 'Base'
+          NODE_VERSION: '22.x'
         blob_extension:
           EXTENSION_DIRECTORY: 'azure-functions-nodejs-extensions-blob'
           EXTENSION_NAME: 'Blob'
+          NODE_VERSION: '22.x'
+        connectors_extension:
+          EXTENSION_DIRECTORY: 'azure-functions-nodejs-extensions-connectors'
+          EXTENSION_NAME: 'Connectors'
+          NODE_VERSION: '24.x'
         service_bus_extension:
           EXTENSION_DIRECTORY: 'azure-functions-nodejs-extensions-servicebus'
           EXTENSION_NAME: 'ServiceBus'
+          NODE_VERSION: '22.x'
 
     steps:
         - task: NodeTool@0
           inputs:
-              versionSpec: 22.x
+              versionSpec: $(NODE_VERSION)
           displayName: 'Install Node.js'
         - task: npmAuthenticate@0
           displayName: 'Authenticate npm'
@@ -28,6 +35,7 @@ jobs:
           displayName: 'npm ci'
           workingDirectory: '$(Build.SourcesDirectory)/$(EXTENSION_DIRECTORY)'
         - bash: | 
+            set -e
             npm run build
             npm run minify
             npm prune --production
