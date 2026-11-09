@@ -49,6 +49,10 @@ function testPayloadFidelity<TItem, TContext extends ConnectorTriggerContext<TIt
             ['JSON batch', JSON.stringify({ body: { value: items } }), items],
             ['object single item', { body: items[0] }, [items[0]]],
             ['JSON single item', JSON.stringify({ body: items[0] }), [items[0]]],
+            ['polling batch envelopes', [{ body: { value: [items[0]] } }, { body: { value: [items[1]] } }], items],
+            ['JSON polling batch envelopes', JSON.stringify([{ body: { value: [items[0]] } }, { body: { value: [items[1]] } }]), items],
+            ['mixed polling envelopes', [{ body: items[0] }, { body: { value: [items[1]] } }], items],
+            ['JSON mixed polling envelopes', JSON.stringify([{ body: items[0] }, { body: { value: [items[1]] } }]), items],
         ] as const) {
             it(`should preserve SDK-specific fields and item order in a ${format}`, async () => {
                 const snapshot = JSON.stringify(payload);

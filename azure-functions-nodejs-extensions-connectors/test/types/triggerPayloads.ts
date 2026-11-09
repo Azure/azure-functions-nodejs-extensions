@@ -9,10 +9,10 @@ import type * as sdkSharepoint from '@azure/connectors/generated/Sharepointonlin
 import type * as sdkTeams from '@azure/connectors/generated/TeamsExtensions';
 import type * as sdkVsts from '@azure/connectors/generated/VisualstudioteamservicesExtensions';
 import type { RefreshModel } from '@azure/connectors/generated/DataflowsExtensions';
-import type { InvocationContext } from '@azure/functions';
+import type { ConnectorTriggerOptions as FunctionsConnectorTriggerOptions, InvocationContext } from '@azure/functions';
 import type * as publicTypes from '@azure/functions-extensions-connectors';
 import type * as sourceTypes from '../../src';
-import { connectors } from '../../src';
+import { connectorTrigger, connectors } from '../../src';
 
 type Assert<Condition extends true> = Condition;
 type Equal<Left, Right> = (<Value>() => Value extends Left ? 1 : 2) extends
@@ -23,6 +23,20 @@ type Context<Registration> = Registration extends (
 ) => void ? TriggerContext : never;
 type Payload<Registration> = Context<Registration> extends { payload: infer TriggerPayload } ? TriggerPayload : never;
 type NamedAliases<Registration> = Omit<Context<Registration>, keyof publicTypes.ConnectorTriggerContext>;
+type Options<Registration> = Registration extends (name: string, options: infer TriggerOptions) => void ? TriggerOptions : never;
+type PollingOptions = Pick<FunctionsConnectorTriggerOptions,
+    'deliveryMode' | 'connection' | 'triggerConfigName' | 'cardinality' |
+    'maxBatchSize' | 'maxConcurrentCalls' | 'targetPendingEventThreshold'>;
+type RegistrationBindingOptions<Groups> = {
+    -readonly [Group in keyof Groups]: {
+        -readonly [Operation in keyof Groups[Group]]: Omit<Options<Groups[Group][Operation]>, 'handler'>;
+    };
+};
+type ExpectedRegistrationBindingOptions<Groups> = {
+    -readonly [Group in keyof Groups]: {
+        -readonly [Operation in keyof Groups[Group]]: Omit<publicTypes.ConnectorTriggerOptions, 'handler'>;
+    };
+};
 type RegistrationContexts<Groups> = {
     -readonly [Group in keyof Groups]: {
         -readonly [Operation in keyof Groups[Group]]: Context<Groups[Group][Operation]>;
@@ -100,6 +114,13 @@ export type TriggerPayloadAssertions = [
     Assert<Equal<publicTypes.SharepointItem, sdkSharepoint.Item>>,
     Assert<Equal<publicTypes.SalesforceItem, sdkSalesforce.Item>>,
     Assert<Equal<RegistrationContexts<typeof connectors>, RegistrationContexts<publicTypes.ConnectorTriggers>>>,
+];
+
+export type PollingOptionAssertions = [
+    Assert<Equal<Pick<publicTypes.ConnectorTriggerOptions, keyof PollingOptions>, PollingOptions>>,
+    Assert<Equal<sourceTypes.ConnectorTriggerOptions, publicTypes.ConnectorTriggerOptions>>,
+    Assert<Equal<RegistrationBindingOptions<typeof connectors>, ExpectedRegistrationBindingOptions<typeof connectors>>>,
+    Assert<Equal<RegistrationBindingOptions<publicTypes.ConnectorTriggers>, ExpectedRegistrationBindingOptions<publicTypes.ConnectorTriggers>>>,
 ];
 
 export type NamedAliasAssertions = [
@@ -321,4 +342,50 @@ export function verifyHandlerCompatibility(registrations: publicTypes.ConnectorT
         // @ts-expect-error OneDrive metadata registrations must not accept record contexts.
         handler: async (context: publicTypes.SalesforceRecordTriggerContext) => context.records,
     });
+}
+
+export function verifyPollingOptions(registrations: publicTypes.ConnectorTriggers): void {
+    connectors.office365.onNewEmail('pollEmail', {
+        deliveryMode: 'Poll',
+        connection: 'ConnectorNamespace',
+        triggerConfigName: 'email-poll',
+        cardinality: 'many',
+        maxBatchSize: 10,
+        maxConcurrentCalls: 2,
+        targetPendingEventThreshold: 20,
+        handler: async (context) => context.emails,
+    });
+    registrations.planner.onNewTask('pollPublicTask', {
+        deliveryMode: 'Poll',
+        connection: 'ConnectorNamespace',
+        triggerConfigName: '%TaskTriggerConfig%',
+        cardinality: 'one',
+        handler: async (context) => context.tasks,
+    });
+    connectorTrigger('genericPoll', {
+        deliveryMode: 'Poll',
+        connection: 'ConnectorNamespace',
+        triggerConfigName: 'generic-poll',
+        cardinality: 'many',
+        handler: async (context) => context.items,
+    });
+
+    const invalidOptions: publicTypes.ConnectorTriggerOptions = {
+        // @ts-expect-error Delivery modes are case-sensitive.
+        deliveryMode: 'poll',
+        // @ts-expect-error The connection must be a string.
+        connection: 1,
+        // @ts-expect-error The trigger configuration name must be a string.
+        triggerConfigName: 1,
+        // @ts-expect-error Cardinality only accepts one or many.
+        cardinality: 'batch',
+        // @ts-expect-error The batch size must be numeric.
+        maxBatchSize: '10',
+        // @ts-expect-error The concurrency limit must be numeric.
+        maxConcurrentCalls: '2',
+        // @ts-expect-error The scaling threshold must be numeric.
+        targetPendingEventThreshold: '20',
+        handler: async () => undefined,
+    };
+    registrations.office365.onNewEmail('invalidPollingOptions', invalidOptions);
 }

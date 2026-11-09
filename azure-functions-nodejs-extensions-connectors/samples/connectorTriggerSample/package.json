@@ -15,8 +15,8 @@
   },
   "dependencies": {
     "@azure/functions": "^4.17.0",
-    "@azure/functions-extensions-connectors": "0.1.0-preview",
-    "@azure/connectors": "0.1.1-preview"
+    "@azure/functions-extensions-connectors": "0.2.0-preview",
+    "@azure/connectors": "0.4.0-preview"
   },
   "devDependencies": {
     "typescript": "^5.0.0"

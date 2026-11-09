@@ -11,7 +11,7 @@ import { Item as SalesforceItem } from '@azure/connectors/generated/SalesforceEx
 import { BlobMetadata, DeletedItem, Item as SharepointItem } from '@azure/connectors/generated/SharepointonlineExtensions';
 import { ChatMessage } from '@azure/connectors/generated/TeamsExtensions';
 import { BuildResult, GitPullRequest, GitPush, TfvcChangeset, TriggerWorkItemResponse } from '@azure/connectors/generated/VisualstudioteamservicesExtensions';
-import { FunctionInput, FunctionOutput, InvocationContext } from '@azure/functions';
+import { ConnectorTriggerOptions as FunctionsConnectorTriggerOptions, FunctionInput, FunctionOutput, InvocationContext } from '@azure/functions';
 
 // ---------------------------------------------------------------------------
 // Re-export connector SDK types used as trigger items.
@@ -97,14 +97,14 @@ export type {
  * Wraps the AI Gateway trigger callback payload with typed access to items.
  */
 export interface ConnectorTriggerContext<TItem = unknown> {
-    /** The full trigger callback payload envelope. */
+    /** The normalized trigger callback envelope, combining all items in a polling batch. */
     payload: TriggerCallbackPayload<TItem>;
 
     /** The items delivered by the connector trigger (convenience accessor for payload.body.value). */
     items: TItem[];
 
     /**
-     * The original payload object as received from the host (before envelope extraction).
+     * The original parsed payload object or polling envelope array (before envelope extraction).
      * Use this when you need to persist the full trigger data (e.g., to blob storage).
      */
     rawPayload: unknown;
@@ -134,10 +134,15 @@ export type ConnectorTriggerHandler<
 
 /**
  * Options for registering a connector trigger function with {@link connectorTrigger}.
+ * Includes the polling and batching options from `@azure/functions`.
  */
 export interface ConnectorTriggerOptions<
     TItem = unknown,
     TContext extends ConnectorTriggerContext<TItem> = ConnectorTriggerContext<TItem>,
+> extends Pick<
+    FunctionsConnectorTriggerOptions,
+    'deliveryMode' | 'connection' | 'triggerConfigName' | 'cardinality' |
+    'maxBatchSize' | 'maxConcurrentCalls' | 'targetPendingEventThreshold'
 > {
     /** Optional extra input bindings (e.g., blob storage, connector content). */
     extraInputs?: FunctionInput[];

@@ -5,7 +5,7 @@ import * as assert from 'assert';
 import { app, InvocationContext, input, output } from '@azure/functions';
 import * as sinon from 'sinon';
 import { connectors } from '../src';
-import { ConnectorTriggerContext, ConnectorTriggerRegistration } from '../types';
+import { ConnectorTriggerContext, ConnectorTriggerRegistration, KustoRow, QueryResultTriggerContext } from '../types';
 
 const testedRegistrations = new Set<string>();
 
@@ -37,8 +37,17 @@ function testTrigger<TItem, TContext extends ConnectorTriggerContext<TItem>>(
             ['JSON single item', JSON.stringify({ body: item }), [item]],
             ['empty batch', { body: { value: [] } }, []],
             ['JSON empty batch', JSON.stringify({ body: { value: [] } }), []],
+            ['polling envelopes', [{ body: item }, { body: item }], [item, item]],
+            ['JSON polling envelopes', JSON.stringify([{ body: item }, { body: item }]), [item, item]],
+            ['polling batch envelopes', [{ body: { value: [item, item] } }, { body: { value: [item] } }], [item, item, item]],
+            ['JSON polling batch envelopes', JSON.stringify([{ body: { value: [item, item] } }, { body: { value: [item] } }]), [item, item, item]],
+            ['mixed polling envelopes', [{ body: item }, { body: { value: [item] } }], [item, item]],
+            ['empty polling batch', [], []],
+            ['JSON empty polling batch', '[]', []],
+            ['polling envelopes with empty entries', [null, undefined, {}, { body: null }, { body: {} }, { body: { value: [] } }, { body: item }], [item]],
         ] as const) {
             it(`should normalize ${format} payloads and preserve aliases, bindings and results`, async () => {
+                const parsedPayload: unknown = typeof payload === 'string' ? JSON.parse(payload) : payload;
                 const extraInput = input.generic({ name: 'input', type: 'connectorContent' });
                 const extraOutput = output.generic({ name: 'output', type: 'connectorContent' });
                 const returnOutput = output.generic({ name: 'returnValue', type: 'http' });
@@ -57,7 +66,8 @@ function testTrigger<TItem, TContext extends ConnectorTriggerContext<TItem>>(
                         assert.strictEqual(context[property], context.items);
                         assert.strictEqual(context.payload.body?.value, context.items);
                         assert.deepStrictEqual(context.items, expectedItems);
-                        assert.deepStrictEqual(JSON.parse(context.toJSON()), context.rawPayload);
+                        assert.deepStrictEqual(context.rawPayload, parsedPayload);
+                        assert.strictEqual(context.toJSON(), JSON.stringify(parsedPayload));
                         return result;
                     },
                 });
@@ -72,6 +82,30 @@ function testTrigger<TItem, TContext extends ConnectorTriggerContext<TItem>>(
                 assert.ok(receivedContext);
                 assert.strictEqual(warnStub.called, false);
             });
+        }
+
+        for (const deliveryMode of ['Poll', 'Webhook'] as const) {
+            for (const cardinality of ['one', 'many'] as const) {
+                it(`should forward ${deliveryMode} options with cardinality ${cardinality} without mutation`, () => {
+                    const options = Object.freeze({
+                        deliveryMode,
+                        connection: 'ConnectorNamespace',
+                        triggerConfigName: '%TriggerConfigName%',
+                        cardinality,
+                        maxBatchSize: 10,
+                        maxConcurrentCalls: 2,
+                        targetPendingEventThreshold: 20,
+                        handler: async () => undefined,
+                    });
+
+                    register(name, options);
+
+                    assert.strictEqual(appStub.firstCall.args[0], name);
+                    assert.deepStrictEqual({ ...appStub.firstCall.args[1], handler: options.handler }, options);
+                    assert.notStrictEqual(appStub.firstCall.args[1].handler, options.handler);
+                    assert.strictEqual(warnStub.called, false);
+                });
+            }
         }
 
         for (const [description, payload] of [
@@ -143,6 +177,33 @@ function testTrigger<TItem, TContext extends ConnectorTriggerContext<TItem>>(
                     assert.strictEqual(context[property], payload.body.value);
                     assert.notStrictEqual(context.payload, payload);
                     assert.deepStrictEqual(context.payload, { body: { value: [item] } });
+                    assert.strictEqual(context.toJSON(), snapshot);
+                },
+            });
+
+            await appStub.firstCall.args[1].handler(payload, invocationContext);
+
+            assert.strictEqual(handlerCalls, 1);
+            assert.strictEqual(JSON.stringify(payload), snapshot);
+            assert.strictEqual(warnStub.called, false);
+        });
+
+        it('should retain frozen polling envelopes, metadata, item identity and serialization', async () => {
+            const payload = Object.freeze([
+                Object.freeze({ body: Object.freeze({ value: Object.freeze([item]) }), metadata: { sequence: 1 } }),
+                Object.freeze({ body: item, headers: { 'x-correlation-id': 'second' } }),
+            ]);
+            const snapshot = JSON.stringify(payload);
+            let handlerCalls = 0;
+            register(name, {
+                handler: async (context) => {
+                    handlerCalls++;
+                    assert.strictEqual(context.rawPayload, payload);
+                    assert.strictEqual(context.items[0], item);
+                    assert.strictEqual(context.items[1], item);
+                    assert.strictEqual(context[property], context.items);
+                    assert.strictEqual(context.payload.body?.value, context.items);
+                    assert.deepStrictEqual(context.payload, { body: { value: [item, item] } });
                     assert.strictEqual(context.toJSON(), snapshot);
                 },
             });
@@ -263,6 +324,7 @@ function testTrigger<TItem, TContext extends ConnectorTriggerContext<TItem>>(
 }
 
 describe('typed trigger payloads', () => {
+    testTrigger<KustoRow, QueryResultTriggerContext>('kusto.onQueryResult', connectors.kusto.onQueryResult, 'rows', { count: 1 });
     testTrigger('office365.onCalendarChangedItems', connectors.office365.onCalendarChangedItems, 'calendarEvents', { subject: 'Changed' });
     testTrigger('office365.onCalendarNewItems', connectors.office365.onCalendarNewItems, 'calendarEvents', { subject: 'New' });
     testTrigger('office365.onCalendarUpdatedItems', connectors.office365.onCalendarUpdatedItems, 'calendarEvents', { subject: 'Updated' });
@@ -306,9 +368,8 @@ describe('typed trigger payloads', () => {
     testTrigger('vsts.onWorkItemUpdated', connectors.vsts.onWorkItemUpdated, 'workItems', { id: 4 });
     testTrigger('dataflows.onRefreshComplete', connectors.dataflows.onRefreshComplete, 'refreshes', { dataflowId: 'flow', status: 'Success' });
 
-    it('should exercise every registration across the eight requested connectors', () => {
+    it('should exercise every registration across all connector groups', () => {
         const registrations = Object.entries(connectors)
-            .filter(([connectorName]) => connectorName !== 'kusto')
             .flatMap(([connectorName, triggers]) => Object.keys(triggers).map((triggerName) => `${connectorName}.${triggerName}`));
         assert.deepStrictEqual([...testedRegistrations].sort(), registrations.sort());
     });

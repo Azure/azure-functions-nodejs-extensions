@@ -5,6 +5,29 @@ All notable changes to `@azure/functions-extensions-connectors` will be document
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.0-preview] - 2026-11-09
+
+### Added
+
+- Typed polling and batching options on the generic trigger and every named
+  helper: `deliveryMode`, `connection`, `triggerConfigName`, `cardinality`,
+  `maxBatchSize`, `maxConcurrentCalls`, and `targetPendingEventThreshold`.
+- Polling option passthrough and envelope-array regression tests across all
+  connector registrations, including Kusto, plus compile-time option checks.
+
+### Fixed
+
+- Normalize batched polling payloads delivered as arrays of single-item or
+  `body.value` envelopes, including JSON strings and mixed envelope formats.
+- Preserve envelope and item order, SDK fields, named aliases, raw payloads,
+  metadata, and serialization without mutating polling inputs.
+
+### Changed
+
+- Update the connector SDK dependency to `^0.4.0-preview` and the sample to
+  `@azure/functions-extensions-connectors` 0.2.0-preview and
+  `@azure/connectors` 0.4.0-preview.
+
 ## [0.1.0-preview] - 2026-10-29
 
 ### Added

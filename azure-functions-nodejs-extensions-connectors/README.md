@@ -54,7 +54,7 @@ Each named property is an alias for `context.items` — the generic accessor sti
 ### Additional Typed Trigger Registrations
 
 These registrations cover every trigger callback payload alias exported by
-`@azure/connectors` **0.3.1-preview** for the eight connectors below. Registration
+`@azure/connectors` **0.4.0-preview** for the eight connectors below. Registration
 names follow the SDK trigger operation names, with a lowercase initial letter.
 The existing helpers in the table above remain compatible.
 
@@ -135,6 +135,41 @@ connectorTrigger<MyItemType>('MyFunction', {
 });
 ```
 
+## Polling and Batching
+
+The generic `connectorTrigger()` and **all** named helpers accept the same
+polling and batching options from `@azure/functions` 4.17.0 or later:
+
+```typescript
+import { connectors } from '@azure/functions-extensions-connectors';
+
+connectors.office365.onNewEmail('OnNewEmail', {
+    deliveryMode: 'Poll',
+    connection: 'ConnectorNamespace',
+    triggerConfigName: 'email-poll',
+    cardinality: 'many',
+    maxBatchSize: 100,
+    handler: async (context, invocationContext) => {
+        for (const email of context.emails) {
+            invocationContext.log(email.subject);
+        }
+    },
+});
+```
+
+`connection` and `triggerConfigName` are required by the host for `Poll` delivery.
+Omitting `deliveryMode` retains the host's default `Webhook` behavior. Use
+`cardinality: 'many'` for batched invocations; omit it or use `'one'` for
+single-event invocations.
+
+Polling batches such as `[{ body: event1 }, { body: event2 }]` are normalized
+into one context with `items: [event1, event2]`. Each envelope may instead contain
+`body.value`, and those item arrays are combined in envelope and item order.
+Object inputs and JSON strings are both supported. The handler runs once per
+invocation, and `payload.body.value` and the connector-specific alias reference
+the same combined `items` array. The complete original parsed envelope array,
+including metadata, remains available through `rawPayload` and `toJSON()`.
+
 ## Configure App Settings
 
 Add the connector connection runtime URL to your `local.settings.json`:
@@ -150,7 +185,7 @@ Add the connector connection runtime URL to your `local.settings.json`:
 ## How It Works
 
 1. **`connectorTrigger()`** wraps `app.connectorTrigger()` from `@azure/functions` with payload normalization into a typed `ConnectorTriggerContext`.
-2. When the Connector Gateway fires the trigger callback, the wrapper parses the JSON payload and normalizes batch/single-item formats into a consistent `items` array.
+2. When the Connector Gateway fires the trigger callback, the wrapper parses the JSON payload and normalizes batch/single-item envelopes and polling envelope arrays into a consistent `items` array.
 3. Connector-specific wrappers (e.g., `onNewEmail`) add named aliases (`emails`, `files`, etc.) to the context for better readability.
 4. Malformed payloads are logged as warnings via `InvocationContext.warn()` and produce empty contexts (the handler still runs).
 
@@ -170,6 +205,13 @@ Add the connector connection runtime URL to your `local.settings.json`:
 | Option | Type | Description |
 |--------|------|-------------|
 | `handler` | `ConnectorTriggerHandler<TItem, TContext>` | Async handler receiving the trigger context and `InvocationContext` |
+| `deliveryMode` | `'Poll' \| 'Webhook'` | Optional delivery mode; the host defaults to `Webhook` |
+| `connection` | `string` | Connector connection setting; required by the host for `Poll` |
+| `triggerConfigName` | `string` | Trigger configuration name or app setting expression; required by the host for `Poll` |
+| `cardinality` | `'one' \| 'many'` | Set to `many` for batching; defaults to `one` |
+| `maxBatchSize` | `number` | Optional per-function batch size limit; otherwise uses the host default |
+| `maxConcurrentCalls` | `number` | Optional concurrency limit for single-event invocations; batches are processed one at a time by the extension |
+| `targetPendingEventThreshold` | `number` | Target pending event count per function instance for scaling |
 | `extraInputs` | `FunctionInput[]` | Optional extra input bindings |
 | `extraOutputs` | `FunctionOutput[]` | Optional extra output bindings |
 | `return` | `FunctionOutput` | Optional return output binding |
@@ -221,13 +263,15 @@ npm run build
 The type check includes compile-only tests that compare every typed
 registration payload with its SDK alias, verify the public payload exports,
 and reject invalid item properties. Runtime tests cover all registrations
-with batched, single-item, JSON-string, missing and malformed payloads, binding
+with batched, single-item, polling envelope array, JSON-string, missing and malformed payloads, binding
 passthrough, falsy return values, registration and handler errors, frozen options,
 and isolated registrations and overlapping invocations. Connector-specific
 fixtures verify nested SDK fields, dynamic properties, field casing, optional
 fields, item ordering and preservation of falsy values. Compile-only tests also
 check named alias types across the source and published declarations and reject
-handlers for the wrong connector.
+handlers for the wrong connector. Polling and webhook options are checked for
+every named registration, including Kusto, and invalid polling option types
+are rejected by compile-only tests.
 
 ## License
 

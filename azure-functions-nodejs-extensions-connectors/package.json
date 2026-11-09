@@ -1,6 +1,6 @@
 {
   "name": "@azure/functions-extensions-connectors",
-  "version": "0.1.0-preview",
+  "version": "0.2.0-preview",
   "description": "Azure Functions Connectors Extension - SDK binding for Azure Logic Apps connectors",
   "author": "Microsoft",
   "license": "MIT",
@@ -59,7 +59,7 @@
   ],
   "license": "MIT",
   "dependencies": {
-    "@azure/connectors": "^0.3.1-preview"
+    "@azure/connectors": "^0.4.0-preview"
   },
   "peerDependencies": {
     "@azure/functions": "^4.17.0"
