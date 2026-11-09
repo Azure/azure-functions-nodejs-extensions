@@ -14,6 +14,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `maxBatchSize`, `maxConcurrentCalls`, and `targetPendingEventThreshold`.
 - Polling option passthrough and envelope-array regression tests across all
   connector registrations, including Kusto, plus compile-time option checks.
+- Expanded getting-started, connector operation, polling, troubleshooting, and
+  sample documentation, with checks for documentation/API drift and typed examples.
 
 ### Fixed
 
