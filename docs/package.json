@@ -5,7 +5,7 @@
   "description": "GitHub Pages API reference tooling for every extension package",
   "type": "module",
   "engines": {
-    "node": ">=22.13.0"
+    "node": ">=24.0.0"
   },
   "scripts": {
     "install:packages": "node scripts/install-packages.mjs",

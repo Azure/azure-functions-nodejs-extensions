@@ -24,7 +24,7 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
-          node-version: '22'
+          node-version: '24'
       - name: Install documentation tools
         run: npm ci --ignore-scripts --no-audit --no-fund
         working-directory: docs
@@ -32,8 +32,8 @@ jobs:
         run: npm test
         working-directory: docs
       - name: Install package declaration dependencies
-        # Requires anonymous access to the locked SDK tarballs; see docs/README.md.
-        # In particular, connectors 0.4.0-preview returned HTTP 401 during setup.
+        # A feed collaborator must save upstream SDK versions before anonymous CI can fetch them.
+        # See docs/README.md for the one-time bootstrap; PR builds intentionally use no feed credentials.
         run: npm run install:packages
         working-directory: docs
       - name: Generate and validate all API pages
