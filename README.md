@@ -3,6 +3,8 @@
 This repository is for the active development of the Azure Functions extensions for the TypeScript worker.  
 For consumers of these extensions, we recommend visiting our [public developer docs](https://learn.microsoft.com/javascript/azure/).
 
+The [API reference](https://azure.github.io/azure-functions-nodejs-extensions/) is generated from every extension's public declarations. First publication requires GitHub Pages to be enabled; see [API site setup and maintenance](docs/README.md).
+
 ## Getting started
 
 Each binding type is published as an individual package, allowing you to use only the libraries you need.  
@@ -19,7 +21,7 @@ For full compatibility details, refer to our [Azure Functions version support po
 
 ## Need help?
 
-- For detailed documentation, visit our [Azure Functions Extensions for TypeScript documentation]()
+- For detailed documentation, see the generated [Azure Functions Extensions for TypeScript API reference](https://azure.github.io/azure-functions-nodejs-extensions/) after GitHub Pages is enabled.
 - File an issue via [GitHub Issues](https://github.com/Azure/azure-functions-nodejs-extensions/issues)
 - Check [previous questions](https://stackoverflow.com/questions/tagged/azure+typescript) or ask new ones on StackOverflow using `azure` and `typescript` tags.
 

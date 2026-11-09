@@ -1,0 +1,21 @@
+{
+  "name": "azure-functions-extensions-api-docs",
+  "private": true,
+  "version": "1.0.0",
+  "description": "GitHub Pages API reference tooling for every extension package",
+  "type": "module",
+  "engines": {
+    "node": ">=22.13.0"
+  },
+  "scripts": {
+    "install:packages": "node scripts/install-packages.mjs",
+    "build": "node scripts/build.mjs",
+    "test": "node --test scripts/*.test.mjs"
+  },
+  "devDependencies": {
+    "@types/node": "22.19.0",
+    "semver": "7.7.3",
+    "typedoc": "0.28.20",
+    "typescript": "5.9.3"
+  }
+}
