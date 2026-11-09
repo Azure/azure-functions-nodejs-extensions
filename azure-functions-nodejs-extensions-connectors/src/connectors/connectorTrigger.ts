@@ -7,65 +7,63 @@ import { ConnectorTriggerContext, ConnectorTriggerOptions } from '../../types';
 
 export type { ConnectorTriggerOptions };
 
+function getItemsFromEnvelope<TItem>(envelope: unknown): TItem[] {
+    if (typeof envelope !== 'object' || envelope === null || !('body' in envelope)) {
+        return [];
+    }
+
+    const body = envelope.body;
+    if (typeof body !== 'object' || body === null) {
+        return [];
+    }
+
+    if ('value' in body && Array.isArray(body.value)) {
+        return body.value as TItem[];
+    }
+
+    return Object.keys(body).length > 0 ? [body as TItem] : [];
+}
+
 /**
  * Normalises a raw trigger payload (string or object) into a ConnectorTriggerContext.
  *
- * The Connector Gateway can deliver two payload formats:
+ * The Connector Gateway can deliver three payload formats:
  * 1. Batch format: `{ body: { value: [...items] } }` — standard TriggerCallbackPayload envelope.
  * 2. Single-item format: `{ body: { id, subject, ... } }` — body IS the item directly.
+ * 3. Polling batch format: an array of either envelope format, flattened in delivery order.
  *
- * Both are normalised into a `TriggerCallbackPayload<TItem>` with `body.value` as `TItem[]`,
+ * All are normalised into a `TriggerCallbackPayload<TItem>` with `body.value` as `TItem[]`,
  * so the customer always receives a strongly typed `payload` and `items` array.
  */
 function buildContextFromRawPayload<TItem>(raw: unknown, invocationContext: InvocationContext): ConnectorTriggerContext<TItem> {
-    try {
-        const parsed = typeof raw === 'string'
-            ? JSON.parse(raw) as Record<string, unknown>
-            : (raw ?? {}) as Record<string, unknown>;
-
-        const body = parsed.body as Record<string, unknown> | undefined;
-
-        let items: TItem[];
-
-        if (body !== undefined && body !== null && Array.isArray(body.value)) {
-            // NOTE(swapnilnagar): Batch format — body.value is already the items array.
-            items = body.value as TItem[];
-        } else if (body !== undefined && body !== null && typeof body === 'object' && Object.keys(body).length > 0) {
-            // NOTE(swapnilnagar): Single-item format — body IS the item directly.
-            items = [body as unknown as TItem];
-        } else {
-            items = [];
+    let parsed: unknown = raw ?? {};
+    if (typeof raw === 'string') {
+        try {
+            parsed = JSON.parse(raw);
+            if (parsed === null) {
+                throw new TypeError('Expected a connector trigger payload object or array.');
+            }
+        } catch (error) {
+            invocationContext.warn(`Failed to parse connector trigger payload: '${error instanceof Error ? error.message : String(error)}'.`);
+            parsed = raw;
         }
-
-        // NOTE(swapnilnagar): Normalise into TriggerCallbackPayload<TItem> so
-        // context.payload always has the { body: { value: TItem[] } } shape.
-        const payload: TriggerCallbackPayload<TItem> = {
-            body: { value: items },
-        };
-
-        return {
-            payload,
-            items,
-            rawPayload: parsed,
-            toJSON(): string {
-                return JSON.stringify(parsed);
-            },
-        };
-    } catch (error) {
-        // NOTE(swapnilnagar): If the payload is malformed JSON or otherwise unparseable,
-        // log a warning and return an empty context so the handler still runs gracefully.
-        invocationContext.warn(`Failed to parse connector trigger payload: '${error instanceof Error ? error.message : String(error)}'.`);
-        const items: TItem[] = [];
-        const emptyPayload: TriggerCallbackPayload<TItem> = { body: { value: items } };
-        return {
-            payload: emptyPayload,
-            items,
-            rawPayload: raw,
-            toJSON(): string {
-                return JSON.stringify(raw);
-            },
-        };
     }
+
+    const items = Array.isArray(parsed)
+        ? parsed.flatMap((envelope: unknown) => getItemsFromEnvelope<TItem>(envelope))
+        : getItemsFromEnvelope<TItem>(parsed);
+    const payload: TriggerCallbackPayload<TItem> = {
+        body: { value: items },
+    };
+
+    return {
+        payload,
+        items,
+        rawPayload: parsed,
+        toJSON(): string {
+            return JSON.stringify(parsed);
+        },
+    };
 }
 
 /**

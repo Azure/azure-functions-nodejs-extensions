@@ -54,7 +54,67 @@ describe('connectorTrigger', () => {
         assert.strictEqual(registeredOptions.return, mockReturn);
     });
 
+    for (const deliveryMode of ['Poll', 'Webhook'] as const) {
+        it(`should forward ${deliveryMode} and batching options`, () => {
+            const options = {
+                deliveryMode,
+                connection: 'ConnectorNamespace',
+                triggerConfigName: 'email-poll',
+                cardinality: 'many',
+                maxBatchSize: 10,
+                maxConcurrentCalls: 2,
+                targetPendingEventThreshold: 20,
+                handler: async () => undefined,
+            } satisfies azureFunctions.ConnectorTriggerFunctionOptions;
+
+            connectorTrigger('testFunction', options);
+
+            assert.deepStrictEqual({ ...appStub.firstCall.args[1], handler: options.handler }, options);
+        });
+    }
+
     describe('handler wrapper (payload normalization)', () => {
+        const firstItem = { id: '1', subject: 'First Email' };
+        const secondItem = { id: '2', subject: 'Second Email' };
+        const pollingEnvelopes = [
+            { body: firstItem, metadata: { sequence: 1 } },
+            { body: secondItem, metadata: { sequence: 2 } },
+        ];
+        const mixedEnvelopes = [
+            { body: { value: [firstItem] } },
+            { body: { value: [] } },
+            { body: secondItem },
+        ];
+
+        for (const [format, payload] of [
+            ['polling envelopes', pollingEnvelopes],
+            ['JSON polling envelopes', JSON.stringify(pollingEnvelopes)],
+            ['mixed polling envelopes', mixedEnvelopes],
+            ['JSON mixed polling envelopes', JSON.stringify(mixedEnvelopes)],
+        ] as const) {
+            it(`should normalize ${format} in order without losing the raw payload`, async () => {
+                const parsed = typeof payload === 'string' ? JSON.parse(payload) : payload;
+                const snapshot = JSON.stringify(parsed);
+                let handlerCalls = 0;
+                connectorTrigger<typeof firstItem>('testFunction', {
+                    handler: async (context) => {
+                        handlerCalls++;
+                        assert.deepStrictEqual(context.items, [firstItem, secondItem]);
+                        assert.strictEqual(context.payload.body?.value, context.items);
+                        assert.deepStrictEqual(context.rawPayload, parsed);
+                        assert.strictEqual(context.toJSON(), snapshot);
+                        return context.items.length;
+                    },
+                });
+
+                const result = await appStub.firstCall.args[1].handler(payload, new azureFunctions.InvocationContext());
+
+                assert.strictEqual(result, 2);
+                assert.strictEqual(handlerCalls, 1);
+                assert.strictEqual(JSON.stringify(parsed), snapshot);
+            });
+        }
+
         it('should normalize batch payload with body.value array', async () => {
             let capturedContext: unknown;
             connectorTrigger('testFunction', {
