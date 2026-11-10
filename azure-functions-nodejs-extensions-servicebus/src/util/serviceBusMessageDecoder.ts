@@ -7,17 +7,19 @@ import { LockTokenUtil } from './lockTokenUtil';
 export class ServiceBusMessageDecoder {
     /**
      * Decodes a Service Bus message from a buffer.
-     * @param content Buffer that contains the Service Bus message with lock token
+     * @param content Buffer containing the host's 16-byte .NET GUID lock token followed by an AMQP message
      * @returns An object containing the decoded message and the lock token
      */
     static decode(content: Buffer): { decodedMessage: rhea.Message; lockToken: string } {
         if (!content || content.length === 0) throw new Error('Content buffer is empty');
 
-        const index = content.indexOf(LockTokenUtil.X_OPT_LOCK_TOKEN);
-        if (index === -1) throw new Error('Lock token not found in content');
+        const lockTokenLength = 16;
+        if (content.length <= lockTokenLength) {
+            throw new Error('Content must contain a 16-byte lock token followed by an AMQP message');
+        }
 
-        const lockToken = LockTokenUtil.extractFromMessage(content, index);
-        const amqpSlice = content.subarray(16);
+        const lockToken = LockTokenUtil.extractFromMessage(content, lockTokenLength);
+        const amqpSlice = content.subarray(lockTokenLength);
 
         // Suppress rhea warnings about message structure by temporarily overriding console.warn
         // This prevents warnings like "WARNING: expected described message section got {...}"

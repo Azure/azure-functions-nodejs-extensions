@@ -11,16 +11,161 @@ import { ServiceBusMessageDecoder } from '../../src/util/serviceBusMessageDecode
 // Configure chai with sinon-chai
 chai.use(sinonChai);
 
+describe('ServiceBusMessageDecoder host binding payloads', () => {
+    const lockTokenBytes = Buffer.from('33221100554477668899aabbccddeeff', 'hex');
+    const expectedLockToken = '00112233-4455-6677-8899-aabbccddeeff';
+    const createContent = (message: Partial<rhea.Message> = {}, prefix = lockTokenBytes): Buffer =>
+        Buffer.concat([
+            prefix,
+            rhea.message.encode({ body: 'test message body', message_id: 'message-180', ...message }),
+        ]);
+
+    const annotationCases: { name: string; message: Partial<rhea.Message> }[] = [
+        { name: 'no annotations', message: {} },
+        {
+            name: 'unrelated message annotations',
+            message: { message_annotations: { 'custom-annotation': 'value' } },
+        },
+        {
+            name: 'a zero-valued lock-token annotation',
+            message: { message_annotations: { 'x-opt-lock-token': Buffer.alloc(16) } },
+        },
+        {
+            name: 'a conflicting lock-token annotation',
+            message: { message_annotations: { 'x-opt-lock-token': Buffer.alloc(16, 0xff) } },
+        },
+        {
+            name: 'a delivery lock-token annotation',
+            message: { delivery_annotations: { 'x-opt-lock-token': Buffer.alloc(16) } },
+        },
+    ];
+
+    annotationCases.forEach(({ name, message }) => {
+        it(`should decode messages with ${name} using the host-provided GUID`, () => {
+            const result = ServiceBusMessageDecoder.decode(createContent(message));
+
+            expect(result.lockToken).to.equal(expectedLockToken);
+            expect(result.decodedMessage.message_id).to.equal('message-180');
+            expect(result.decodedMessage.body).to.equal('test message body');
+            expect(result.decodedMessage.message_annotations).to.deep.equal(message.message_annotations);
+            expect(result.decodedMessage.delivery_annotations).to.deep.equal(message.delivery_annotations);
+        });
+    });
+
+    const tokenCases = [
+        {
+            name: 'leading zeros',
+            bytes: Buffer.from('00000001000200030405060708090a0b', 'hex'),
+            expected: '01000000-0200-0300-0405-060708090a0b',
+        },
+        {
+            name: 'all zero bytes',
+            bytes: Buffer.alloc(16),
+            expected: '00000000-0000-0000-0000-000000000000',
+        },
+        {
+            name: 'all maximum-value bytes',
+            bytes: Buffer.alloc(16, 0xff),
+            expected: 'ffffffff-ffff-ffff-ffff-ffffffffffff',
+        },
+    ];
+
+    tokenCases.forEach(({ name, bytes, expected }) => {
+        it(`should preserve .NET GUID byte ordering for ${name}`, () => {
+            expect(ServiceBusMessageDecoder.decode(createContent({}, bytes)).lockToken).to.equal(expected);
+        });
+    });
+
+    it('should preserve message properties without a lock-token annotation', () => {
+        const content = createContent({
+            correlation_id: 'correlation-180',
+            content_type: 'application/json',
+            subject: 'test subject',
+            application_properties: { customProperty: 'value', retryCount: 2 },
+        });
+
+        const { decodedMessage } = ServiceBusMessageDecoder.decode(content);
+
+        expect(decodedMessage.correlation_id).to.equal('correlation-180');
+        expect(decodedMessage.content_type).to.equal('application/json');
+        expect(decodedMessage.subject).to.equal('test subject');
+        expect(decodedMessage.application_properties).to.deep.equal({ customProperty: 'value', retryCount: 2 });
+    });
+
+    it('should not treat the annotation name in the body as a lock token', () => {
+        const result = ServiceBusMessageDecoder.decode(createContent({ body: 'x-opt-lock-token' }));
+
+        expect(result.lockToken).to.equal(expectedLockToken);
+        expect(result.decodedMessage.body).to.equal('x-opt-lock-token');
+    });
+
+    it('should leave the entire input unchanged across repeated decodes', () => {
+        const content = createContent();
+        const original = Buffer.from(content);
+
+        for (let i = 0; i < 2; i++) {
+            const result = ServiceBusMessageDecoder.decode(content);
+
+            expect(result.lockToken).to.equal(expectedLockToken);
+            expect(result.decodedMessage.body).to.equal('test message body');
+            expect(content).to.deep.equal(original);
+        }
+    });
+
+    it('should decode a buffer view with a nonzero byte offset', () => {
+        const content = createContent();
+        const paddedContent = Buffer.concat([Buffer.alloc(3, 0xff), content, Buffer.alloc(3, 0xff)]);
+        const original = Buffer.from(paddedContent);
+        const view = paddedContent.subarray(3, 3 + content.length);
+
+        const result = ServiceBusMessageDecoder.decode(view);
+
+        expect(result.lockToken).to.equal(expectedLockToken);
+        expect(result.decodedMessage.body).to.equal('test message body');
+        expect(paddedContent).to.deep.equal(original);
+    });
+
+    for (let length = 1; length <= 16; length++) {
+        it(`should reject ${length} bytes without a complete prefix and AMQP message`, () => {
+            expect(() => ServiceBusMessageDecoder.decode(Buffer.alloc(length))).to.throw(
+                'Content must contain a 16-byte lock token followed by an AMQP message'
+            );
+        });
+    }
+
+    it('should propagate invalid AMQP errors and restore console.warn', () => {
+        const originalWarn = console.warn;
+        const content = Buffer.concat([lockTokenBytes, Buffer.from([0xff, 0xff, 0xff])]);
+
+        expect(() => ServiceBusMessageDecoder.decode(content)).to.throw();
+        expect(console.warn).to.equal(originalWarn);
+    });
+
+    it('should reject a truncated AMQP message after a complete prefix', () => {
+        const amqp = rhea.message.encode({ body: 'truncated message body' });
+        const content = Buffer.concat([lockTokenBytes, amqp.subarray(0, amqp.length - 1)]);
+
+        expect(() => ServiceBusMessageDecoder.decode(content)).to.throw();
+    });
+
+    it('should restore console.warn after successfully decoding an annotation-free message', () => {
+        const originalWarn = console.warn;
+
+        ServiceBusMessageDecoder.decode(createContent());
+
+        expect(console.warn).to.equal(originalWarn);
+    });
+});
+
 describe('ServiceBusMessageDecoder', () => {
     let lockTokenUtilStub: sinon.SinonStub;
     let rheaMessageDecodeStub: sinon.SinonStub;
 
     // Mock constants and test data
-    const MOCK_X_OPT_LOCK_TOKEN = Buffer.from('x-opt-lock-token');
     const MOCK_LOCK_TOKEN = '12345678-1234-1234-1234-123456789abc';
 
     // Helper function to create test buffers
-    const createTestBuffer = (includeToken = true, amqpData?: Buffer): Buffer => {
+    const createTestBuffer = (amqpData?: Buffer): Buffer => {
         const amqpBuffer =
             amqpData ||
             Buffer.from([
@@ -37,19 +182,7 @@ describe('ServiceBusMessageDecoder', () => {
                 0x08,
             ]);
 
-        // The source code uses content.subarray(16) which discards the first 16 bytes
-        // So we need exactly 16 bytes before the AMQP data
-        const prefixData = Buffer.alloc(16); // Exactly 16 bytes
-
-        // Place the lock token within the first 16 bytes if needed
-        if (includeToken && MOCK_X_OPT_LOCK_TOKEN.length <= 16) {
-            MOCK_X_OPT_LOCK_TOKEN.copy(prefixData, 0);
-        }
-
-        return Buffer.concat([
-            prefixData, // Exactly 16 bytes that will be discarded
-            amqpBuffer, // AMQP data starts at byte 16
-        ]);
+        return Buffer.concat([Buffer.alloc(16), amqpBuffer]);
     };
 
     // Helper function to create mock Rhea message
@@ -96,9 +229,6 @@ describe('ServiceBusMessageDecoder', () => {
         // Mock LockTokenUtil methods
         lockTokenUtilStub = sinon.stub(LockTokenUtil, 'extractFromMessage').returns(MOCK_LOCK_TOKEN);
 
-        // Set up the X_OPT_LOCK_TOKEN constant mock
-        sinon.stub(LockTokenUtil, 'X_OPT_LOCK_TOKEN').value(MOCK_X_OPT_LOCK_TOKEN);
-
         // Mock rhea.message.decode
         // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
         rheaMessageDecodeStub = sinon.stub(rhea.message, 'decode').returns(createMockRheaMessage());
@@ -127,22 +257,21 @@ describe('ServiceBusMessageDecoder', () => {
                 expect(result).to.have.property('lockToken', MOCK_LOCK_TOKEN);
             });
 
-            it('should find lock token in buffer correctly', () => {
+            it('should extract the lock token from the fixed-size prefix', () => {
                 // Arrange
                 const testBuffer = createTestBuffer();
-                const expectedIndex = testBuffer.indexOf(MOCK_X_OPT_LOCK_TOKEN);
 
                 // Act
                 ServiceBusMessageDecoder.decode(testBuffer);
 
                 // Assert
-                expect(lockTokenUtilStub).to.have.been.calledOnceWith(testBuffer, expectedIndex);
+                expect(lockTokenUtilStub).to.have.been.calledOnceWithExactly(testBuffer, 16);
             });
 
             it('should extract AMQP slice after lock token', () => {
                 // Arrange
                 const amqpData = Buffer.from([0x10, 0x20, 0x30, 0x40]);
-                const testBuffer = createTestBuffer(true, amqpData);
+                const testBuffer = createTestBuffer(amqpData);
 
                 // Act
                 ServiceBusMessageDecoder.decode(testBuffer);
@@ -242,13 +371,13 @@ describe('ServiceBusMessageDecoder', () => {
                 expect(rheaMessageDecodeStub).to.not.have.been.called;
             });
 
-            it('should throw error when lock token is not found', () => {
+            it('should reject an incomplete prefix before extracting or decoding', () => {
                 // Arrange
-                const bufferWithoutToken = createTestBuffer(false);
+                const incompleteContent = Buffer.alloc(15);
 
                 // Act & Assert
-                expect(() => ServiceBusMessageDecoder.decode(bufferWithoutToken)).to.throw(
-                    'Lock token not found in content'
+                expect(() => ServiceBusMessageDecoder.decode(incompleteContent)).to.throw(
+                    'Content must contain a 16-byte lock token followed by an AMQP message'
                 );
 
                 expect(lockTokenUtilStub).to.not.have.been.called;
@@ -280,7 +409,7 @@ describe('ServiceBusMessageDecoder', () => {
             it('should handle corrupted AMQP data gracefully', () => {
                 // Arrange
                 const corruptedAmqpData = Buffer.from([0xff, 0xff, 0xff, 0xff]); // Invalid AMQP data
-                const testBuffer = createTestBuffer(true, corruptedAmqpData);
+                const testBuffer = createTestBuffer(corruptedAmqpData);
                 rheaMessageDecodeStub.throws(new Error('Invalid AMQP format'));
 
                 // Act & Assert
@@ -292,7 +421,7 @@ describe('ServiceBusMessageDecoder', () => {
             it('should handle large message buffers efficiently', () => {
                 // Arrange
                 const largeAmqpData = Buffer.alloc(1024 * 1024, 0xab); // 1MB buffer
-                const testBuffer = createTestBuffer(true, largeAmqpData);
+                const testBuffer = createTestBuffer(largeAmqpData);
                 const startTime = process.hrtime.bigint();
 
                 // Act
@@ -326,23 +455,22 @@ describe('ServiceBusMessageDecoder', () => {
                 expect(passedBuffer).to.not.equal(originalBuffer); // Should be different buffer reference
             });
 
-            it('should handle multiple lock tokens in buffer correctly', () => {
+            it('should ignore annotation names in AMQP data when extracting the lock token', () => {
                 // Arrange
-                const multiTokenBuffer = Buffer.concat([
-                    Buffer.from('prefix'),
-                    MOCK_X_OPT_LOCK_TOKEN,
+                const amqpData = Buffer.concat([
+                    Buffer.from('x-opt-lock-token'),
                     Buffer.from('middle'),
-                    MOCK_X_OPT_LOCK_TOKEN, // Second occurrence
-                    Buffer.from([0x01, 0x02, 0x03]), // AMQP data
+                    Buffer.from('x-opt-lock-token'),
+                    Buffer.from([0x01, 0x02, 0x03]),
                 ]);
+                const multiTokenBuffer = createTestBuffer(amqpData);
 
                 // Act
                 ServiceBusMessageDecoder.decode(multiTokenBuffer);
 
                 // Assert
-                // Should find the first occurrence
-                const expectedIndex = multiTokenBuffer.indexOf(MOCK_X_OPT_LOCK_TOKEN);
-                expect(lockTokenUtilStub).to.have.been.calledWith(multiTokenBuffer, expectedIndex);
+                expect(lockTokenUtilStub).to.have.been.calledOnceWithExactly(multiTokenBuffer, 16);
+                expect(rheaMessageDecodeStub).to.have.been.calledOnceWithExactly(amqpData);
             });
 
             it('should handle concurrent decode operations', async () => {
@@ -371,7 +499,7 @@ describe('ServiceBusMessageDecoder', () => {
         });
 
         describe('LockTokenUtil Integration', () => {
-            it('should use correct X_OPT_LOCK_TOKEN constant', () => {
+            it('should extract the prefix without a lock-token annotation', () => {
                 // Arrange
                 const testBuffer = createTestBuffer();
 
@@ -379,21 +507,19 @@ describe('ServiceBusMessageDecoder', () => {
                 ServiceBusMessageDecoder.decode(testBuffer);
 
                 // Assert
-                const expectedIndex = testBuffer.indexOf(LockTokenUtil.X_OPT_LOCK_TOKEN);
-                expect(expectedIndex).to.be.greaterThan(-1);
-                expect(lockTokenUtilStub).to.have.been.calledWith(testBuffer, expectedIndex);
+                expect(testBuffer.includes(LockTokenUtil.X_OPT_LOCK_TOKEN)).to.be.false;
+                expect(lockTokenUtilStub).to.have.been.calledOnceWithExactly(testBuffer, 16);
             });
 
             it('should pass correct parameters to LockTokenUtil.extractFromMessage', () => {
                 // Arrange
                 const testBuffer = createTestBuffer();
-                const expectedIndex = testBuffer.indexOf(MOCK_X_OPT_LOCK_TOKEN);
 
                 // Act
                 ServiceBusMessageDecoder.decode(testBuffer);
 
                 // Assert
-                expect(lockTokenUtilStub).to.have.been.calledOnceWith(testBuffer, expectedIndex);
+                expect(lockTokenUtilStub).to.have.been.calledOnceWithExactly(testBuffer, 16);
             });
 
             it('should handle different lock token formats', () => {
@@ -422,7 +548,7 @@ describe('ServiceBusMessageDecoder', () => {
             it('should pass correct buffer to rhea.message.decode', () => {
                 // Arrange
                 const specificAmqpData = Buffer.from([0xaa, 0xbb, 0xcc, 0xdd]);
-                const testBuffer = createTestBuffer(true, specificAmqpData);
+                const testBuffer = createTestBuffer(specificAmqpData);
 
                 // Act
                 ServiceBusMessageDecoder.decode(testBuffer);
@@ -491,13 +617,10 @@ describe('ServiceBusMessageDecoder', () => {
         });
 
         describe('Edge Cases and Boundary Conditions', () => {
-            it('should handle lock token at the very end of buffer', () => {
+            it('should pass AMQP data immediately after the fixed-size prefix', () => {
                 // Arrange
                 const amqpData = Buffer.from([0x01, 0x02]);
-                // Create exactly 16 bytes of prefix data with lock token
-                const prefixData = Buffer.alloc(16);
-                MOCK_X_OPT_LOCK_TOKEN.copy(prefixData, 0);
-                const testBuffer = Buffer.concat([prefixData, amqpData]);
+                const testBuffer = createTestBuffer(amqpData);
 
                 // Act
                 const result = ServiceBusMessageDecoder.decode(testBuffer);
@@ -510,10 +633,10 @@ describe('ServiceBusMessageDecoder', () => {
                 );
             });
 
-            it('should handle minimal valid buffer', () => {
+            it('should delegate nonempty AMQP validation to rhea', () => {
                 // Arrange
-                const minimalAmqpData = Buffer.from([0x00]); // Minimal AMQP data
-                const testBuffer = Buffer.concat([MOCK_X_OPT_LOCK_TOKEN, minimalAmqpData]);
+                const minimalAmqpData = Buffer.from([0x00]);
+                const testBuffer = createTestBuffer(minimalAmqpData);
 
                 // Act
                 const result = ServiceBusMessageDecoder.decode(testBuffer);
@@ -521,30 +644,25 @@ describe('ServiceBusMessageDecoder', () => {
                 // Assert
                 expect(result).to.have.property('decodedMessage');
                 expect(result).to.have.property('lockToken', MOCK_LOCK_TOKEN);
+                expect(rheaMessageDecodeStub).to.have.been.calledOnceWithExactly(minimalAmqpData);
             });
 
-            it('should handle buffer with only lock token and no AMQP data', () => {
+            it('should reject a buffer containing only the lock token without decoding', () => {
                 // Arrange
-                // Create exactly 16 bytes of prefix data with lock token
-                const prefixData = Buffer.alloc(16);
-                MOCK_X_OPT_LOCK_TOKEN.copy(prefixData, 0);
-                const testBuffer = prefixData; // Only prefix, no AMQP data after
+                const testBuffer = Buffer.alloc(16);
 
-                // Act
-                const result = ServiceBusMessageDecoder.decode(testBuffer);
-
-                // Assert
-                expect(rheaMessageDecodeStub).to.have.been.calledWith(
-                    sinon.match((value: Buffer) => value.length === 0)
+                // Act & Assert
+                expect(() => ServiceBusMessageDecoder.decode(testBuffer)).to.throw(
+                    'Content must contain a 16-byte lock token followed by an AMQP message'
                 );
-                expect(result).to.have.property('lockToken', MOCK_LOCK_TOKEN);
+                expect(lockTokenUtilStub).to.not.have.been.called;
+                expect(rheaMessageDecodeStub).to.not.have.been.called;
             });
 
             it('should handle very large buffers without memory issues', () => {
                 // Arrange
-                const largePrefix = Buffer.alloc(10 * 1024 * 1024, 0xaa); // 10MB prefix
-                const amqpData = Buffer.from([0x01, 0x02, 0x03]);
-                const testBuffer = Buffer.concat([largePrefix, MOCK_X_OPT_LOCK_TOKEN, amqpData]);
+                const largeAmqpData = Buffer.alloc(10 * 1024 * 1024, 0xaa);
+                const testBuffer = createTestBuffer(largeAmqpData);
 
                 const initialMemory = process.memoryUsage().heapUsed;
 

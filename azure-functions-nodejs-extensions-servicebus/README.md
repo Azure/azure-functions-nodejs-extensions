@@ -97,6 +97,10 @@ app.serviceBusQueue("serviceBusTrigger", {
   func azure functionapp publish <YourFunctionAppName>
   ```
 
+### SDK Binding Message Decoding
+
+With `sdkBinding: true`, the extension reads the message lock token from the 16-byte GUID prefix supplied by the Functions host. The AMQP message does not need an `x-opt-lock-token` annotation. This applies to both single-message and batch triggers; manual settlement continues to use `serviceBusMessageContext.actions`.
+
 ### Contributing
 
 Contributions are welcome! Please follow the [contribution guidelines](CONTRIBUTING.md) when submitting issues or pull requests.

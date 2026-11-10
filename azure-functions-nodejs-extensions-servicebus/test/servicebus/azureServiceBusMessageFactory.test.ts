@@ -5,7 +5,7 @@ import { AmqpAnnotatedMessage } from '@azure/core-amqp';
 import { ModelBindingData } from '@azure/functions-extensions-base';
 import chai, { expect } from 'chai';
 import LongActual from 'long';
-import * as rhea from 'rhea';
+import rhea from 'rhea';
 import sinon from 'sinon';
 import sinonChai from 'sinon-chai';
 import { AzureServiceBusMessageFactory } from '../../src/servicebus/azureServiceBusMessageFactory';
@@ -15,6 +15,103 @@ import { ServiceBusMessageContext } from '../../types';
 
 // Configure chai with sinon-chai
 chai.use(sinonChai);
+
+describe('AzureServiceBusMessageFactory host binding payloads', () => {
+    const firstLockTokenBytes = Buffer.from('33221100554477668899aabbccddeeff', 'hex');
+    const firstLockToken = '00112233-4455-6677-8899-aabbccddeeff';
+    const secondLockTokenBytes = Buffer.from('bdb08aee3ea80645ba3019ccb40b5073', 'hex');
+    const secondLockToken = 'ee8ab0bd-a83e-4506-ba30-19ccb40b5073';
+    let actions: sinon.SinonStubbedInstance<ServiceBusMessageActions>;
+
+    const createBindingData = (message: rhea.Message, prefix = firstLockTokenBytes): ModelBindingData => ({
+        version: '1.0',
+        source: 'AzureServiceBusReceivedMessage',
+        contentType: 'application/octet-stream',
+        content: Buffer.concat([prefix, rhea.message.encode(message)]),
+    });
+
+    beforeEach(() => {
+        actions = sinon.createStubInstance(ServiceBusMessageActions);
+        sinon.stub(ServiceBusMessageActions, 'getInstance').returns(actions);
+    });
+
+    afterEach(() => {
+        sinon.restore();
+    });
+
+    it('should convert a single annotation-free message with its host-provided lock token', () => {
+        const body = Buffer.from('{"id":180}');
+        const bodySection: unknown = rhea.message.data_section(body);
+        const data = createBindingData({
+            message_id: 'single-180',
+            content_type: 'application/json',
+            body: bodySection,
+            application_properties: { customProperty: 'value' },
+        });
+
+        const result = AzureServiceBusMessageFactory.buildServiceBusMessageFromModelBindingData(data);
+
+        expect(result.actions).to.equal(actions);
+        expect(result.messages).to.have.lengthOf(1);
+        expect(result.messages[0]).to.include({
+            messageId: 'single-180',
+            contentType: 'application/json',
+            lockToken: firstLockToken,
+        });
+        expect(result.messages[0]?.body).to.deep.equal(body);
+        expect(result.messages[0]?.applicationProperties).to.deep.equal({ customProperty: 'value' });
+    });
+
+    it('should convert mixed batches using each message prefix rather than its annotations', () => {
+        const inputs = [
+            createBindingData({ message_id: 'without-annotation', body: 'first message' }),
+            createBindingData(
+                {
+                    message_id: 'with-annotation',
+                    body: 'second message',
+                    message_annotations: { 'x-opt-lock-token': Buffer.alloc(16) },
+                },
+                secondLockTokenBytes
+            ),
+        ];
+
+        const result = AzureServiceBusMessageFactory.buildServiceBusMessageFromModelBindingData(inputs);
+
+        expect(result.actions).to.equal(actions);
+        expect(result.messages).to.have.lengthOf(2);
+        expect(result.messages[0]).to.include({
+            messageId: 'without-annotation',
+            body: 'first message',
+            lockToken: firstLockToken,
+        });
+        expect(result.messages[1]).to.include({
+            messageId: 'with-annotation',
+            body: 'second message',
+            lockToken: secondLockToken,
+        });
+    });
+
+    it('should reject incomplete host binding content before returning a message context', () => {
+        const data: ModelBindingData = { content: Buffer.from(firstLockTokenBytes) };
+
+        expect(() => AzureServiceBusMessageFactory.buildServiceBusMessageFromModelBindingData(data)).to.throw(
+            'Content must contain a 16-byte lock token followed by an AMQP message'
+        );
+    });
+
+    it('should propagate decoding failures in mixed batches', () => {
+        const decodeSpy = sinon.spy(ServiceBusMessageDecoder, 'decode');
+        const inputs = [
+            createBindingData({ body: 'valid first message' }),
+            { content: Buffer.concat([secondLockTokenBytes, Buffer.from([0xff, 0xff, 0xff])]) },
+        ];
+
+        expect(() => AzureServiceBusMessageFactory.buildServiceBusMessageFromModelBindingData(inputs)).to.throw();
+        expect(decodeSpy).to.have.been.calledTwice;
+        expect(decodeSpy.firstCall.exception).to.be.undefined;
+        expect(decodeSpy.secondCall.exception).to.be.instanceOf(Error);
+    });
+});
 
 describe('AzureServiceBusMessageFactory', () => {
     let serviceBusMessageActionsStub: sinon.SinonStubbedInstance<ServiceBusMessageActions>;
