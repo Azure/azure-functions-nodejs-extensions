@@ -42,11 +42,12 @@
     "format": "prettier . --write",
     "lint": "eslint src test --ext .ts",
     "test": "mocha",
+    "test:ci": "mocha --reporter mocha-junit-reporter --reporter-options mochaFile=test/unit-test-results.xml",
     "typecheck": "tsc --noEmit && tsc --project tsconfig.test.json --noEmit",
     "watch": "webpack --mode development --watch"
   },
   "engines": {
-    "node": ">=24.0.0"
+    "node": ">=22.0.0"
   },
   "keywords": [
     "azure",
@@ -75,6 +76,7 @@
     "eslint-webpack-plugin": "^4.0.0",
     "fork-ts-checker-webpack-plugin": "^8.0.0",
     "mocha": "^10.0.0",
+    "mocha-junit-reporter": "^2.0.2",
     "sinon": "^15.0.0",
     "ts-loader": "^9.0.0",
     "tsx": "^4.21.0",
