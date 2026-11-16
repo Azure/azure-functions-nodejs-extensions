@@ -63,8 +63,8 @@ The existing helpers in the table above remain compatible.
 | `office365` | `onCalendarNewItems`, `onCalendarUpdatedItems`, `onUpcomingEvents` | `CalendarEventTriggerContext` | `calendarEvents: GraphCalendarEventClientReceive[]` |
 | `office365` | `onCalendarChangedItems` | `CalendarChangedEventTriggerContext` | `calendarEvents: GraphCalendarEventClientWithActionType[]` |
 | `office365` | `onFlaggedEmail`, `onNewEmailMentioningMe`, `onSharedMailboxNewEmail` | `EmailTriggerContext` | `emails: GraphClientReceiveMessage[]` |
-| `sharepoint` | `onChangedItems`, `onNewItems`, `onNewItemsFromForm`, `onRecurrenceDigest`, `onUpdatedItems` | `SharepointItemTriggerContext` | `records: SharepointItem[]` |
-| `sharepoint` | `onNewFileItems`, `onUpdatedFileItems`, `onUpdatedFileClassifiedTimes` | `SharepointItemTriggerContext` | `records: SharepointItem[]` |
+| `sharepoint` | `onChangedItems`, `onNewItems`, `onNewItemsFromForm`, `onRecurrenceDigest`, `onUpdatedItems` | `SharePointOnlineItemTriggerContext` | `records: SharePointOnlineItem[]` |
+| `sharepoint` | `onNewFileItems`, `onUpdatedFileItems`, `onUpdatedFileClassifiedTimes` | `SharePointOnlineItemTriggerContext` | `records: SharePointOnlineItem[]` |
 | `sharepoint` | `onDeletedFileItems`, `onDeletedItems` | `DeletedItemTriggerContext` | `deletedItems: DeletedItem[]` |
 | `onedriveforbusiness` | `onNewFiles`, `onUpdatedFiles` | `OneDriveFileTriggerContext` | `files: OneDriveBlobMetadata[]` |
 | `teams` | `onNewChannelMessageMentioningMe` | `ChannelMessageTriggerContext` | `messages: ChatMessage[]` |
@@ -221,7 +221,7 @@ Add the connector connection runtime URL to your `local.settings.json`:
 All connector SDK item types are re-exported for convenience:
 
 - `GraphClientReceiveMessage`, `GraphCalendarEventClientReceive` (Office 365)
-- `BlobMetadata` (SharePoint)
+- `SharePointOnlineBlobMetadata`, `SharePointOnlineItem`, `SharePointOnlineDeletedItem` (SharePoint Online)
 - `ChatMessage` (Teams)
 - `KustoRow` (Kusto)
 - `TriggerCallbackPayload`, `TriggerCallbackBody`
@@ -235,11 +235,13 @@ under their original SDK names (for example,
 `VisualStudioTeamServicesOnWorkItemCreatedTriggerPayload`).
 
 Additional item type exports are `GraphCalendarEventClientWithActionType`,
-`DeletedItem`, `SharepointItem`, `OneDriveBlobMetadata`, `PlannerTask`,
+`DeletedItem`, `OneDriveBlobMetadata`, `PlannerTask`,
 `SalesforceItem`, `BuildResult`, `GitPullRequest`, `GitPush`, `TfvcChangeset`,
 `TriggerWorkItemResponse` and `RefreshModel`. Aliases avoid collisions between
-the different SDK `Item` and `BlobMetadata` definitions. All new context and
-connector registration interfaces in the table above are also exported.
+the different SDK `Item` and `BlobMetadata` definitions. The previous
+`BlobMetadata`, `SharepointItem`, `SharepointItemTriggerContext`, and
+`SharepointTriggers` names remain exported for compatibility. All new context
+and connector registration interfaces in the table above are also exported.
 
 ### Context Types
 

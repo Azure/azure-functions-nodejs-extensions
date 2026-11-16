@@ -2,11 +2,11 @@
 // Licensed under the MIT License.
 
 import { BlobMetadata, DeletedItem, Item } from '@azure/connectors/generated/SharePointOnlineExtensions';
-import { ConnectorTriggerOptions, DeletedItemTriggerContext, FileTriggerContext, SharepointItemTriggerContext } from '../../types';
+import { ConnectorTriggerOptions, DeletedItemTriggerContext, FileTriggerContext, SharePointOnlineItemTriggerContext } from '../../types';
 import { connectorTrigger } from './connectorTrigger';
 import { createConnectorTrigger } from './createConnectorTrigger';
 
-const registerItemTrigger = createConnectorTrigger<Item, SharepointItemTriggerContext>(
+const registerItemTrigger = createConnectorTrigger<Item, SharePointOnlineItemTriggerContext>(
     (context) => ({ ...context, records: context.items }),
 );
 const registerDeletedItemTrigger = createConnectorTrigger<DeletedItem, DeletedItemTriggerContext>(
