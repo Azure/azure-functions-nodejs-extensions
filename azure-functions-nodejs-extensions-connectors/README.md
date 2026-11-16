@@ -54,7 +54,7 @@ Each named property is an alias for `context.items` — the generic accessor sti
 ### Additional Typed Trigger Registrations
 
 These registrations cover every trigger callback payload alias exported by
-`@azure/connectors` **0.4.0-preview** for the eight connectors below. Registration
+`@azure/connectors` **1.0.0** for the eight connectors below. Registration
 names follow the SDK trigger operation names, with a lowercase initial letter.
 The existing helpers in the table above remain compatible.
 
@@ -229,10 +229,10 @@ All connector SDK item types are re-exported for convenience:
 All 38 SDK `*TriggerPayload` aliases for Office 365, SharePoint Online,
 OneDrive for Business, Teams, Planner, Salesforce and VSTS are re-exported
 under their original SDK names (for example,
-`Office365OnNewEmailTriggerPayload`, `SharepointonlineOnNewFileItemsTriggerPayload`,
-`OnedriveforbusinessOnNewFilesTriggerPayload`, `TeamsOnTeamMemberAddedTriggerPayload`,
+`Office365OnNewEmailTriggerPayload`, `SharePointOnlineOnNewFileItemsTriggerPayload`,
+`OneDriveForBusinessOnNewFilesTriggerPayload`, `TeamsOnTeamMemberAddedTriggerPayload`,
 `PlannerOnNewTaskTriggerPayload`, `SalesforceOnNewItemsTriggerPayload`, and
-`VisualstudioteamservicesOnWorkItemCreatedTriggerPayload`).
+`VisualStudioTeamServicesOnWorkItemCreatedTriggerPayload`).
 
 Additional item type exports are `GraphCalendarEventClientWithActionType`,
 `DeletedItem`, `SharepointItem`, `OneDriveBlobMetadata`, `PlannerTask`,

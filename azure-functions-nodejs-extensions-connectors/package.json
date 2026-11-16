@@ -59,7 +59,7 @@
   ],
   "license": "MIT",
   "dependencies": {
-    "@azure/connectors": "^0.4.0-preview"
+    "@azure/connectors": "^1.0.0"
   },
   "peerDependencies": {
     "@azure/functions": "^4.17.0"

@@ -1,7 +1,7 @@
 // Copyright (c) .NET Foundation. All rights reserved.
 // Licensed under the MIT License.
 
-import { BlobMetadata, DeletedItem, Item } from '@azure/connectors/generated/SharepointonlineExtensions';
+import { BlobMetadata, DeletedItem, Item } from '@azure/connectors/generated/SharePointOnlineExtensions';
 import { ConnectorTriggerOptions, DeletedItemTriggerContext, FileTriggerContext, SharepointItemTriggerContext } from '../../types';
 import { connectorTrigger } from './connectorTrigger';
 import { createConnectorTrigger } from './createConnectorTrigger';

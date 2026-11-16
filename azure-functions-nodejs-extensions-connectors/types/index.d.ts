@@ -5,12 +5,12 @@ import { TriggerCallbackPayload } from '@azure/connectors';
 import { RefreshModel } from '@azure/connectors/generated/DataflowsExtensions';
 import { Row } from '@azure/connectors/generated/KustoExtensions';
 import { GraphCalendarEventClientReceive, GraphCalendarEventClientWithActionType, GraphClientReceiveMessage } from '@azure/connectors/generated/Office365Extensions';
-import { BlobMetadata as OneDriveBlobMetadata } from '@azure/connectors/generated/OnedriveforbusinessExtensions';
+import { BlobMetadata as OneDriveBlobMetadata } from '@azure/connectors/generated/OneDriveForBusinessExtensions';
 import { GetTaskResponseV2 as PlannerTask } from '@azure/connectors/generated/PlannerExtensions';
 import { Item as SalesforceItem } from '@azure/connectors/generated/SalesforceExtensions';
-import { BlobMetadata, DeletedItem, Item as SharepointItem } from '@azure/connectors/generated/SharepointonlineExtensions';
+import { BlobMetadata, DeletedItem, Item as SharepointItem } from '@azure/connectors/generated/SharePointOnlineExtensions';
 import { ChatMessage } from '@azure/connectors/generated/TeamsExtensions';
-import { BuildResult, GitPullRequest, GitPush, TfvcChangeset, TriggerWorkItemResponse } from '@azure/connectors/generated/VisualstudioteamservicesExtensions';
+import { BuildResult, GitPullRequest, GitPush, TfvcChangeset, TriggerWorkItemResponse } from '@azure/connectors/generated/VisualStudioTeamServicesExtensions';
 import { ConnectorTriggerOptions as FunctionsConnectorTriggerOptions, FunctionInput, FunctionOutput, InvocationContext } from '@azure/functions';
 
 // ---------------------------------------------------------------------------
@@ -21,7 +21,7 @@ import { ConnectorTriggerOptions as FunctionsConnectorTriggerOptions, FunctionIn
 export { TriggerCallbackBody, TriggerCallbackPayload } from '@azure/connectors';
 export { Row as KustoRow } from '@azure/connectors/generated/KustoExtensions';
 export { GraphCalendarEventClientReceive, GraphClientReceiveMessage } from '@azure/connectors/generated/Office365Extensions';
-export { BlobMetadata } from '@azure/connectors/generated/SharepointonlineExtensions';
+export { BlobMetadata } from '@azure/connectors/generated/SharePointOnlineExtensions';
 export { ChatMessage } from '@azure/connectors/generated/TeamsExtensions';
 export type { RefreshModel } from '@azure/connectors/generated/DataflowsExtensions';
 export type {
@@ -37,9 +37,9 @@ export type {
 } from '@azure/connectors/generated/Office365Extensions';
 export type {
     BlobMetadata as OneDriveBlobMetadata,
-    OnedriveforbusinessOnNewFilesTriggerPayload,
-    OnedriveforbusinessOnUpdatedFilesTriggerPayload,
-} from '@azure/connectors/generated/OnedriveforbusinessExtensions';
+    OneDriveForBusinessOnNewFilesTriggerPayload,
+    OneDriveForBusinessOnUpdatedFilesTriggerPayload,
+} from '@azure/connectors/generated/OneDriveForBusinessExtensions';
 export type {
     GetTaskResponseV2 as PlannerTask,
     PlannerOnCompleteTaskTriggerPayload,
@@ -54,17 +54,17 @@ export type {
 export type {
     DeletedItem,
     Item as SharepointItem,
-    SharepointonlineOnChangedItemsTriggerPayload,
-    SharepointonlineOnDeletedFileItemsTriggerPayload,
-    SharepointonlineOnDeletedItemsTriggerPayload,
-    SharepointonlineOnNewFileItemsTriggerPayload,
-    SharepointonlineOnNewItemsTriggerPayload,
-    SharepointonlineOnNewItemsFromFormTriggerPayload,
-    SharepointonlineOnRecurrenceDigestTriggerPayload,
-    SharepointonlineOnUpdatedFileClassifiedTimesTriggerPayload,
-    SharepointonlineOnUpdatedFileItemsTriggerPayload,
-    SharepointonlineOnUpdatedItemsTriggerPayload,
-} from '@azure/connectors/generated/SharepointonlineExtensions';
+    SharePointOnlineOnChangedItemsTriggerPayload,
+    SharePointOnlineOnDeletedFileItemsTriggerPayload,
+    SharePointOnlineOnDeletedItemsTriggerPayload,
+    SharePointOnlineOnNewFileItemsTriggerPayload,
+    SharePointOnlineOnNewItemsTriggerPayload,
+    SharePointOnlineOnNewItemsFromFormTriggerPayload,
+    SharePointOnlineOnRecurrenceDigestTriggerPayload,
+    SharePointOnlineOnUpdatedFileClassifiedTimesTriggerPayload,
+    SharePointOnlineOnUpdatedFileItemsTriggerPayload,
+    SharePointOnlineOnUpdatedItemsTriggerPayload,
+} from '@azure/connectors/generated/SharePointOnlineExtensions';
 export type {
     TeamsOnNewChannelMessageTriggerPayload,
     TeamsOnNewChannelMessageMentioningMeTriggerPayload,
@@ -77,16 +77,16 @@ export type {
     GitPush,
     TfvcChangeset,
     TriggerWorkItemResponse,
-    VisualstudioteamservicesOnBuildCompletedTriggerPayload,
-    VisualstudioteamservicesOnGitPullClosedTriggerPayload,
-    VisualstudioteamservicesOnGitPullCreatedTriggerPayload,
-    VisualstudioteamservicesOnGitPushTriggerPayload,
-    VisualstudioteamservicesOnTfvcCheckInTriggerPayload,
-    VisualstudioteamservicesOnWorkItemAssignedTriggerPayload,
-    VisualstudioteamservicesOnWorkItemClosedTriggerPayload,
-    VisualstudioteamservicesOnWorkItemCreatedTriggerPayload,
-    VisualstudioteamservicesOnWorkItemUpdatedTriggerPayload,
-} from '@azure/connectors/generated/VisualstudioteamservicesExtensions';
+    VisualStudioTeamServicesOnBuildCompletedTriggerPayload,
+    VisualStudioTeamServicesOnGitPullClosedTriggerPayload,
+    VisualStudioTeamServicesOnGitPullCreatedTriggerPayload,
+    VisualStudioTeamServicesOnGitPushTriggerPayload,
+    VisualStudioTeamServicesOnTfvcCheckInTriggerPayload,
+    VisualStudioTeamServicesOnWorkItemAssignedTriggerPayload,
+    VisualStudioTeamServicesOnWorkItemClosedTriggerPayload,
+    VisualStudioTeamServicesOnWorkItemCreatedTriggerPayload,
+    VisualStudioTeamServicesOnWorkItemUpdatedTriggerPayload,
+} from '@azure/connectors/generated/VisualStudioTeamServicesExtensions';
 
 // ---------------------------------------------------------------------------
 // Core trigger context
