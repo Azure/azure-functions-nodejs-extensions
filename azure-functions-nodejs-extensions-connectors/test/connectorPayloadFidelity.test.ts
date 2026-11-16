@@ -21,7 +21,7 @@ import type {
     PlannerTask,
     RefreshModel,
     SalesforceItem,
-    SharepointItem,
+    SharePointOnlineItem,
     TfvcChangeset,
     TriggerWorkItemResponse,
 } from '../types';
@@ -125,7 +125,7 @@ describe('connector-specific payload fidelity', () => {
         assert.strictEqual(context.calendarEvents[0]?.IsUpdated, false);
     });
 
-    const sharepointRecord: SharepointItem = {
+    const sharepointRecord: SharePointOnlineItem = {
         dynamicProperties: {
             CustomFields: { Title: 'Document', Count: 0, Approved: false, Description: '', Reviewer: null, Tags: ['one', 'two'] },
         },

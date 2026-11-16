@@ -5,12 +5,12 @@ import { ConnectorTriggers } from '../../types';
 import * as dataflows from './dataflowsTriggers';
 import { onQueryResult } from './kustoTriggers';
 import * as office365 from './office365Triggers';
-import * as onedriveforbusiness from './onedriveforbusinessTriggers';
+import * as onedriveforbusiness from './oneDriveForBusinessTriggers';
 import * as planner from './plannerTriggers';
 import * as salesforce from './salesforceTriggers';
-import * as sharepoint from './sharepointTriggers';
+import * as sharepoint from './sharePointOnlineTriggers';
 import * as teams from './teamsTriggers';
-import * as vsts from './vstsTriggers';
+import * as vsts from './visualStudioTeamServicesTriggers';
 
 /**
  * First-class connector trigger registrations grouped by connector.

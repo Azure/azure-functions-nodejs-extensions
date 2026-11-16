@@ -1,7 +1,7 @@
 // Copyright (c) .NET Foundation. All rights reserved.
 // Licensed under the MIT License.
 
-import { BlobMetadata } from '@azure/connectors/generated/OnedriveforbusinessExtensions';
+import { BlobMetadata } from '@azure/connectors/generated/OneDriveForBusinessExtensions';
 import { OneDriveFileTriggerContext } from '../../types';
 import { createConnectorTrigger } from './createConnectorTrigger';
 

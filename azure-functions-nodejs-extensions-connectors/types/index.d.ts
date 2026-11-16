@@ -5,12 +5,16 @@ import { TriggerCallbackPayload } from '@azure/connectors';
 import { RefreshModel } from '@azure/connectors/generated/DataflowsExtensions';
 import { Row } from '@azure/connectors/generated/KustoExtensions';
 import { GraphCalendarEventClientReceive, GraphCalendarEventClientWithActionType, GraphClientReceiveMessage } from '@azure/connectors/generated/Office365Extensions';
-import { BlobMetadata as OneDriveBlobMetadata } from '@azure/connectors/generated/OnedriveforbusinessExtensions';
+import { BlobMetadata as OneDriveBlobMetadata } from '@azure/connectors/generated/OneDriveForBusinessExtensions';
 import { GetTaskResponseV2 as PlannerTask } from '@azure/connectors/generated/PlannerExtensions';
 import { Item as SalesforceItem } from '@azure/connectors/generated/SalesforceExtensions';
-import { BlobMetadata, DeletedItem, Item as SharepointItem } from '@azure/connectors/generated/SharepointonlineExtensions';
+import {
+    BlobMetadata as SharePointOnlineBlobMetadata,
+    DeletedItem as SharePointOnlineDeletedItem,
+    Item as SharePointOnlineItem,
+} from '@azure/connectors/generated/SharePointOnlineExtensions';
 import { ChatMessage } from '@azure/connectors/generated/TeamsExtensions';
-import { BuildResult, GitPullRequest, GitPush, TfvcChangeset, TriggerWorkItemResponse } from '@azure/connectors/generated/VisualstudioteamservicesExtensions';
+import { BuildResult, GitPullRequest, GitPush, TfvcChangeset, TriggerWorkItemResponse } from '@azure/connectors/generated/VisualStudioTeamServicesExtensions';
 import { ConnectorTriggerOptions as FunctionsConnectorTriggerOptions, FunctionInput, FunctionOutput, InvocationContext } from '@azure/functions';
 
 // ---------------------------------------------------------------------------
@@ -21,8 +25,13 @@ import { ConnectorTriggerOptions as FunctionsConnectorTriggerOptions, FunctionIn
 export { TriggerCallbackBody, TriggerCallbackPayload } from '@azure/connectors';
 export { Row as KustoRow } from '@azure/connectors/generated/KustoExtensions';
 export { GraphCalendarEventClientReceive, GraphClientReceiveMessage } from '@azure/connectors/generated/Office365Extensions';
-export { BlobMetadata } from '@azure/connectors/generated/SharepointonlineExtensions';
+export { BlobMetadata } from '@azure/connectors/generated/SharePointOnlineExtensions';
 export { ChatMessage } from '@azure/connectors/generated/TeamsExtensions';
+export type {
+    BlobMetadata as SharePointOnlineBlobMetadata,
+    DeletedItem as SharePointOnlineDeletedItem,
+    Item as SharePointOnlineItem,
+} from '@azure/connectors/generated/SharePointOnlineExtensions';
 export type { RefreshModel } from '@azure/connectors/generated/DataflowsExtensions';
 export type {
     GraphCalendarEventClientWithActionType,
@@ -37,9 +46,9 @@ export type {
 } from '@azure/connectors/generated/Office365Extensions';
 export type {
     BlobMetadata as OneDriveBlobMetadata,
-    OnedriveforbusinessOnNewFilesTriggerPayload,
-    OnedriveforbusinessOnUpdatedFilesTriggerPayload,
-} from '@azure/connectors/generated/OnedriveforbusinessExtensions';
+    OneDriveForBusinessOnNewFilesTriggerPayload,
+    OneDriveForBusinessOnUpdatedFilesTriggerPayload,
+} from '@azure/connectors/generated/OneDriveForBusinessExtensions';
 export type {
     GetTaskResponseV2 as PlannerTask,
     PlannerOnCompleteTaskTriggerPayload,
@@ -54,17 +63,17 @@ export type {
 export type {
     DeletedItem,
     Item as SharepointItem,
-    SharepointonlineOnChangedItemsTriggerPayload,
-    SharepointonlineOnDeletedFileItemsTriggerPayload,
-    SharepointonlineOnDeletedItemsTriggerPayload,
-    SharepointonlineOnNewFileItemsTriggerPayload,
-    SharepointonlineOnNewItemsTriggerPayload,
-    SharepointonlineOnNewItemsFromFormTriggerPayload,
-    SharepointonlineOnRecurrenceDigestTriggerPayload,
-    SharepointonlineOnUpdatedFileClassifiedTimesTriggerPayload,
-    SharepointonlineOnUpdatedFileItemsTriggerPayload,
-    SharepointonlineOnUpdatedItemsTriggerPayload,
-} from '@azure/connectors/generated/SharepointonlineExtensions';
+    SharePointOnlineOnChangedItemsTriggerPayload,
+    SharePointOnlineOnDeletedFileItemsTriggerPayload,
+    SharePointOnlineOnDeletedItemsTriggerPayload,
+    SharePointOnlineOnNewFileItemsTriggerPayload,
+    SharePointOnlineOnNewItemsTriggerPayload,
+    SharePointOnlineOnNewItemsFromFormTriggerPayload,
+    SharePointOnlineOnRecurrenceDigestTriggerPayload,
+    SharePointOnlineOnUpdatedFileClassifiedTimesTriggerPayload,
+    SharePointOnlineOnUpdatedFileItemsTriggerPayload,
+    SharePointOnlineOnUpdatedItemsTriggerPayload,
+} from '@azure/connectors/generated/SharePointOnlineExtensions';
 export type {
     TeamsOnNewChannelMessageTriggerPayload,
     TeamsOnNewChannelMessageMentioningMeTriggerPayload,
@@ -77,16 +86,16 @@ export type {
     GitPush,
     TfvcChangeset,
     TriggerWorkItemResponse,
-    VisualstudioteamservicesOnBuildCompletedTriggerPayload,
-    VisualstudioteamservicesOnGitPullClosedTriggerPayload,
-    VisualstudioteamservicesOnGitPullCreatedTriggerPayload,
-    VisualstudioteamservicesOnGitPushTriggerPayload,
-    VisualstudioteamservicesOnTfvcCheckInTriggerPayload,
-    VisualstudioteamservicesOnWorkItemAssignedTriggerPayload,
-    VisualstudioteamservicesOnWorkItemClosedTriggerPayload,
-    VisualstudioteamservicesOnWorkItemCreatedTriggerPayload,
-    VisualstudioteamservicesOnWorkItemUpdatedTriggerPayload,
-} from '@azure/connectors/generated/VisualstudioteamservicesExtensions';
+    VisualStudioTeamServicesOnBuildCompletedTriggerPayload,
+    VisualStudioTeamServicesOnGitPullClosedTriggerPayload,
+    VisualStudioTeamServicesOnGitPullCreatedTriggerPayload,
+    VisualStudioTeamServicesOnGitPushTriggerPayload,
+    VisualStudioTeamServicesOnTfvcCheckInTriggerPayload,
+    VisualStudioTeamServicesOnWorkItemAssignedTriggerPayload,
+    VisualStudioTeamServicesOnWorkItemClosedTriggerPayload,
+    VisualStudioTeamServicesOnWorkItemCreatedTriggerPayload,
+    VisualStudioTeamServicesOnWorkItemUpdatedTriggerPayload,
+} from '@azure/connectors/generated/VisualStudioTeamServicesExtensions';
 
 // ---------------------------------------------------------------------------
 // Core trigger context
@@ -199,9 +208,9 @@ export interface CalendarEventTriggerContext extends ConnectorTriggerContext<Gra
 }
 
 /** Trigger context for SharePoint file triggers. Provides `files` as a named alias for `items`. */
-export interface FileTriggerContext extends ConnectorTriggerContext<BlobMetadata> {
+export interface FileTriggerContext extends ConnectorTriggerContext<SharePointOnlineBlobMetadata> {
     /** The file metadata delivered by the trigger. Alias for `items`. */
-    files: BlobMetadata[];
+    files: SharePointOnlineBlobMetadata[];
 }
 
 /** Trigger context for Teams channel message triggers. Provides `messages` as a named alias for `items`. */
@@ -223,15 +232,17 @@ export interface CalendarChangedEventTriggerContext extends ConnectorTriggerCont
 }
 
 /** SharePoint list items and file properties with dynamic SDK fields. */
-export interface SharepointItemTriggerContext extends ConnectorTriggerContext<SharepointItem> {
+export interface SharePointOnlineItemTriggerContext extends ConnectorTriggerContext<SharePointOnlineItem> {
     /** SharePoint records. Alias for `items`. */
-    records: SharepointItem[];
+    records: SharePointOnlineItem[];
 }
 
+export interface SharepointItemTriggerContext extends SharePointOnlineItemTriggerContext {}
+
 /** Deleted SharePoint list items or files. */
-export interface DeletedItemTriggerContext extends ConnectorTriggerContext<DeletedItem> {
+export interface DeletedItemTriggerContext extends ConnectorTriggerContext<SharePointOnlineDeletedItem> {
     /** Deleted items. Alias for `items`. */
-    deletedItems: DeletedItem[];
+    deletedItems: SharePointOnlineDeletedItem[];
 }
 
 /** OneDrive for Business file metadata. */
@@ -347,34 +358,36 @@ export interface Office365Triggers {
 /**
  * SharePoint Online connector trigger registrations.
  */
-export interface SharepointTriggers {
+export interface SharePointOnlineTriggers {
     /** Registers changed list items. */
-    onChangedItems: ConnectorTriggerRegistration<SharepointItem, SharepointItemTriggerContext>;
+    onChangedItems: ConnectorTriggerRegistration<SharePointOnlineItem, SharePointOnlineItemTriggerContext>;
     /** Registers deleted files. */
-    onDeletedFileItems: ConnectorTriggerRegistration<DeletedItem, DeletedItemTriggerContext>;
+    onDeletedFileItems: ConnectorTriggerRegistration<SharePointOnlineDeletedItem, DeletedItemTriggerContext>;
     /** Registers deleted list items. */
-    onDeletedItems: ConnectorTriggerRegistration<DeletedItem, DeletedItemTriggerContext>;
+    onDeletedItems: ConnectorTriggerRegistration<SharePointOnlineDeletedItem, DeletedItemTriggerContext>;
     /** Registers new file properties (not file content). */
-    onNewFileItems: ConnectorTriggerRegistration<SharepointItem, SharepointItemTriggerContext>;
+    onNewFileItems: ConnectorTriggerRegistration<SharePointOnlineItem, SharePointOnlineItemTriggerContext>;
     /** Registers new list items. */
-    onNewItems: ConnectorTriggerRegistration<SharepointItem, SharepointItemTriggerContext>;
+    onNewItems: ConnectorTriggerRegistration<SharePointOnlineItem, SharePointOnlineItemTriggerContext>;
     /** Registers list items submitted through a form. */
-    onNewItemsFromForm: ConnectorTriggerRegistration<SharepointItem, SharepointItemTriggerContext>;
+    onNewItemsFromForm: ConnectorTriggerRegistration<SharePointOnlineItem, SharePointOnlineItemTriggerContext>;
     /** Registers recurring list item digests. */
-    onRecurrenceDigest: ConnectorTriggerRegistration<SharepointItem, SharepointItemTriggerContext>;
+    onRecurrenceDigest: ConnectorTriggerRegistration<SharePointOnlineItem, SharePointOnlineItemTriggerContext>;
     /** Registers file classification changes. */
-    onUpdatedFileClassifiedTimes: ConnectorTriggerRegistration<SharepointItem, SharepointItemTriggerContext>;
+    onUpdatedFileClassifiedTimes: ConnectorTriggerRegistration<SharePointOnlineItem, SharePointOnlineItemTriggerContext>;
     /** Registers updated file properties (not file content). */
-    onUpdatedFileItems: ConnectorTriggerRegistration<SharepointItem, SharepointItemTriggerContext>;
+    onUpdatedFileItems: ConnectorTriggerRegistration<SharePointOnlineItem, SharePointOnlineItemTriggerContext>;
     /** Registers updated list items. */
-    onUpdatedItems: ConnectorTriggerRegistration<SharepointItem, SharepointItemTriggerContext>;
+    onUpdatedItems: ConnectorTriggerRegistration<SharePointOnlineItem, SharePointOnlineItemTriggerContext>;
 
     /** Registers a trigger that fires when a new file is created. Handler items are typed as `BlobMetadata[]`. */
-    onNewFile(name: string, options: ConnectorTriggerOptions<BlobMetadata, FileTriggerContext>): void;
+    onNewFile(name: string, options: ConnectorTriggerOptions<SharePointOnlineBlobMetadata, FileTriggerContext>): void;
 
     /** Registers a trigger that fires when an existing file is modified. Handler items are typed as `BlobMetadata[]`. */
-    onUpdatedFile(name: string, options: ConnectorTriggerOptions<BlobMetadata, FileTriggerContext>): void;
+    onUpdatedFile(name: string, options: ConnectorTriggerOptions<SharePointOnlineBlobMetadata, FileTriggerContext>): void;
 }
+
+export interface SharepointTriggers extends SharePointOnlineTriggers {}
 
 /**
  * Teams connector trigger registrations.
@@ -468,7 +481,7 @@ export interface ConnectorTriggers {
     salesforce: SalesforceTriggers;
 
     /** SharePoint Online connector triggers (files). */
-    sharepoint: SharepointTriggers;
+    sharepoint: SharePointOnlineTriggers;
 
     /** Teams connector triggers (messages). */
     teams: TeamsTriggers;

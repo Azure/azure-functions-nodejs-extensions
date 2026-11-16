@@ -2,12 +2,12 @@
 // Licensed under the MIT License.
 
 import type * as sdkOffice365 from '@azure/connectors/generated/Office365Extensions';
-import type * as sdkOneDrive from '@azure/connectors/generated/OnedriveforbusinessExtensions';
+import type * as sdkOneDrive from '@azure/connectors/generated/OneDriveForBusinessExtensions';
 import type * as sdkPlanner from '@azure/connectors/generated/PlannerExtensions';
 import type * as sdkSalesforce from '@azure/connectors/generated/SalesforceExtensions';
-import type * as sdkSharepoint from '@azure/connectors/generated/SharepointonlineExtensions';
+import type * as sdkSharePointOnline from '@azure/connectors/generated/SharePointOnlineExtensions';
 import type * as sdkTeams from '@azure/connectors/generated/TeamsExtensions';
-import type * as sdkVsts from '@azure/connectors/generated/VisualstudioteamservicesExtensions';
+import type * as sdkVsts from '@azure/connectors/generated/VisualStudioTeamServicesExtensions';
 import type { RefreshModel } from '@azure/connectors/generated/DataflowsExtensions';
 import type { ConnectorTriggerOptions as FunctionsConnectorTriggerOptions, InvocationContext } from '@azure/functions';
 import type * as publicTypes from '@azure/functions-extensions-connectors';
@@ -54,20 +54,20 @@ type AllPayloads = {
         onUpcomingEvents: sdkOffice365.Office365OnUpcomingEventsTriggerPayload;
     };
     sharepoint: {
-        onChangedItems: sdkSharepoint.SharepointonlineOnChangedItemsTriggerPayload;
-        onDeletedFileItems: sdkSharepoint.SharepointonlineOnDeletedFileItemsTriggerPayload;
-        onDeletedItems: sdkSharepoint.SharepointonlineOnDeletedItemsTriggerPayload;
-        onNewFileItems: sdkSharepoint.SharepointonlineOnNewFileItemsTriggerPayload;
-        onNewItems: sdkSharepoint.SharepointonlineOnNewItemsTriggerPayload;
-        onNewItemsFromForm: sdkSharepoint.SharepointonlineOnNewItemsFromFormTriggerPayload;
-        onRecurrenceDigest: sdkSharepoint.SharepointonlineOnRecurrenceDigestTriggerPayload;
-        onUpdatedFileClassifiedTimes: sdkSharepoint.SharepointonlineOnUpdatedFileClassifiedTimesTriggerPayload;
-        onUpdatedFileItems: sdkSharepoint.SharepointonlineOnUpdatedFileItemsTriggerPayload;
-        onUpdatedItems: sdkSharepoint.SharepointonlineOnUpdatedItemsTriggerPayload;
+        onChangedItems: sdkSharePointOnline.SharePointOnlineOnChangedItemsTriggerPayload;
+        onDeletedFileItems: sdkSharePointOnline.SharePointOnlineOnDeletedFileItemsTriggerPayload;
+        onDeletedItems: sdkSharePointOnline.SharePointOnlineOnDeletedItemsTriggerPayload;
+        onNewFileItems: sdkSharePointOnline.SharePointOnlineOnNewFileItemsTriggerPayload;
+        onNewItems: sdkSharePointOnline.SharePointOnlineOnNewItemsTriggerPayload;
+        onNewItemsFromForm: sdkSharePointOnline.SharePointOnlineOnNewItemsFromFormTriggerPayload;
+        onRecurrenceDigest: sdkSharePointOnline.SharePointOnlineOnRecurrenceDigestTriggerPayload;
+        onUpdatedFileClassifiedTimes: sdkSharePointOnline.SharePointOnlineOnUpdatedFileClassifiedTimesTriggerPayload;
+        onUpdatedFileItems: sdkSharePointOnline.SharePointOnlineOnUpdatedFileItemsTriggerPayload;
+        onUpdatedItems: sdkSharePointOnline.SharePointOnlineOnUpdatedItemsTriggerPayload;
     };
     onedriveforbusiness: {
-        onNewFiles: sdkOneDrive.OnedriveforbusinessOnNewFilesTriggerPayload;
-        onUpdatedFiles: sdkOneDrive.OnedriveforbusinessOnUpdatedFilesTriggerPayload;
+        onNewFiles: sdkOneDrive.OneDriveForBusinessOnNewFilesTriggerPayload;
+        onUpdatedFiles: sdkOneDrive.OneDriveForBusinessOnUpdatedFilesTriggerPayload;
     };
     teams: {
         onNewChannelMessage: sdkTeams.TeamsOnNewChannelMessageTriggerPayload;
@@ -85,15 +85,15 @@ type AllPayloads = {
         onUpdatedItems: sdkSalesforce.SalesforceOnUpdatedItemsTriggerPayload;
     };
     vsts: {
-        onBuildCompleted: sdkVsts.VisualstudioteamservicesOnBuildCompletedTriggerPayload;
-        onGitPullClosed: sdkVsts.VisualstudioteamservicesOnGitPullClosedTriggerPayload;
-        onGitPullCreated: sdkVsts.VisualstudioteamservicesOnGitPullCreatedTriggerPayload;
-        onGitPush: sdkVsts.VisualstudioteamservicesOnGitPushTriggerPayload;
-        onTfvcCheckIn: sdkVsts.VisualstudioteamservicesOnTfvcCheckInTriggerPayload;
-        onWorkItemAssigned: sdkVsts.VisualstudioteamservicesOnWorkItemAssignedTriggerPayload;
-        onWorkItemClosed: sdkVsts.VisualstudioteamservicesOnWorkItemClosedTriggerPayload;
-        onWorkItemCreated: sdkVsts.VisualstudioteamservicesOnWorkItemCreatedTriggerPayload;
-        onWorkItemUpdated: sdkVsts.VisualstudioteamservicesOnWorkItemUpdatedTriggerPayload;
+        onBuildCompleted: sdkVsts.VisualStudioTeamServicesOnBuildCompletedTriggerPayload;
+        onGitPullClosed: sdkVsts.VisualStudioTeamServicesOnGitPullClosedTriggerPayload;
+        onGitPullCreated: sdkVsts.VisualStudioTeamServicesOnGitPullCreatedTriggerPayload;
+        onGitPush: sdkVsts.VisualStudioTeamServicesOnGitPushTriggerPayload;
+        onTfvcCheckIn: sdkVsts.VisualStudioTeamServicesOnTfvcCheckInTriggerPayload;
+        onWorkItemAssigned: sdkVsts.VisualStudioTeamServicesOnWorkItemAssignedTriggerPayload;
+        onWorkItemClosed: sdkVsts.VisualStudioTeamServicesOnWorkItemClosedTriggerPayload;
+        onWorkItemCreated: sdkVsts.VisualStudioTeamServicesOnWorkItemCreatedTriggerPayload;
+        onWorkItemUpdated: sdkVsts.VisualStudioTeamServicesOnWorkItemUpdatedTriggerPayload;
     };
     dataflows: {
         onRefreshComplete: publicTypes.TriggerCallbackPayload<RefreshModel>;
@@ -111,7 +111,12 @@ export type TriggerPayloadAssertions = [
     Assert<Equal<RegistrationPayloads<publicTypes.ConnectorTriggers>, AllPayloads>>,
     Assert<Equal<publicTypes.DataflowsOnRefreshCompleteTriggerPayload, publicTypes.TriggerCallbackPayload<RefreshModel>>>,
     Assert<Equal<sourceTypes.OneDriveBlobMetadata, sdkOneDrive.BlobMetadata>>,
-    Assert<Equal<publicTypes.SharepointItem, sdkSharepoint.Item>>,
+    Assert<Equal<publicTypes.SharePointOnlineBlobMetadata, sdkSharePointOnline.BlobMetadata>>,
+    Assert<Equal<publicTypes.SharePointOnlineDeletedItem, sdkSharePointOnline.DeletedItem>>,
+    Assert<Equal<publicTypes.SharePointOnlineItem, sdkSharePointOnline.Item>>,
+    Assert<Equal<publicTypes.SharepointItem, publicTypes.SharePointOnlineItem>>,
+    Assert<Equal<publicTypes.SharepointItemTriggerContext, publicTypes.SharePointOnlineItemTriggerContext>>,
+    Assert<Equal<publicTypes.SharepointTriggers, publicTypes.SharePointOnlineTriggers>>,
     Assert<Equal<publicTypes.SalesforceItem, sdkSalesforce.Item>>,
     Assert<Equal<RegistrationContexts<typeof connectors>, RegistrationContexts<publicTypes.ConnectorTriggers>>>,
 ];
@@ -127,9 +132,9 @@ export type NamedAliasAssertions = [
     Assert<Equal<NamedAliases<typeof connectors.office365.onNewEmail>, { emails: sdkOffice365.GraphClientReceiveMessage[] }>>,
     Assert<Equal<NamedAliases<typeof connectors.office365.onNewCalendarEvent>, { calendarEvents: sdkOffice365.GraphCalendarEventClientReceive[] }>>,
     Assert<Equal<NamedAliases<typeof connectors.office365.onCalendarChangedItems>, { calendarEvents: sdkOffice365.GraphCalendarEventClientWithActionType[] }>>,
-    Assert<Equal<NamedAliases<typeof connectors.sharepoint.onNewItems>, { records: sdkSharepoint.Item[] }>>,
-    Assert<Equal<NamedAliases<typeof connectors.sharepoint.onDeletedItems>, { deletedItems: sdkSharepoint.DeletedItem[] }>>,
-    Assert<Equal<NamedAliases<typeof connectors.sharepoint.onNewFile>, { files: sdkSharepoint.BlobMetadata[] }>>,
+    Assert<Equal<NamedAliases<typeof connectors.sharepoint.onNewItems>, { records: sdkSharePointOnline.Item[] }>>,
+    Assert<Equal<NamedAliases<typeof connectors.sharepoint.onDeletedItems>, { deletedItems: sdkSharePointOnline.DeletedItem[] }>>,
+    Assert<Equal<NamedAliases<typeof connectors.sharepoint.onNewFile>, { files: sdkSharePointOnline.BlobMetadata[] }>>,
     Assert<Equal<NamedAliases<typeof connectors.onedriveforbusiness.onNewFiles>, { files: sdkOneDrive.BlobMetadata[] }>>,
     Assert<Equal<NamedAliases<typeof connectors.teams.onNewChannelMessage>, { messages: sdkTeams.ChatMessage[] }>>,
     Assert<Equal<NamedAliases<typeof connectors.teams.onTeamMemberAdded>, { members: Record<string, unknown>[] }>>,
@@ -152,18 +157,18 @@ export type PayloadExportAssertions = [
     Assert<Equal<publicTypes.Office365OnNewEmailMentioningMeTriggerPayload, sdkOffice365.Office365OnNewEmailMentioningMeTriggerPayload>>,
     Assert<Equal<publicTypes.Office365OnSharedMailboxNewEmailTriggerPayload, sdkOffice365.Office365OnSharedMailboxNewEmailTriggerPayload>>,
     Assert<Equal<publicTypes.Office365OnUpcomingEventsTriggerPayload, sdkOffice365.Office365OnUpcomingEventsTriggerPayload>>,
-    Assert<Equal<publicTypes.SharepointonlineOnChangedItemsTriggerPayload, sdkSharepoint.SharepointonlineOnChangedItemsTriggerPayload>>,
-    Assert<Equal<publicTypes.SharepointonlineOnDeletedFileItemsTriggerPayload, sdkSharepoint.SharepointonlineOnDeletedFileItemsTriggerPayload>>,
-    Assert<Equal<publicTypes.SharepointonlineOnDeletedItemsTriggerPayload, sdkSharepoint.SharepointonlineOnDeletedItemsTriggerPayload>>,
-    Assert<Equal<publicTypes.SharepointonlineOnNewFileItemsTriggerPayload, sdkSharepoint.SharepointonlineOnNewFileItemsTriggerPayload>>,
-    Assert<Equal<publicTypes.SharepointonlineOnNewItemsTriggerPayload, sdkSharepoint.SharepointonlineOnNewItemsTriggerPayload>>,
-    Assert<Equal<publicTypes.SharepointonlineOnNewItemsFromFormTriggerPayload, sdkSharepoint.SharepointonlineOnNewItemsFromFormTriggerPayload>>,
-    Assert<Equal<publicTypes.SharepointonlineOnRecurrenceDigestTriggerPayload, sdkSharepoint.SharepointonlineOnRecurrenceDigestTriggerPayload>>,
-    Assert<Equal<publicTypes.SharepointonlineOnUpdatedFileClassifiedTimesTriggerPayload, sdkSharepoint.SharepointonlineOnUpdatedFileClassifiedTimesTriggerPayload>>,
-    Assert<Equal<publicTypes.SharepointonlineOnUpdatedFileItemsTriggerPayload, sdkSharepoint.SharepointonlineOnUpdatedFileItemsTriggerPayload>>,
-    Assert<Equal<publicTypes.SharepointonlineOnUpdatedItemsTriggerPayload, sdkSharepoint.SharepointonlineOnUpdatedItemsTriggerPayload>>,
-    Assert<Equal<publicTypes.OnedriveforbusinessOnNewFilesTriggerPayload, sdkOneDrive.OnedriveforbusinessOnNewFilesTriggerPayload>>,
-    Assert<Equal<publicTypes.OnedriveforbusinessOnUpdatedFilesTriggerPayload, sdkOneDrive.OnedriveforbusinessOnUpdatedFilesTriggerPayload>>,
+    Assert<Equal<publicTypes.SharePointOnlineOnChangedItemsTriggerPayload, sdkSharePointOnline.SharePointOnlineOnChangedItemsTriggerPayload>>,
+    Assert<Equal<publicTypes.SharePointOnlineOnDeletedFileItemsTriggerPayload, sdkSharePointOnline.SharePointOnlineOnDeletedFileItemsTriggerPayload>>,
+    Assert<Equal<publicTypes.SharePointOnlineOnDeletedItemsTriggerPayload, sdkSharePointOnline.SharePointOnlineOnDeletedItemsTriggerPayload>>,
+    Assert<Equal<publicTypes.SharePointOnlineOnNewFileItemsTriggerPayload, sdkSharePointOnline.SharePointOnlineOnNewFileItemsTriggerPayload>>,
+    Assert<Equal<publicTypes.SharePointOnlineOnNewItemsTriggerPayload, sdkSharePointOnline.SharePointOnlineOnNewItemsTriggerPayload>>,
+    Assert<Equal<publicTypes.SharePointOnlineOnNewItemsFromFormTriggerPayload, sdkSharePointOnline.SharePointOnlineOnNewItemsFromFormTriggerPayload>>,
+    Assert<Equal<publicTypes.SharePointOnlineOnRecurrenceDigestTriggerPayload, sdkSharePointOnline.SharePointOnlineOnRecurrenceDigestTriggerPayload>>,
+    Assert<Equal<publicTypes.SharePointOnlineOnUpdatedFileClassifiedTimesTriggerPayload, sdkSharePointOnline.SharePointOnlineOnUpdatedFileClassifiedTimesTriggerPayload>>,
+    Assert<Equal<publicTypes.SharePointOnlineOnUpdatedFileItemsTriggerPayload, sdkSharePointOnline.SharePointOnlineOnUpdatedFileItemsTriggerPayload>>,
+    Assert<Equal<publicTypes.SharePointOnlineOnUpdatedItemsTriggerPayload, sdkSharePointOnline.SharePointOnlineOnUpdatedItemsTriggerPayload>>,
+    Assert<Equal<publicTypes.OneDriveForBusinessOnNewFilesTriggerPayload, sdkOneDrive.OneDriveForBusinessOnNewFilesTriggerPayload>>,
+    Assert<Equal<publicTypes.OneDriveForBusinessOnUpdatedFilesTriggerPayload, sdkOneDrive.OneDriveForBusinessOnUpdatedFilesTriggerPayload>>,
     Assert<Equal<publicTypes.TeamsOnNewChannelMessageTriggerPayload, sdkTeams.TeamsOnNewChannelMessageTriggerPayload>>,
     Assert<Equal<publicTypes.TeamsOnNewChannelMessageMentioningMeTriggerPayload, sdkTeams.TeamsOnNewChannelMessageMentioningMeTriggerPayload>>,
     Assert<Equal<publicTypes.TeamsOnTeamMemberAddedTriggerPayload, sdkTeams.TeamsOnTeamMemberAddedTriggerPayload>>,
@@ -173,15 +178,15 @@ export type PayloadExportAssertions = [
     Assert<Equal<publicTypes.PlannerOnTaskAssignedToMeTriggerPayload, sdkPlanner.PlannerOnTaskAssignedToMeTriggerPayload>>,
     Assert<Equal<publicTypes.SalesforceOnNewItemsTriggerPayload, sdkSalesforce.SalesforceOnNewItemsTriggerPayload>>,
     Assert<Equal<publicTypes.SalesforceOnUpdatedItemsTriggerPayload, sdkSalesforce.SalesforceOnUpdatedItemsTriggerPayload>>,
-    Assert<Equal<publicTypes.VisualstudioteamservicesOnBuildCompletedTriggerPayload, sdkVsts.VisualstudioteamservicesOnBuildCompletedTriggerPayload>>,
-    Assert<Equal<publicTypes.VisualstudioteamservicesOnGitPullClosedTriggerPayload, sdkVsts.VisualstudioteamservicesOnGitPullClosedTriggerPayload>>,
-    Assert<Equal<publicTypes.VisualstudioteamservicesOnGitPullCreatedTriggerPayload, sdkVsts.VisualstudioteamservicesOnGitPullCreatedTriggerPayload>>,
-    Assert<Equal<publicTypes.VisualstudioteamservicesOnGitPushTriggerPayload, sdkVsts.VisualstudioteamservicesOnGitPushTriggerPayload>>,
-    Assert<Equal<publicTypes.VisualstudioteamservicesOnTfvcCheckInTriggerPayload, sdkVsts.VisualstudioteamservicesOnTfvcCheckInTriggerPayload>>,
-    Assert<Equal<publicTypes.VisualstudioteamservicesOnWorkItemAssignedTriggerPayload, sdkVsts.VisualstudioteamservicesOnWorkItemAssignedTriggerPayload>>,
-    Assert<Equal<publicTypes.VisualstudioteamservicesOnWorkItemClosedTriggerPayload, sdkVsts.VisualstudioteamservicesOnWorkItemClosedTriggerPayload>>,
-    Assert<Equal<publicTypes.VisualstudioteamservicesOnWorkItemCreatedTriggerPayload, sdkVsts.VisualstudioteamservicesOnWorkItemCreatedTriggerPayload>>,
-    Assert<Equal<publicTypes.VisualstudioteamservicesOnWorkItemUpdatedTriggerPayload, sdkVsts.VisualstudioteamservicesOnWorkItemUpdatedTriggerPayload>>,
+    Assert<Equal<publicTypes.VisualStudioTeamServicesOnBuildCompletedTriggerPayload, sdkVsts.VisualStudioTeamServicesOnBuildCompletedTriggerPayload>>,
+    Assert<Equal<publicTypes.VisualStudioTeamServicesOnGitPullClosedTriggerPayload, sdkVsts.VisualStudioTeamServicesOnGitPullClosedTriggerPayload>>,
+    Assert<Equal<publicTypes.VisualStudioTeamServicesOnGitPullCreatedTriggerPayload, sdkVsts.VisualStudioTeamServicesOnGitPullCreatedTriggerPayload>>,
+    Assert<Equal<publicTypes.VisualStudioTeamServicesOnGitPushTriggerPayload, sdkVsts.VisualStudioTeamServicesOnGitPushTriggerPayload>>,
+    Assert<Equal<publicTypes.VisualStudioTeamServicesOnTfvcCheckInTriggerPayload, sdkVsts.VisualStudioTeamServicesOnTfvcCheckInTriggerPayload>>,
+    Assert<Equal<publicTypes.VisualStudioTeamServicesOnWorkItemAssignedTriggerPayload, sdkVsts.VisualStudioTeamServicesOnWorkItemAssignedTriggerPayload>>,
+    Assert<Equal<publicTypes.VisualStudioTeamServicesOnWorkItemClosedTriggerPayload, sdkVsts.VisualStudioTeamServicesOnWorkItemClosedTriggerPayload>>,
+    Assert<Equal<publicTypes.VisualStudioTeamServicesOnWorkItemCreatedTriggerPayload, sdkVsts.VisualStudioTeamServicesOnWorkItemCreatedTriggerPayload>>,
+    Assert<Equal<publicTypes.VisualStudioTeamServicesOnWorkItemUpdatedTriggerPayload, sdkVsts.VisualStudioTeamServicesOnWorkItemUpdatedTriggerPayload>>,
     Assert<Equal<sourceTypes.Office365OnNewEmailTriggerPayload, publicTypes.Office365OnNewEmailTriggerPayload>>,
     Assert<Equal<sourceTypes.DataflowsOnRefreshCompleteTriggerPayload, publicTypes.DataflowsOnRefreshCompleteTriggerPayload>>,
 ];
@@ -210,7 +215,7 @@ export function verifyHandlerInference(): void {
     });
     connectors.sharepoint.onNewFileItems('sharepointPropertyTypes', {
         handler: async (context) => {
-            const records: sdkSharepoint.Item[] = context.records;
+            const records: sdkSharePointOnline.Item[] = context.records;
             // @ts-expect-error File-property records are not BlobMetadata.
             context.records.map((record) => record.Name);
             // @ts-expect-error Dynamic SharePoint fields must be narrowed before treating them as strings.
@@ -220,7 +225,7 @@ export function verifyHandlerInference(): void {
     });
     connectors.sharepoint.onDeletedItems('sharepointDeletionTypes', {
         handler: async (context) => {
-            const deletedItems: sdkSharepoint.DeletedItem[] = context.deletedItems;
+            const deletedItems: sdkSharePointOnline.DeletedItem[] = context.deletedItems;
             const identifiers: (number | undefined)[] = deletedItems.map((item) => item.ID);
             // @ts-expect-error The SDK deleted item identifier is uppercase.
             context.deletedItems.map((item) => item.id);
@@ -330,7 +335,7 @@ export function verifyHandlerInference(): void {
 export function verifyHandlerCompatibility(registrations: publicTypes.ConnectorTriggers): void {
     const emailHandler: publicTypes.ConnectorTriggerHandler<sdkOffice365.GraphClientReceiveMessage, publicTypes.EmailTriggerContext> = async () => undefined;
     const plannerHandler: publicTypes.ConnectorTriggerHandler<sdkPlanner.GetTaskResponseV2, publicTypes.PlannerTaskTriggerContext> = async () => undefined;
-    const sharepointFileHandler: publicTypes.ConnectorTriggerHandler<sdkSharepoint.BlobMetadata, publicTypes.FileTriggerContext> = async () => undefined;
+    const sharepointFileHandler: publicTypes.ConnectorTriggerHandler<sdkSharePointOnline.BlobMetadata, publicTypes.FileTriggerContext> = async () => undefined;
 
     // @ts-expect-error Planner registrations must not accept email contexts.
     registrations.planner.onNewTask('wrongPlannerHandler', { handler: emailHandler });

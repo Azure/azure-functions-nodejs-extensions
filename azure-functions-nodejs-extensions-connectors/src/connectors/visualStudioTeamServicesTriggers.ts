@@ -7,7 +7,7 @@ import {
     GitPush,
     TfvcChangeset,
     TriggerWorkItemResponse,
-} from '@azure/connectors/generated/VisualstudioteamservicesExtensions';
+} from '@azure/connectors/generated/VisualStudioTeamServicesExtensions';
 import {
     BuildCompletedTriggerContext,
     GitPullRequestTriggerContext,
