@@ -6,7 +6,7 @@ import * as sinon from 'sinon';
 import * as azureFunctions from '@azure/functions';
 import { onQueryResult } from '../src/connectors/kustoTriggers';
 import { onNewCalendarEvent, onNewEmail } from '../src/connectors/office365Triggers';
-import { onNewFile, onUpdatedFile } from '../src/connectors/sharepointTriggers';
+import { onNewFile, onUpdatedFile } from '../src/connectors/sharePointOnlineTriggers';
 import { onNewChannelMessage } from '../src/connectors/teamsTriggers';
 
 describe('connector-specific triggers', () => {
